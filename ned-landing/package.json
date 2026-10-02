@@ -1,0 +1,32 @@
+{
+  "name": "ned-landing",
+  "private": true,
+  "version": "0.1.0",
+  "description": "N.E.D landing page: shared money, held by rules, not by a middleman.",
+  "type": "module",
+  "scripts": {
+    "predev": "node scripts/fetch-teddy.mjs",
+    "dev": "vite",
+    "prebuild": "node scripts/fetch-teddy.mjs",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.0.0",
+    "@react-three/fiber": "^9.1.0",
+    "lenis": "^1.3.0",
+    "motion": "^12.9.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "three": "^0.176.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@types/three": "^0.176.0",
+    "@vitejs/plugin-react": "^4.4.0",
+    "typescript": "^5.8.0",
+    "vite": "^6.3.0"
+  }
+}

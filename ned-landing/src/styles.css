@@ -1,0 +1,487 @@
+/* N.E.D landing · dark purple DesignKit (ned-wallet/constants/design.ts). No neo-brutalism. */
+
+:root {
+  --purple-100: #f0e4ff;
+  --purple-200: #d4b5f7;
+  --purple-300: #b87aed;
+  --purple-400: #9b4fde;
+  --purple-500: #7b2fbe;
+  --purple-600: #5a1d9e;
+  --purple-700: #3d1270;
+  --purple-800: #270a4d;
+  --purple-900: #160530;
+
+  --surface-1: #141418;
+  --surface-2: #1c1c24;
+  --border: #353540;
+  --text: #ffffff;
+  --text-2: #9ca3af;
+  --text-3: #6b7280;
+  --warning-text: #fbbf24;
+  --glass-fill: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+
+  --glyph: var(--purple-100);
+  --line-faint: rgba(240, 228, 255, 0.14);
+
+  --page: linear-gradient(170deg, #110822 0%, #0d0618 30%, #080812 60%, #06060e 100%);
+  --grain-opacity: 0.06;
+
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --gutter: clamp(20px, 6vw, 96px);
+  --scale: 1;
+
+  color-scheme: dark;
+}
+
+/* Presentation mode (?present=1): brighter ground, larger type, almost no grain. */
+:root.present {
+  --page: linear-gradient(170deg, #241040 0%, #1a0c30 40%, #120a22 100%);
+  --text-2: #c9cdd6;
+  --grain-opacity: 0.015;
+  --scale: 1.2;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: #06060e;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: calc(16px * var(--scale));
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--page);
+}
+
+p,
+h1,
+h2 {
+  margin: 0;
+}
+
+a {
+  color: var(--purple-200);
+}
+
+:focus-visible {
+  outline: 2px solid var(--purple-300);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: fixed;
+  left: 16px;
+  top: -60px;
+  z-index: 20;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: var(--purple-500);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.skip-link:focus {
+  top: 16px;
+}
+
+/* ---------- Fixed layers ---------- */
+
+.scene-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+.scene-layer.is-ready {
+  opacity: 1;
+}
+
+.static-scene,
+.static-scene svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.dip {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: #06060e;
+  pointer-events: none;
+}
+
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(18px + env(safe-area-inset-top, 0px)) var(--gutter) 18px;
+  pointer-events: none;
+}
+
+.topbar > * {
+  pointer-events: auto;
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: calc(17px * var(--scale));
+  letter-spacing: 0.06em;
+}
+
+.topbar-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-fill);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: calc(14px * var(--scale));
+  text-decoration: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.topbar-link:hover {
+  border-color: rgba(184, 122, 237, 0.5);
+  background: rgba(123, 47, 190, 0.2);
+}
+
+/* ---------- Preloader ---------- */
+
+.preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  pointer-events: none;
+}
+
+.preloader-glyph {
+  width: min(300px, 58vw);
+}
+
+.preloader-glyph svg,
+.hero-glyph svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.preloader-word {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.1em;
+  color: var(--text-2);
+}
+
+/* ---------- Chapters ---------- */
+
+main {
+  position: relative;
+  z-index: 2;
+}
+
+.chapter {
+  position: relative;
+}
+
+.pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  display: flex;
+  align-items: center;
+  padding: 96px var(--gutter) 64px;
+}
+
+.chapter-hero {
+  height: 120vh;
+}
+
+/* Pinned from 120 to 400 vh of scroll. */
+.chapter-problem {
+  height: 380vh;
+}
+
+.chapter-end {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 96px var(--gutter);
+}
+
+.hero-copy {
+  max-width: min(600px, 46vw);
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: calc(clamp(40px, 5.6vw, 84px) * var(--scale));
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.word {
+  display: inline-block;
+}
+
+.glyph-slot {
+  height: clamp(26px, 2.6vw, 38px);
+  margin: clamp(14px, 1.6vw, 22px) 0 clamp(18px, 2vw, 28px);
+}
+
+.hero-glyph {
+  width: clamp(110px, 11vw, 160px);
+}
+
+.headline {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: calc(clamp(28px, 3.2vw, 48px) * var(--scale));
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.lede {
+  max-width: 44ch;
+  color: var(--text-2);
+  font-size: calc(clamp(16px, 1.25vw, 19px) * var(--scale));
+  line-height: 1.55;
+}
+
+.lede.strong {
+  color: var(--text);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 22px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-family: var(--font-mono);
+  font-size: calc(12px * var(--scale));
+  color: #d1d5db;
+}
+
+.chip-warn {
+  color: var(--warning-text);
+  border-color: rgba(251, 191, 36, 0.4);
+}
+
+.scroll-cue {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 28px;
+  text-align: center;
+  font-size: calc(11px * var(--scale));
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+.problem-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: min(480px, 34vw);
+  align-self: flex-start;
+  margin-top: 6vh;
+}
+
+.source {
+  font-size: calc(11px * var(--scale));
+  color: var(--text-2);
+}
+
+.source span {
+  display: block;
+  color: var(--text-3);
+}
+
+.end-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  max-width: 560px;
+}
+
+.end-copy .chip {
+  margin-top: 0;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 24px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #7b2fbe 0%, #9b4fde 50%, #6366f1 100%);
+  box-shadow: 0 4px 14px rgba(123, 47, 190, 0.45);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: calc(17px * var(--scale));
+  text-decoration: none;
+}
+
+/* ---------- Teddy ---------- */
+
+.teddy {
+  position: fixed;
+  right: clamp(16px, 4vw, 56px);
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  z-index: 4;
+  width: clamp(92px, 10vw, 150px);
+  pointer-events: none;
+}
+
+.teddy-body {
+  position: relative;
+  transform-origin: 50% 100%;
+}
+
+.teddy-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+}
+
+.teddy-body .teddy-img + .teddy-img {
+  position: absolute;
+  inset: 0;
+}
+
+.teddy-bubble {
+  position: absolute;
+  right: 72%;
+  bottom: 82%;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: #fff;
+  color: var(--purple-900);
+  font-size: calc(14px * var(--scale));
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(8, 2, 20, 0.35);
+}
+
+/* ---------- Portrait and phones ---------- */
+
+@media (max-aspect-ratio: 17/20) {
+  .chapter-hero .pin {
+    align-items: flex-end;
+    padding-bottom: 116px;
+  }
+
+  .teddy {
+    width: 76px;
+  }
+
+  .hero-copy {
+    max-width: 100%;
+  }
+
+  .problem-copy {
+    max-width: 100%;
+    margin-top: 0;
+  }
+
+  .scroll-cue {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .lede {
+    font-size: 15px;
+  }
+
+  .problem-copy {
+    gap: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-layer {
+    transition: none;
+  }
+}
