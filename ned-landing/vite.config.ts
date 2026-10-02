@@ -13,10 +13,10 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        // three.js and the React 3D layer get their own chunk, so the
+        // three.js gets its own chunk (loaded lazily with the scene), so the
         // "initial JS excluding three.js < 250 KB gzip" budget can be measured.
         manualChunks(id) {
-          if (id.includes('node_modules/three') || id.includes('@react-three')) return 'three';
+          if (id.includes('node_modules/three')) return 'three';
           if (id.includes('node_modules/motion') || id.includes('node_modules/framer-motion')) return 'motion';
           return undefined;
         },

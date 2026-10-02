@@ -1,44 +1,39 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
-import {
-  AnimatePresence,
-  LayoutGroup,
-  MotionConfig,
-  animate,
-  motion,
-  useMotionValue,
-  useReducedMotion,
-  useTransform,
-} from 'motion/react';
+import { AnimatePresence, LayoutGroup, MotionConfig, animate, motion, useMotionValue, useReducedMotion, useTransform } from 'motion/react';
 import { Preloader } from './components/Preloader';
-import { Teddy } from './components/Teddy';
 import { StaticScene } from './components/StaticScene';
+import { Phone } from './components/Phone';
+import { Bubbles } from './components/Bubbles';
 import { ctaHoverProps } from './components/ctaHover';
 import { Hero } from './chapters/Hero';
-import { Problem } from './chapters/Problem';
-import { PrototypeEnd } from './chapters/PrototypeEnd';
-import { site } from './content/hero';
+import { Idea, Milestones, Problem, SceneLabels, TwoWays } from './chapters/Story';
+import { AppChapter, Close, Real, Role } from './chapters/Ending';
+import { site } from './content/copy';
 import { COIN_COUNT, DEMO_URL } from './config';
-import { IS_TOUCH, PRESENT, hasWebGL, isPhone } from './motion/flags';
-import { useScrollVh } from './motion/useScrollVh';
+import { signals } from './motion/anchors';
+import { DEBUG, IS_TOUCH, K, PRESENT, hasWebGL, isPhone } from './motion/flags';
+import { CHAPTER, TOTAL, seg } from './motion/timeline';
+import { storyVh, useScrollVh } from './motion/useScrollVh';
 import { useSmoothScroll } from './motion/useSmoothScroll';
 
-const Scene = lazy(() => import('./scene/Scene'));
+const SceneCanvas = lazy(() => import('./scene/SceneCanvas'));
 
-const MIN_LOADER_MS = 600;
-const MAX_LOADER_MS = 2500;
+const MIN_LOADER_MS = 900;
+const MAX_LOADER_MS = 1200;
+const MAX_LOADER_SLOW_FONTS_MS = 2000;
 
-type Task = 'fonts' | 'teddy' | 'scene';
+type Task = 'fonts' | 'scene';
 
 export default function App() {
   const reduced = useReducedMotion() ?? false;
   useSmoothScroll();
-  const { vh, velocity } = useScrollVh();
+  const { vh, velocity, dip } = useScrollVh(reduced);
 
   const [webgl] = useState(hasWebGL);
   const [phone] = useState(isPhone);
   const [ready, setReady] = useState(false);
   const progress = useMotionValue(0);
-  const done = useRef<Record<Task, boolean>>({ fonts: false, teddy: false, scene: !webgl });
+  const done = useRef<Record<Task, boolean>>({ fonts: false, scene: !webgl });
   const started = useRef(performance.now());
 
   const finish = useCallback(() => {
@@ -58,25 +53,39 @@ export default function App() {
     [finish, progress, reduced],
   );
 
+  // 00.6: exit at max(900 ms, everything ready); cap 1,200 ms, or 2,000 ms while fonts are slow.
   useEffect(() => {
     document.fonts?.ready.then(() => mark('fonts')).catch(() => mark('fonts'));
-    const img = new Image();
-    img.src = `${import.meta.env.BASE_URL}assets/teddy/waving.png`;
-    img.decode().then(() => mark('teddy')).catch(() => mark('teddy'));
-    // Never hold the page longer than the cap.
     const cap = window.setTimeout(() => {
+      if (!done.current.fonts) return;
       animate(progress, 1, { duration: 0.2 });
       setReady(true);
     }, MAX_LOADER_MS);
-    return () => window.clearTimeout(cap);
+    const hardCap = window.setTimeout(() => setReady(true), MAX_LOADER_SLOW_FONTS_MS);
+    return () => {
+      window.clearTimeout(cap);
+      window.clearTimeout(hardCap);
+    };
   }, [mark, progress]);
 
   useEffect(() => {
+    signals.ready.set(ready ? 1 : 0);
+  }, [ready]);
+
+  useEffect(() => {
     document.documentElement.classList.toggle('present', PRESENT);
+    document.documentElement.style.setProperty('--k', String(K));
   }, []);
 
-  // Reduced motion: chapters swap behind a short dip instead of a camera move.
-  const dip = useTransform(vh, [105, 120, 135], [0, 1, 0]);
+  // Scroll is locked while the preloader is up (00.1).
+  useEffect(() => {
+    document.documentElement.classList.toggle('loading', !ready);
+  }, [ready]);
+
+  // 06: the scene dims behind the phone.
+  const dim = useTransform(vh, (v) => 0.55 * seg(v, [1400, 1420]) * (1 - seg(v, [1850, 1875])));
+  // 02.16 → 03.1: the slot of light fills the screen as the camera passes through.
+  const glow = useTransform(vh, (v) => seg(v, [366, 380]) * (1 - seg(v, [380, 400])));
 
   return (
     <MotionConfig reducedMotion="user">
@@ -95,8 +104,9 @@ export default function App() {
         <div className={`scene-layer${ready ? ' is-ready' : ''}`} aria-hidden="true">
           {webgl ? (
             <Suspense fallback={null}>
-              <Scene
+              <SceneCanvas
                 vh={vh}
+                velocity={velocity}
                 reduced={reduced}
                 phone={phone}
                 parallax={!IS_TOUCH && !PRESENT}
@@ -108,19 +118,44 @@ export default function App() {
             <StaticScene />
           )}
         </div>
-        {reduced && <motion.div className="dip" style={{ opacity: dip }} aria-hidden="true" />}
-        <div className="grain" aria-hidden="true" />
+        <motion.div className="dim" style={{ opacity: dim }} aria-hidden="true" />
+        <motion.div className="slot-glow" style={{ opacity: glow }} aria-hidden="true" />
 
         <AnimatePresence>{!ready && <Preloader key="preloader" progress={progress} />}</AnimatePresence>
 
-        <main id="main">
-          <Hero vh={vh} ready={ready} reduced={reduced} />
-          <Problem vh={vh} reduced={reduced} />
-          <PrototypeEnd />
+        <main id="main" className="stage">
+          <Hero ready={ready} reduced={reduced} />
+          <Problem />
+          <Idea />
+          <Milestones />
+          <TwoWays />
+          <AppChapter />
+          <Role />
+          <Real />
+          <Close />
         </main>
 
-        <Teddy vh={vh} velocity={velocity} ready={ready} reduced={reduced} />
+        <div className="labels" aria-hidden="true">
+          <SceneLabels />
+          <Bubbles ready={ready} reduced={reduced} />
+        </div>
+        <Phone />
+
+        {reduced && <motion.div className="dip" style={{ opacity: dip }} aria-hidden="true" />}
+        <div className="grain" aria-hidden="true" />
+        {DEBUG && <Debug />}
+
+        {/* The scroll track: the story is driven by how far this has been scrolled. */}
+        <div className="scroll-track" style={{ height: `${TOTAL * K + 100}vh` }} aria-hidden="true" />
       </LayoutGroup>
     </MotionConfig>
   );
+}
+
+function Debug() {
+  const text = useTransform(storyVh, (v) => {
+    const name = Object.entries(CHAPTER).find(([, r]) => v >= r[0] && v < r[1])?.[0] ?? '';
+    return `${v.toFixed(0)} vh · ${name}`;
+  });
+  return <motion.p className="debug mono">{text}</motion.p>;
 }
