@@ -5,9 +5,10 @@ One persistent 3D scene, ten chapters (00–09), scroll is the only control. Als
 
 Stack: Vite · React 19 · TypeScript · Motion for React (`motion/react`) · three.js · Lenis · GitHub Pages.
 
-> **Prototype v0.4 (3 Oct 2026) · asset set "A · Ribbon".** All ten chapters are in. Teddy appears **in the hero only**
-> (2D art until the team's model arrives); every other chapter is told with abstract objects: ribbons, pebbles, a loop, gates,
-> coins. The app screens in chapter 06 are **proposed designs** until real screenshots exist.
+> **Prototype v0.5 (3 Oct 2026) · concept "Airmail", motion map v4.1.** All ten chapters are in, 2,680 vh, 28 present stops.
+> Teddy appears **in the hero only** (2D art until the team's model arrives). The story is told with window envelopes (the coin
+> shows through), a glass rack as the contract, two mailboxes, two clocks (submission, review), dashed routes and the partner desk
+> abroad. Chapter 06 shows a laptop (Workspace) and a phone, following the NED Wallet design system and the live demo path.
 
 ## Run
 
@@ -22,9 +23,9 @@ URL flags: `?present=1` projector mode (PageDown / Space / → jump between 26 s
 
 ## How it is put together
 
-The spec is the storyboard canvas: boards **RB-Frames … RB-Facts** ("Asset set · Direction A · Ribbon") for the objects,
-**AD-Coins** for the coin, and the motion map (**MM-00 … MM-09**) for timing. Row ids such as `02.6` appear in code comments.
-Where the MM boards still mention two Teddys or the box Fund, the Ribbon boards win.
+The spec is the storyboard canvas: boards **AW-Story, AW-Objects, AW-Frames, AW-Sequences, AW-Copy** (concept Airmail v4.1)
+for the story and objects, and the motion map v4.1 (**MotionMap, MM-System, MM-00 … MM-09**) for timing. Row ids such as `04.17`
+appear in code comments. The Ribbon (RB-*) and F0–F9 boards are older.
 
 | Layer | Where | Driven by |
 |---|---|---|
@@ -33,11 +34,12 @@ Where the MM boards still mention two Teddys or the box Fund, the Ribbon boards 
 | Page layer | `src/chapters/*`, `src/components/Reveal.tsx` | `useTransform(storyVh, …)`: `Words`, `Fade`, `Chapter`, `Anchored` |
 | 3D scene | `src/scene/Stage.ts` + `objects/*` | reads `storyVh.get()` every frame; every object is a function of vh |
 | Camera | `src/scene/camera.ts` | segments + lens shift (scene sits right of the copy) |
-| Ribbons, coins | `src/scene/ribbon.ts`, `coin.ts`, `paths.ts` | tube ribbons with draw-on and taper; milled-edge coin; shared centre lines |
-| Actors | `src/scene/objects/pebble.ts` | two pebbles (client abroad, freelancer in Vietnam); `PebbleDirector` gives the story beats |
+| Airmail objects | `src/scene/airmail/parts.ts`, `tex.ts` | envelope (window, seal, postmark, RETURN stamp, TO lock), brief, mailbox, rack, clock, desk, wallet, card |
+| Choreography | `src/scene/airmail/story.ts` | every object as a function of vh (motion map v4.1) |
+| 06 devices | `src/components/Devices.tsx` | laptop (Workspace) + phone screens, light design system |
 | Teddy (hero) | `src/components/TeddyHero.tsx`, `src/scene/teddy/*` | 2D art now; `GltfTeddy` takes over when a model URL is set |
 
-Reduced motion: no scrubbing; the story snaps between key states (`REDUCED_STATES`) behind a 300 ms dip; pebbles and Teddy hold still.
+Reduced motion: no scrubbing; the story snaps between key states (`REDUCED_STATES`) behind a 300 ms dip; envelopes and Teddy hold still.
 No WebGL: a still 2D frame (`StaticScene`; Teddy art fetched by `scripts/fetch-teddy.mjs`, hero only), copy reads in full.
 
 ### Why three.js directly, not React Three Fiber
@@ -59,7 +61,8 @@ Please send the 2D art at 1024 px or more as well: the current PNG is about 200 
 
 All copy is in `src/content/copy.ts`, English only. Banned words: pay, paid, payment, payout, deposit, escrow, interest, yield,
 invest, earn, safe, risk-free, scam-free, guaranteed, credit score, rating, pool, vault. VND is always
-"≈ … VND (example, estimated)" at 25,810 VND/USD (Vietcombank, 2 Oct 2026); refresh before 8 Oct.
+"≈ … VND (example, estimated)" at 26,019.5 VND/USD (rate of 2 Oct 2026, as in the app), rounded to 10,000;
+refresh before 8 Oct. App words are translated: payout partner → licensed partner, program vault → held by the program.
 No partner names until confirmed. No "open source" claim until the repo has a LICENSE.
 
 ## Open items

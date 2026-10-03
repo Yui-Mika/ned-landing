@@ -1,38 +1,39 @@
 import { Vector3 } from 'three';
 
-// World layout in metres. One continuous set: the hero and close sit at the origin,
-// the track runs along x, the fork and border sit further right, the record/plan set at x = 20.
+// World layout in metres (motion map v4.1, Airmail). One continuous set: the hero and close sit at the origin,
+// the milestone track around x 0, the fork and border further right, the record/plan set at x = 20.
 
 export const v3 = (x: number, y: number, z: number) => new Vector3(x, y, z);
 
-/** The Fund is a loop of ribbon now (board "Ribbon · 02–03"). */
-export const LOOP_R = 0.62;
-export const FUND_HERO = v3(1.7, 0.95, 0);
-export const FUND_IDEA = v3(0, 1.0, 0);
-
-/** Teddy appears in the hero only (2D art now; the team's model later, scaled to this height). */
+/** Hero: the sealed envelope, and Teddy beside it (2D art now; the team's model later). */
+export const ENV_HERO = v3(1.7, 0.95, 0);
 export const TEDDY_HEIGHT = 1.7;
 export const TEDDY_HERO = v3(3.15, 0, 0.7);
 
-/** The two pebbles: client abroad, freelancer in Vietnam. Centres sit at PEBBLE_Y. */
-export const PEBBLE_Y = 0.45;
-export const ACTORS = {
-  tcMark: v3(-2.2, 0, 0),
-  tfMark: v3(2.2, 0, 0),
-  tcTrack: v3(-2.4, 0, -1.8),
-  tfTrack: v3(3.2, 0, 0.25),
-  tcClose: v3(0.2, 0, 0.35),
-  tfClose: v3(3.15, 0, 0.45),
+/** Mailboxes: client abroad (left), you in Vietnam (right). */
+export const MB = {
+  clientMark: v3(-2.2, 0, 0),
+  youMark: v3(2.2, 0, 0),
+  clientTrack: v3(-1.6, 0, -1.4),
+  youTrack: v3(3.35, 0, 0.6),
+  clientClose: v3(0.3, 0, 0.55),
+  youClose: v3(3.15, 0, 0.5),
 } as const;
+/** Height above a mailbox where an envelope or the brief rests. */
+export const MB_TOP = 1.5;
 
-export const LANE_Z = 0.7;
-export const GATE_X = 1.4;
+/** The contract: one slot (03, 09), three slots on the track (04). */
+export const RACK_IDEA = v3(0, 1.0, 0);
+export const RACK_TRACK = v3(0.8, 0.85, -0.3);
+export const RACK_CLOSE = v3(1.7, 0.95, 0);
+export const BRIEF_IDEA = v3(-1.15, 1.15, 0.55);
 
-export const FORK = v3(8.0, 0, LANE_Z);
+/** 05 · two routes. */
+export const FORK = v3(8.0, 0.9, 0.7);
 export const WALLET = v3(11.5, 0, -2.6);
 export const PARTNER = v3(10.6, 0, 2.4);
 export const BORDER_X = 12.15;
-export const BANK = v3(14.0, 0, 3.0);
+export const BANK = v3(13.05, 0, 3.0);
 
-/** Record and plan set (chapters 06–08). */
+/** Record and plan set (chapters 07–08). */
 export const SET_X = 20;

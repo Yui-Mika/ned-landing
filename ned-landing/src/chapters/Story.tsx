@@ -25,23 +25,26 @@ export function Problem() {
   );
 }
 
-/** 03 · The idea (380–640 vh). */
+/** 03 · The idea (380–700 vh): one brief first (03.5–03.9), then the money is sealed in the rack. */
 export function Idea() {
   return (
-    <Chapter id="idea" label="The idea" stage={[380, 600]} out={[600, 612]} focusAt={580}>
+    <Chapter id="idea" label="The idea" stage={[380, 650]} out={[650, 662]} focusAt={632}>
       <div className="copy">
         <Words text={idea.headline} range={[392, 425]} className="headline" />
         <Fade range={[440, 462]} className="lede strong">
           {idea.body}
         </Fade>
-        <Fade range={[540, 556]} className="chip chip-ok">
+        <Fade range={[475, 500]} className="lede">
+          {idea.brief}
+        </Fade>
+        <Fade range={[598, 612]} className="chip chip-ok">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
             <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
             <circle cx="12" cy="12" r="3" />
           </svg>
           {idea.chip}
         </Fade>
-        <Fade range={[562, 580]} className="lede">
+        <Fade range={[615, 632]} className="lede">
           {idea.rule}
         </Fade>
       </div>
@@ -49,33 +52,36 @@ export function Idea() {
   );
 }
 
-/** 04 · Milestones (640–1040 vh, pinned). */
+/** 04 · Milestones (700–1200 vh, pinned): approved · released on its own · returned. */
 export function Milestones() {
   return (
-    <Chapter id="milestones" label="Milestones" stage={[640, 990]} out={[990, 1005]} focusAt={930}>
+    <Chapter id="milestones" label="Milestones" stage={[700, 1150]} out={[1150, 1165]} focusAt={1120}>
       <div className="copy">
-        <Fade range={[645, 660]} className="chip chip-build">
+        <Fade range={[705, 720]} className="chip chip-build">
           {milestones.badge}
         </Fade>
-        <Words text={milestones.headline} range={[650, 685]} className="headline" />
+        <Words text={milestones.headline} range={[710, 745]} className="headline" />
         <p className="lede strong steps">
-          <Fade as="span" range={[712, 724]}>
+          <Fade as="span" range={[760, 772]}>
             {milestones.steps[0]}
           </Fade>{' '}
-          <Fade as="span" range={[740, 752]}>
+          <Fade as="span" range={[790, 802]}>
             {milestones.steps[1]}
           </Fade>{' '}
-          <Fade as="span" range={[770, 782]}>
+          <Fade as="span" range={[830, 842]}>
             {milestones.steps[2]}
           </Fade>
         </p>
-        <Fade range={[845, 865]} className="lede">
+        <Fade range={[900, 920]} className="lede strong">
+          {milestones.silence}
+        </Fade>
+        <Fade range={[1000, 1020]} className="lede">
           {milestones.deadline}
         </Fade>
-        <Fade range={[910, 928]} className="lede">
+        <Fade range={[1060, 1080]} className="lede">
           {milestones.deadline2}
         </Fade>
-        <Fade range={[955, 975]} className="chip">
+        <Fade range={[1100, 1120]} className="chip">
           {milestones.disputes}
         </Fade>
       </div>
@@ -83,32 +89,38 @@ export function Milestones() {
   );
 }
 
-/** 05 · Two ways to receive (1040–1400 vh, pinned). Key moment at 1,262 vh. */
+/** 05 · Two ways to receive (1200–1600 vh, pinned). Key moment at 1,462 vh. */
 export function TwoWays() {
-  const dimA = useTransform(vh, (v) => 1 - 0.5 * seg(v, [1175, 1190]));
+  const dimA = useTransform(vh, (v) => 1 - 0.5 * seg(v, [1375, 1390]));
+  const dimOnce = useTransform(vh, (v) => 1 - 0.5 * seg(v, [1290, 1305]));
   return (
-    <Chapter id="two-ways" label="Two ways to receive" stage={[1040, 1340]} out={[1340, 1355]} focusAt={1330}>
+    <Chapter id="two-ways" label="Two ways to receive" stage={[1200, 1540]} out={[1540, 1555]} focusAt={1530}>
       <div className="copy">
-        <Fade range={[1060, 1075]} className="chip chip-build">
+        <Fade range={[1220, 1235]} className="chip chip-build">
           {twoWays.badge}
         </Fade>
-        <Words text={twoWays.headline} range={[1050, 1085]} className="headline" />
+        <Words text={twoWays.headline} range={[1210, 1245]} className="headline" />
+        <motion.div style={{ opacity: dimOnce }}>
+          <Fade range={[1248, 1270]} className="lede strong">
+            {twoWays.once}
+          </Fade>
+        </motion.div>
         <motion.div style={{ opacity: dimA }}>
-          <Fade range={[1098, 1118]} className="lede">
+          <Fade range={[1298, 1318]} className="lede">
             {twoWays.abroad}
           </Fade>
         </motion.div>
-        <Fade range={[1180, 1205]} className="lede strong">
+        <Fade range={[1380, 1405]} className="lede strong">
           {twoWays.vietnam}
         </Fade>
-        <Fade range={[1205, 1220]} className="chip chip-warn">
+        <Fade range={[1405, 1420]} className="chip chip-warn">
           {twoWays.partnerChip}
         </Fade>
-        <Fade range={[1292, 1306]} className="vnd" as="div">
+        <Fade range={[1492, 1506]} className="vnd" as="div">
           <span className="vnd-amount">{twoWays.vnd}</span>
           <span className="vnd-note">{twoWays.vndNote}</span>
         </Fade>
-        <Fade range={[1310, 1330]} className="small">
+        <Fade range={[1510, 1530]} className="small">
           {twoWays.identity}
         </Fade>
       </div>
@@ -120,34 +132,43 @@ export function TwoWays() {
 export function SceneLabels() {
   return (
     <>
-      {/* Role labels, hidden while the slot of light fills the screen (02.16–03.1). */}
-      {([[128, 358], [398, 990]] as const).map((r) => (
+      {/* Mailbox labels, hidden while the slot of light fills the screen (02.15–03.1). */}
+      {([[128, 358], [398, 1150], [2490, 2700]] as const).map((r) => (
         <Fragment key={r[0]}>
-          <Anchored name="tc" show={r} className="role-label" dy={34}>
+          <Anchored name="tc" show={r} className="role-label" dy={30}>
             {problem.labels.client}
           </Anchored>
-          <Anchored name="tf" show={r} className="role-label role-you" dy={34}>
+          <Anchored name="tf" show={r} className="role-label role-you" dy={30}>
             {problem.labels.you}
           </Anchored>
         </Fragment>
       ))}
-      <Anchored name="gate1" show={[740, 800]} className="stamp" dy={-10}>
+      <Anchored name="gate1" show={[790, 838]} className="stamp" dy={-16}>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4ADE80" strokeWidth="3" strokeLinecap="round">
           <path d="M5 12l5 5 9-10" />
         </svg>
         {milestones.stamp}
       </Anchored>
-      <Anchored name="wallet" show={[1140, 1172]} className="wallet-card" dy={-30}>
+      <Anchored name="slot1" show={[840, 1140]} className="scene-tag tag-ok" dy={22}>
+        {milestones.outcomes.approved}
+      </Anchored>
+      <Anchored name="slot2" show={[955, 1140]} className="scene-tag tag-review" dy={48}>
+        {milestones.outcomes.silent}
+      </Anchored>
+      <Anchored name="slot3" show={[1052, 1140]} className="scene-tag tag-warn" dy={22}>
+        {milestones.outcomes.none}
+      </Anchored>
+      <Anchored name="wallet" show={[1340, 1372]} className="wallet-card" dy={-30}>
         <span className="mono wallet-name">{twoWays.wallet.name}</span>
         <span className="wallet-amount">{twoWays.wallet.amount}</span>
       </Anchored>
-      <Anchored name="partner" show={[1200, 1340]} className="scene-tag" dy={-18}>
+      <Anchored name="partner" show={[1400, 1540]} className="scene-tag" dy={30}>
         {twoWays.partnerLabel}
       </Anchored>
-      <Anchored name="abroad" show={[1185, 1345]} className="side-tag">
+      <Anchored name="abroad" show={[1385, 1545]} className="side-tag">
         {twoWays.sides.abroad}
       </Anchored>
-      <Anchored name="vietnam" show={[1185, 1345]} className="side-tag side-vn">
+      <Anchored name="vietnam" show={[1385, 1545]} className="side-tag side-vn">
         {twoWays.sides.vietnam}
       </Anchored>
     </>

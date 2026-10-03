@@ -1,32 +1,32 @@
-// The single source of truth for scroll choreography. Matches motion map v3.1 on the storyboard canvas
+// The single source of truth for scroll choreography. Matches motion map v4.1 (Airmail) on the storyboard canvas
 // (boards MM-00 … MM-09). Every range is in "story vh": 100 = one viewport height of scroll on desktop.
 // On phones the page is shorter (K = 0.75); the conversion lives in useScrollVh, so these numbers never change.
-// Row ids in comments (e.g. 02.6) point at the motion map rows.
+// Row ids in comments (e.g. 04.17) point at the motion map rows.
 
 export type Range = readonly [number, number];
 
 /** Total story length in vh. */
-export const TOTAL = 2480;
+export const TOTAL = 2680;
 
 export const CHAPTER: Record<string, Range> = {
   hero: [0, 120],
   problem: [120, 380],
-  idea: [380, 640],
-  milestones: [640, 1040],
-  twoWays: [1040, 1400],
-  app: [1400, 1860],
-  role: [1860, 2080],
-  real: [2080, 2260],
-  close: [2260, 2480],
+  idea: [380, 700],
+  milestones: [700, 1200],
+  twoWays: [1200, 1600],
+  app: [1600, 2060],
+  role: [2060, 2280],
+  real: [2280, 2460],
+  close: [2460, 2680],
 };
 
-/** The key moment: the coin becomes ₫ before it crosses the border (05.14). */
-export const KEY_VH = 1262;
+/** The key moment: the partner abroad issues the ₫ envelope before the border (05.17). */
+export const KEY_VH = 1462;
 
 /** Presentation mode (?present=1): PageDown / Space / → jump between these stops. */
 export const PRESENT_STOPS = [
-  0, 165, 215, 290, 336, 425, 534, 580, 702, 790, 930, 1085, 1140, 1262, 1330, 1480, 1560, 1640, 1720, 1800,
-  1945, 2035, 2165, 2220, 2368, 2480,
+  0, 165, 215, 290, 336, 425, 505, 594, 795, 870, 990, 1095, 1245, 1340, 1462, 1530, 1670, 1740, 1810, 1880, 1950,
+  2020, 2145, 2235, 2365, 2420, 2568, 2680,
 ];
 
 /**
@@ -34,8 +34,8 @@ export const PRESENT_STOPS = [
  * position, behind a 300 ms dip (motion map "Reduced motion" cells).
  */
 export const REDUCED_STATES = [
-  0, 165, 215, 290, 336, 430, 480, 556, 640, 702, 790, 950, 1085, 1140, 1300, 1335, 1480, 1560, 1640, 1720,
-  1830, 1945, 2035, 2165, 2220, 2368, 2480,
+  0, 165, 215, 290, 336, 425, 505, 632, 660, 795, 870, 995, 1100, 1245, 1282, 1340, 1462, 1530, 1670, 1740, 1810,
+  1880, 1950, 2020, 2145, 2235, 2365, 2420, 2568, 2680,
 ];
 
 export function reducedState(v: number) {

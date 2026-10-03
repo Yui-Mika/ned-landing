@@ -2,7 +2,7 @@ import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, LayoutGroup, MotionConfig, animate, motion, useMotionValue, useReducedMotion, useTransform } from 'motion/react';
 import { Preloader } from './components/Preloader';
 import { StaticScene } from './components/StaticScene';
-import { Phone } from './components/Phone';
+import { Devices } from './components/Devices';
 import { Bubbles } from './components/Bubbles';
 import { TeddyHero } from './components/TeddyHero';
 import { ctaHoverProps } from './components/ctaHover';
@@ -10,7 +10,7 @@ import { Hero } from './chapters/Hero';
 import { Idea, Milestones, Problem, SceneLabels, TwoWays } from './chapters/Story';
 import { AppChapter, Close, Real, Role } from './chapters/Ending';
 import { site } from './content/copy';
-import { COIN_COUNT, DEMO_URL } from './config';
+import { DEMO_URL } from './config';
 import { signals } from './motion/anchors';
 import { DEBUG, IS_TOUCH, K, PRESENT, hasWebGL, isPhone } from './motion/flags';
 import { CHAPTER, TOTAL, seg } from './motion/timeline';
@@ -83,8 +83,8 @@ export default function App() {
     document.documentElement.classList.toggle('loading', !ready);
   }, [ready]);
 
-  // 06: the scene dims behind the phone.
-  const dim = useTransform(vh, (v) => 0.55 * seg(v, [1400, 1420]) * (1 - seg(v, [1850, 1875])));
+  // 06: the scene dims behind the laptop and phone.
+  const dim = useTransform(vh, (v) => 0.55 * seg(v, [1600, 1620]) * (1 - seg(v, [2050, 2075])));
   // 02.16 → 03.1: the slot of light fills the screen as the camera passes through.
   const glow = useTransform(vh, (v) => seg(v, [366, 380]) * (1 - seg(v, [380, 400])));
 
@@ -111,7 +111,6 @@ export default function App() {
                 reduced={reduced}
                 phone={phone}
                 parallax={!IS_TOUCH && !PRESENT}
-                coinCount={phone ? COIN_COUNT.phone : COIN_COUNT.desktop}
                 onReady={() => mark('scene')}
               />
             </Suspense>
@@ -141,7 +140,7 @@ export default function App() {
           <SceneLabels />
           <Bubbles ready={ready} reduced={reduced} />
         </div>
-        <Phone />
+        <Devices />
 
         {reduced && <motion.div className="dip" style={{ opacity: dip }} aria-hidden="true" />}
         <div className="grain" aria-hidden="true" />

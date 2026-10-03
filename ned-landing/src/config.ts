@@ -15,5 +15,5 @@ export const TEDDY_MODEL_URL: string | null = null;
 /** The app screens in chapter 06 are proposed designs until real screenshots exist. */
 export const SCREENS_ARE_PROPOSED = true;
 
-/** Coins in the 3D scene. Phones get fewer. */
-export const COIN_COUNT = { desktop: 24, phone: 16 } as const;
+
+

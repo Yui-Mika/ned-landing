@@ -16,19 +16,15 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import type { MotionValue } from 'motion/react';
 import { anchor, signals, type AnchorName } from '../motion/anchors';
 import { PRESENT } from '../motion/flags';
-import { clamp, easeOut, seg } from '../motion/timeline';
+import { easeOut, seg } from '../motion/timeline';
 import { DAMP } from '../motion/tokens';
 import { TEDDY_MODEL_URL } from '../config';
 import { cameraAt, shiftAt } from './camera';
 import { Kit } from './kit';
-import { Coins } from './objects/coins';
-import { Fork } from './objects/fork';
-import { FundLoop } from './objects/loop';
-import { Pebble, PebbleDirector } from './objects/pebble';
-import { Facts, Props } from './objects/props';
-import { Track } from './objects/track';
+import { AirmailScene } from './airmail/story';
+import { disposeTextures } from './airmail/tex';
 import type { TeddyRig } from './teddy/types';
-import { BORDER_X, GATE_X, LANE_Z, PARTNER, TEDDY_HERO, WALLET } from './world';
+import { BORDER_X, PARTNER, TEDDY_HERO, WALLET } from './world';
 
 export type StageOptions = {
   canvas: HTMLCanvasElement;
@@ -38,7 +34,6 @@ export type StageOptions = {
   phone: boolean;
   /** Cursor tilt and camera parallax (desktop, not present mode). */
   parallax: boolean;
-  coinCount: number;
   onReady: () => void;
 };
 
@@ -46,9 +41,10 @@ export type StageOptions = {
 const DESIGN_TAN = Math.tan(MathUtils.degToRad(16)) * (16 / 9);
 
 /**
- * The one persistent 3D scene, in the Ribbon direction: two pebbles, a loop that locks, ribbons that
- * carry the money, milled coins. Everything is a function of the story position (vh), plus a few
- * time-based touches (breathing, flowing beads, the NOW pulse) that switch off under reduced motion.
+ * The one persistent 3D scene, in the Airmail direction (motion map v4.1): window envelopes with the coin
+ * visible, a glass rack as the contract, two mailboxes, two clocks, dashed routes, the partner desk abroad.
+ * Everything is a function of the story position (vh), plus a few time-based touches (float, glint) that
+ * switch off under reduced motion.
  */
 export class Stage {
   private renderer: WebGLRenderer;
@@ -56,27 +52,16 @@ export class Stage {
   private camera = new PerspectiveCamera(32, 1, 0.1, 200);
   private kit = new Kit();
   private clock = new Clock();
-  private loop: FundLoop;
-  private coins: Coins;
-  private track: Track;
-  private fork: Fork;
-  private props: Props;
-  private facts: Facts;
-  private tc: Pebble;
-  private tf: Pebble;
-  private director = new PebbleDirector();
+  private air: AirmailScene;
   private teddy: TeddyRig | null = null;
   private raf = 0;
   private running = false;
   private readyAt: number | null = null;
   private firstFrame = true;
   private pointer = { x: 0, y: 0 };
-  private lean = 0;
   private parallax = { x: 0, y: 0 };
   private camPos = new Vector3();
   private camTgt = new Vector3();
-  private tcHold = new Vector3();
-  private tfHold = new Vector3();
   private phoneAnchor = new Vector3();
   private tmp = new Vector3();
   private anchors: [AnchorName, () => Vector3, () => boolean][] = [];
@@ -102,39 +87,27 @@ export class Stage {
     rim2.position.set(-5, 2, -3);
     this.scene.add(key, rim, rim2);
 
-    this.loop = new FundLoop(this.kit);
-    this.coins = new Coins(this.kit, o.coinCount);
-    this.track = new Track(this.kit);
-    this.fork = new Fork(this.kit);
-    this.props = new Props(this.kit);
-    this.facts = new Facts(this.kit);
-    this.tc = new Pebble(this.kit, 'client');
-    this.tf = new Pebble(this.kit, 'freelancer');
-    this.scene.add(
-      this.loop.group,
-      this.loop.extras,
-      this.coins.mesh,
-      this.track.group,
-      this.fork.group,
-      this.props.group,
-      this.facts.group,
-      this.tc.root,
-      this.tf.root,
-    );
+    this.air = new AirmailScene(this.kit);
+    this.scene.add(this.air.group);
 
     const at = (x: number, y: number, z: number) => {
       const p = new Vector3(x, y, z);
       return () => p;
     };
     const world = (obj: () => Object3D) => () => obj().getWorldPosition(this.tmp);
+    const slotTop = (i: number) => () => this.air.slotTop(i, this.tmp);
+    const slotBottom = (i: number) => () => this.air.slotBottom(i, this.tmp);
     this.anchors = [
-      ['tc', world(() => this.tc.label), () => this.director.tc.opacity > 0.5],
-      ['tf', world(() => this.tf.label), () => this.director.tf.opacity > 0.5],
+      ['tc', world(() => this.air.mc.label), () => this.air.mc.root.visible],
+      ['tf', world(() => this.air.my.label), () => this.air.my.root.visible],
       ['teddy', at(TEDDY_HERO.x, TEDDY_HERO.y + 0.85, TEDDY_HERO.z), () => true],
       ['teddy-top', at(TEDDY_HERO.x - 0.1, TEDDY_HERO.y + 1.75, TEDDY_HERO.z), () => true],
-      ['gate1', at(GATE_X, 1.2, LANE_Z), () => true],
+      ['gate1', slotTop(0), () => true],
+      ['slot1', slotBottom(0), () => true],
+      ['slot2', slotBottom(1), () => true],
+      ['slot3', slotBottom(2), () => true],
       ['wallet', at(WALLET.x, 1.0, WALLET.z), () => true],
-      ['partner', at(PARTNER.x, 0.5, PARTNER.z), () => true],
+      ['partner', at(PARTNER.x, 0.0, PARTNER.z + 0.45), () => true],
       ['abroad', at(BORDER_X - 0.6, 0.12, 4.0), () => true],
       ['vietnam', at(BORDER_X + 0.6, 0.12, 4.0), () => true],
     ];
@@ -193,9 +166,9 @@ export class Stage {
   /** Lens shift: scene to the right of the copy on desktop; pushed down under the copy in portrait. */
   private applyShift(v: number) {
     const { w, h, portrait } = this.size;
-    const sx = portrait ? (v < 120 || v > 2260 ? -0.2 : 0) : shiftAt(v);
-    // Portrait: chapter 05 has the longest copy, so its scene sits lower.
-    const sy = portrait ? 0.14 + 0.09 * bell01(v, 1180, 1220, 1360, 1400) : 0;
+    const sx = portrait ? (v < 120 || v > 2460 ? -0.2 : 0) : shiftAt(v);
+    // Portrait: chapters 04–05 have the longest copy, so their scene sits lower.
+    const sy = portrait ? 0.14 + 0.09 * Math.max(bell01(v, 700, 740, 1150, 1200), bell01(v, 1240, 1280, 1560, 1600) * 1.45) : 0;
     const key = sx + sy * 10;
     if (Math.abs(key - this.shift) < 0.0005) return;
     this.shift = key;
@@ -228,24 +201,8 @@ export class Stage {
     if (this.readyAt === null && signals.ready.get() > 0) this.readyAt = now;
     const entry = this.readyAt === null ? 0 : still ? 1 : easeOut(Math.min(1, (now - this.readyAt) / 0.9));
     const interactive = this.o.parallax && !still;
+    void PRESENT;
     const k = 1 - Math.exp(-DAMP * dt);
-
-    // ---------- Pebbles ----------
-    this.director.update(v, now, { velocity: this.o.velocity.get(), ctaHover: signals.ctaHover.get() > 0, present: PRESENT || still });
-    const { tc, tf } = this.director;
-    const leanT = interactive && tf.free ? clamp(-this.pointer.x * 0.08, -0.08, 0.08) : 0;
-    this.lean += (leanT - this.lean) * k;
-    for (const [peb, cue, toward, lean] of [
-      [this.tc, tc, 1, 0],
-      [this.tf, tf, -1, this.lean],
-    ] as const) {
-      peb.root.position.copy(cue.pos);
-      peb.set(cue.opacity, cue.halo);
-      if (cue.opacity > 0.01) peb.pose(cue.req, still, toward, lean);
-      peb.root.updateMatrixWorld();
-    }
-    this.tc.hold.getWorldPosition(this.tcHold);
-    this.tf.hold.getWorldPosition(this.tfHold);
 
     // ---------- Teddy model (hero only, when provided) ----------
     if (this.teddy) {
@@ -258,8 +215,8 @@ export class Stage {
     // ---------- Camera ----------
     this.applyShift(v);
     cameraAt(v, this.camPos, this.camTgt);
-    if (v >= 1400 && v < 1860 && !still) {
-      this.camPos.x += Math.sin(now * 0.15) * 0.25; // slow drift behind the phone (06.1)
+    if (v >= 1600 && v < 2060 && !still) {
+      this.camPos.x += Math.sin(now * 0.15) * 0.25; // slow drift behind the devices (06.1)
       this.camPos.y += Math.sin(now * 0.11) * 0.08;
     }
     const px = interactive ? this.pointer.x * 0.18 : 0;
@@ -271,19 +228,13 @@ export class Stage {
     this.camera.position.y += this.parallax.y;
     this.camera.lookAt(this.camTgt);
     this.camera.updateMatrixWorld();
-    const camYaw = Math.atan2(this.camera.position.x - this.camTgt.x, this.camera.position.z - this.camTgt.z);
 
-    this.phoneAnchor.set(0.42, -0.05, 0.5).unproject(this.camera).sub(this.camera.position).normalize();
+    this.phoneAnchor.set(0.72, -0.3, 0.5).unproject(this.camera).sub(this.camera.position).normalize();
     this.phoneAnchor.multiplyScalar(3).add(this.camera.position);
 
     // ---------- Objects ----------
-    this.loop.update(v, now, entry);
-    this.coins.update(v, { now, tcHold: this.tcHold, tfHold: this.tfHold, still });
-    this.coins.mesh.visible = !(v >= 1400 && v < 2215);
-    this.track.update(v, now, still, camYaw);
-    this.fork.update(v, this.camera, this.phoneAnchor);
-    this.props.update(v, this.tcHold, this.tfHold);
-    this.facts.update(v, now, still, this.camera.quaternion, this.size.portrait);
+    this.air.phone.copy(this.phoneAnchor);
+    this.air.update(v, now, this.camera, entry, still);
 
     // ---------- Anchors for the page layer ----------
     const w = this.o.canvas.clientWidth || window.innerWidth;
@@ -311,6 +262,7 @@ export class Stage {
     document.removeEventListener('visibilitychange', this.onVisibility);
     this.teddy?.dispose();
     this.kit.dispose();
+    disposeTextures();
     this.renderer.dispose();
   }
 }
