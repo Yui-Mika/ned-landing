@@ -1,160 +1,292 @@
-import { Group, Mesh, SphereGeometry, Vector3, type MeshBasicMaterial, type MeshStandardMaterial } from 'three';
-import { easeInOut, easeOut, lerp, seg, window01 } from '../../motion/timeline';
-import { Kit, fadeMat } from '../kit';
-import { GATE_X, LANE_Z, SET_X } from '../world';
+import {
+  AdditiveBlending,
+  CanvasTexture,
+  DoubleSide,
+  Group,
+  Mesh,
+  MeshBasicMaterial,
+  MeshPhysicalMaterial,
+  SRGBColorSpace,
+  ShapeGeometry,
+  Shape,
+  SphereGeometry,
+  Sprite,
+  SpriteMaterial,
+  TorusGeometry,
+  Vector3,
+} from 'three';
+import { easeInOut, easeOut, seg, window01 } from '../../motion/timeline';
+import type { Kit } from '../kit';
+import { coinGeometry, coinMaterials } from '../coin';
+import { PATH, PLAN_T, RECORD_T } from '../paths';
+import { Dots, Ribbon } from '../ribbon';
+import { GATE_X, LANE_Z } from '../world';
 
-const DOTS = 18;
+const CLIENT = 0x818cf8;
+const LINE = 0xf0e4ff;
 
-/** The work file (02.6, 04.7), the promise line (02.8) and the slot of light (02.16). */
+function pageTexture() {
+  const c = document.createElement('canvas');
+  c.width = 256;
+  c.height = 320;
+  const g = c.getContext('2d')!;
+  g.fillStyle = '#F0E4FF';
+  g.fillRect(0, 0, 256, 320);
+  g.fillStyle = 'rgba(184,122,237,0.75)';
+  g.beginPath();
+  g.moveTo(176, 0);
+  g.lineTo(256, 80);
+  g.lineTo(196, 80);
+  g.quadraticCurveTo(176, 80, 176, 60);
+  g.closePath();
+  g.fill();
+  g.strokeStyle = '#7B2FBE';
+  g.lineCap = 'round';
+  g.lineWidth = 18;
+  for (const [y, w] of [[150, 150], [196, 120], [242, 90]] as const) {
+    g.beginPath();
+    g.moveTo(48, y);
+    g.lineTo(48 + w, y);
+    g.stroke();
+  }
+  const t = new CanvasTexture(c);
+  t.colorSpace = SRGBColorSpace;
+  return t;
+}
+
+/** The work: a page with a folded corner, rounded silhouette. */
+function pageShape(w: number, h: number) {
+  const r = 0.05;
+  const f = 0.11;
+  const s = new Shape();
+  s.moveTo(-w / 2 + r, -h / 2);
+  s.lineTo(w / 2 - r, -h / 2);
+  s.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r);
+  s.lineTo(w / 2, h / 2 - f);
+  s.lineTo(w / 2 - f, h / 2);
+  s.lineTo(-w / 2 + r, h / 2);
+  s.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r);
+  s.lineTo(-w / 2, -h / 2 + r);
+  s.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
+  return s;
+}
+
+/** Chapters 02–03 props (board "Ribbon · 02–03"): the work, the promise, the seam of light. */
 export class Props {
   readonly group = new Group();
-  private file = new Group();
-  private fileMat: MeshStandardMaterial;
-  private dots: Mesh[] = [];
-  private dotMat: MeshBasicMaterial;
+  private page = new Group();
+  private pageMat: MeshBasicMaterial;
+  private promise: Ribbon;
+  private promiseRest: Dots;
   private pulse: Mesh;
-  private pulseMat: MeshBasicMaterial;
-  private slot: Mesh;
-  private slotMat: MeshBasicMaterial;
+  private pulseRing: Mesh;
+  private ringMat: MeshBasicMaterial;
+  private seamL: Ribbon;
+  private seamR: Ribbon;
+  private seamGlow: Sprite;
+  private seamMat: SpriteMaterial;
   private b = new Vector3();
-  private c = new Vector3();
+  /** Where the delivered page rests: beside the client's coins, not on them. */
+  private restOffset = new Vector3(0.48, -0.22, 0.2);
 
   constructor(kit: Kit) {
-    this.fileMat = kit.std(0xf0e4ff, { emissive: 0x9b4fde, emissiveIntensity: 0.25, roughness: 0.5 });
-    const fold = kit.std(0xb87aed, { emissive: 0x7b2fbe, emissiveIntensity: 0.4 });
-    this.file.add(kit.box(0.34, 0.44, 0.05, this.fileMat));
-    this.file.add(kit.box(0.24, 0.03, 0.06, fold, 0, 0.08, 0.005));
-    this.file.add(kit.box(0.24, 0.03, 0.06, fold, 0, -0.02, 0.005));
-    this.file.add(kit.box(0.16, 0.03, 0.06, fold, -0.04, -0.12, 0.005));
-    this.group.add(this.file);
+    const W = 0.36;
+    const H = 0.46;
+    const geo = kit.geo(new ShapeGeometry(pageShape(W, H), 12));
+    const uv = geo.attributes.uv;
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, (uv.getX(i) + W / 2) / W, (uv.getY(i) + H / 2) / H);
+    this.pageMat = new MeshBasicMaterial({ map: pageTexture(), side: DoubleSide, transparent: true, toneMapped: false });
+    kit.materials.push(this.pageMat);
+    this.page.add(new Mesh(geo, this.pageMat));
+    this.group.add(this.page);
 
-    this.dotMat = kit.basic(0xb87aed, 1);
-    const dotGeo = kit.geo(new SphereGeometry(0.025, 8, 6));
-    for (let i = 0; i < DOTS; i++) {
-      const d = new Mesh(dotGeo, this.dotMat);
-      this.dots.push(d);
-      this.group.add(d);
-    }
-    this.pulseMat = kit.basic(0x2775ca, 1);
-    this.pulse = new Mesh(kit.geo(new SphereGeometry(0.09, 16, 12)), this.pulseMat);
-    this.group.add(this.pulse);
+    this.promise = new Ribbon(kit, PATH.promise, { color: CLIENT, radius: 0.026 });
+    this.promiseRest = new Dots(kit, PATH.promiseRest, 0.11, 0.012, LINE);
+    this.pulse = new Mesh(coinGeometry(kit, 0.12, 0.035), coinMaterials(kit, 'usdc'));
+    this.pulse.rotation.x = 1.2;
+    this.ringMat = new MeshBasicMaterial({ color: CLIENT, transparent: true, toneMapped: false });
+    kit.materials.push(this.ringMat);
+    this.pulseRing = new Mesh(kit.geo(new TorusGeometry(0.2, 0.008, 6, 48)), this.ringMat);
+    this.group.add(this.promise.group, this.promiseRest.mesh, this.pulse, this.pulseRing);
 
-    this.slotMat = kit.basic(0xf0e4ff, 1);
-    this.slot = kit.box(0.42, 1, 0.04, this.slotMat, 0, 1.1, 0);
-    this.group.add(this.slot);
-  }
-
-  update(v: number, tcHand: Vector3, tfHand: Vector3) {
-    // ---------- File ----------
-    let fo = 0;
-    const f = this.file.position;
-    if (v >= 178 && v < 300) {
-      fo = seg(v, [178, 184]) * (1 - 0.85 * seg(v, [258, 290])) * (1 - seg(v, [292, 300]));
-      this.arc(tfHand, tcHand, 0.9, easeInOut(seg(v, [182, 212])), f);
-    } else if (v >= 706 && v < 792) {
-      fo = seg(v, [706, 712]) * (1 - seg(v, [780, 792]));
-      this.b.set(GATE_X + 0.45, 0.95, LANE_Z);
-      this.arc(tfHand, this.b, 0.8, easeInOut(seg(v, [712, 740])), f);
-    }
-    this.file.visible = fo > 0.01;
-    this.file.rotation.y = v * 0.02;
-    fadeMat(this.fileMat, fo);
-
-    // ---------- Promise line: a pulse leaves the client and stops halfway ----------
-    const lo = window01(v, [215, 222], [290, 300]);
-    this.dots.forEach((d, i) => {
-      d.visible = lo > 0.01;
-      d.position.copy(tcHand).lerp(tfHand, (i + 1) / (DOTS + 1));
+    this.seamL = new Ribbon(kit, PATH.seamL, { color: LINE, radius: 0.022 });
+    this.seamR = new Ribbon(kit, PATH.seamR, { color: 0xb87aed, radius: 0.018 });
+    this.seamMat = new SpriteMaterial({
+      map: new CanvasTexture(
+        (() => {
+          const c = document.createElement('canvas');
+          c.width = 64;
+          c.height = 256;
+          const g = c.getContext('2d')!;
+          const gr = g.createRadialGradient(32, 128, 0, 32, 128, 128);
+          gr.addColorStop(0, 'rgba(240,228,255,0.9)');
+          gr.addColorStop(1, 'rgba(240,228,255,0)');
+          g.fillStyle = gr;
+          g.fillRect(0, 0, 64, 256);
+          return c;
+        })(),
+      ),
+      blending: AdditiveBlending,
+      transparent: true,
+      depthWrite: false,
     });
-    fadeMat(this.dotMat, lo * 0.7);
-    const travel = 0.5 * easeOut(seg(v, [215, 250]));
-    this.pulse.position.copy(tcHand).lerp(tfHand, travel);
-    this.pulse.visible = lo > 0.01;
-    fadeMat(this.pulseMat, lo * lerp(1, 0.35, seg(v, [250, 262])));
-
-    // ---------- Slot of light between them (02.16) ----------
-    const grow = easeOut(seg(v, [344, 366]));
-    const so = v < 395 ? Math.min(1, grow * 1.2) * (1 - seg(v, [380, 395])) : 0;
-    this.slot.visible = so > 0.01;
-    this.slot.scale.y = Math.max(0.001, 2.2 * grow);
-    fadeMat(this.slotMat, so);
+    kit.materials.push(this.seamMat);
+    this.seamGlow = new Sprite(this.seamMat);
+    this.seamGlow.scale.set(0.7, 2.4, 1);
+    this.seamGlow.position.set(0, 1.1, 0.2);
+    this.group.add(this.seamL.group, this.seamR.group, this.seamGlow);
   }
 
-  private arc(a: Vector3, b: Vector3, h: number, t: number, out: Vector3) {
-    this.c.copy(a).add(b).multiplyScalar(0.5);
-    this.c.y += h;
-    const u = 1 - t;
-    out.set(
-      u * u * a.x + 2 * u * t * this.c.x + t * t * b.x,
-      u * u * a.y + 2 * u * t * this.c.y + t * t * b.y,
-      u * u * a.z + 2 * u * t * this.c.z + t * t * b.z,
-    );
+  update(v: number, tcHold: Vector3, tfHold: Vector3) {
+    // ---------- The work ----------
+    let po = 0;
+    const f = this.page.position;
+    if (v >= 178 && v < 300) {
+      po = seg(v, [178, 184]) * (1 - 0.85 * seg(v, [258, 290])) * (1 - seg(v, [292, 300]));
+      const u = easeInOut(seg(v, [182, 212])); // 02.6
+      if (u <= 0) f.copy(tfHold);
+      else if (u >= 1) f.copy(tcHold).add(this.restOffset);
+      else PATH.workFlight.getPointAt(u, f).addScaledVector(this.restOffset, u);
+      this.page.rotation.set(0, 0, -0.25 * Math.sin(u * Math.PI));
+    } else if (v >= 706 && v < 792) {
+      po = seg(v, [706, 712]) * (1 - seg(v, [780, 792]));
+      this.b.set(GATE_X + 0.35, 0.95, LANE_Z + 0.1);
+      const u = easeInOut(seg(v, [712, 740])); // 04.7
+      f.copy(tfHold).lerp(this.b, u);
+      f.y += Math.sin(u * Math.PI) * 0.7;
+      this.page.rotation.set(0, 0, 0.2 * Math.sin(u * Math.PI));
+    }
+    this.page.visible = po > 0.01;
+    this.pageMat.opacity = po;
+
+    // ---------- The promise: a coin leaves the client and stops halfway (02.8) ----------
+    const lo = window01(v, [215, 222], [290, 300]);
+    const d = easeOut(seg(v, [215, 250]));
+    this.promise.draw(d);
+    this.promise.fade(lo);
+    this.promiseRest.set(seg(v, [236, 252]), 0.3 * lo);
+    PATH.promise.getPointAt(d, this.b);
+    this.pulse.position.copy(this.b);
+    this.pulse.position.y += 0.06;
+    this.pulse.visible = lo > 0.01 && d > 0.02;
+    this.pulseRing.position.copy(this.b);
+    this.pulseRing.position.y += 0.06;
+    const ping = (v - 250) / 40;
+    this.pulseRing.visible = lo > 0.01 && ping > 0 && ping < 1;
+    this.pulseRing.scale.setScalar(1 + 1.2 * Math.max(0, ping));
+    this.ringMat.opacity = Math.max(0, 1 - ping) * 0.6 * lo;
+
+    // ---------- The seam of light (02.16) ----------
+    const grow = easeOut(seg(v, [344, 366]));
+    const so = v < 395 ? Math.min(1, grow * 1.3) * (1 - seg(v, [380, 395])) : 0;
+    this.seamL.draw(grow);
+    this.seamR.draw(grow);
+    this.seamL.fade(so);
+    this.seamR.fade(so);
+    this.seamMat.opacity = so * 0.8;
+    this.seamGlow.visible = so > 0.01;
   }
 }
 
-/** Chapters 07–08: the release record as a chain of blocks → two stacks → a timeline path. */
-export class Plates {
+/** Chapters 06–08 (board "Ribbon · 06–09"): the record as beads, does / doesn't, the plan. */
+export class Facts {
   readonly group = new Group();
-  private plates: Mesh[] = [];
-  private doesMat: MeshStandardMaterial;
-  private notMat: MeshStandardMaterial;
-  private line: Mesh;
-  private lineMat: MeshBasicMaterial;
-  private p = new Vector3();
-  private q = new Vector3();
+  private record: Ribbon;
+  private recordBeads: Mesh[] = [];
+  private does: Ribbon;
+  private doesBeads: Mesh[] = [];
+  private doesnt: Dots;
+  private rings: Mesh[] = [];
+  private plan: Ribbon;
+  private nodes: Mesh[] = [];
+  private nowRing: Mesh;
+  private nowMat: MeshBasicMaterial;
 
   constructor(kit: Kit) {
-    this.doesMat = kit.std(0x7b2fbe, { emissive: 0x5a1d9e, emissiveIntensity: 0.7, roughness: 0.35 });
-    this.notMat = kit.std(0x1c1c24, { emissive: 0x270a4d, emissiveIntensity: 0.5, roughness: 0.6 });
-    for (let k = 0; k < 9; k++) {
-      const m = kit.box(1, 1, 1, k < 4 ? this.doesMat : this.notMat);
-      this.plates.push(m);
-      this.group.add(m);
+    const bead = new MeshPhysicalMaterial({ color: 0x7b2fbe, roughness: 0.25, clearcoat: 1, emissive: 0x5a1d9e, emissiveIntensity: 0.8 });
+    const core = new MeshBasicMaterial({ color: LINE, toneMapped: false });
+    const hollow = new MeshBasicMaterial({ color: 0x9ca3af, transparent: true, opacity: 0.85 });
+    const dark = new MeshPhysicalMaterial({ color: 0x270a4d, roughness: 0.3, clearcoat: 1, emissive: 0x160530 });
+    kit.materials.push(bead, core, hollow, dark);
+    const sphere = kit.geo(new SphereGeometry(0.11, 32, 24));
+    const dotGeo = kit.geo(new SphereGeometry(0.04, 16, 12));
+    const ring = kit.geo(new TorusGeometry(0.1, 0.014, 8, 40));
+
+    this.record = new Ribbon(kit, PATH.record, { color: [0x818cf8, 0xb87aed], radius: 0.026 });
+    this.group.add(this.record.group);
+    for (const t of RECORD_T) {
+      const g = new Mesh(sphere, dark);
+      g.add(new Mesh(dotGeo, core));
+      PATH.record.getPointAt(t, g.position);
+      this.recordBeads.push(g);
+      this.group.add(g);
     }
-    this.lineMat = kit.basic(0xb87aed, 1);
-    this.line = kit.box(9.2, 0.02, 0.05, this.lineMat, SET_X, 0.08, 0.42);
-    this.group.add(this.line);
+
+    this.does = new Ribbon(kit, PATH.does, { color: 0xb87aed, radius: 0.026 });
+    this.group.add(this.does.group);
+    for (let k = 0; k < 4; k++) {
+      const g = new Mesh(sphere, bead);
+      PATH.does.getPointAt(0.2 + k * 0.22, g.position);
+      this.doesBeads.push(g);
+      this.group.add(g);
+    }
+    this.doesnt = new Dots(kit, PATH.doesnt, 0.12, 0.012, LINE);
+    this.group.add(this.doesnt.mesh);
+    for (let k = 0; k < 5; k++) {
+      const r = new Mesh(ring, hollow);
+      PATH.doesnt.getPointAt(0.12 + k * 0.19, r.position);
+      this.rings.push(r);
+      this.group.add(r);
+    }
+
+    this.plan = new Ribbon(kit, PATH.plan, { color: [0xb87aed, 0x818cf8], radius: 0.03 });
+    this.group.add(this.plan.group);
+    PLAN_T.forEach((t, k) => {
+      const n = new Mesh(sphere, k === 0 ? bead : dark);
+      PATH.plan.getPointAt(t, n.position);
+      n.position.y += 0.05;
+      this.nodes.push(n);
+      this.group.add(n);
+    });
+    this.nowMat = new MeshBasicMaterial({ color: 0xb87aed, transparent: true, toneMapped: false });
+    kit.materials.push(this.nowMat);
+    this.nowRing = new Mesh(kit.geo(new TorusGeometry(0.18, 0.012, 8, 48)), this.nowMat);
+    this.nowRing.rotation.x = -Math.PI / 2;
+    this.nowRing.position.copy(this.nodes[0].position);
+    this.group.add(this.nowRing);
   }
 
-  update(v: number) {
+  update(v: number, now: number, still: boolean, camQuat: { x: number; y: number; z: number; w: number }, portrait = false) {
     const on = v >= 1830 && v < 2300;
     this.group.visible = on;
     if (!on) return;
-    this.plates.forEach((m, k) => {
-      const does = k < 4;
-      const idx = does ? k : k - 4;
-      // Chain (06.14).
-      const chainIn = seg(v, [1835 + k * 3, 1845 + k * 3]);
-      this.p.set(SET_X - 3.6 + k * 0.9, 1.0, 0);
-      let sx = 0.4;
-      let sy = 0.4;
-      let sz = 0.4;
-      // Fold into two stacks (07.2), then rise one plate per item (07.5, 07.7).
-      const fold = easeInOut(seg(v, [1860, 1900]));
-      this.q.set(does ? SET_X - 2.6 : SET_X + 2.6, 0.12, -1.2);
-      this.p.lerp(this.q, fold);
-      const rr = does ? [1905 + idx * 10, 1915 + idx * 10] : [1950 + idx * 10, 1960 + idx * 10];
-      const rise = easeOut(seg(v, rr as [number, number]));
-      this.p.y = lerp(this.p.y, 0.2 + idx * 0.4, rise);
-      sx = lerp(sx, 1.3, rise);
-      sy = lerp(sy, lerp(0.2, 0.3, rise), fold);
-      sz = lerp(sz, 0.9, rise);
-      // Flat into timeline tiles (07.10).
-      const flat = easeInOut(seg(v, [2045 + k * 1.5, 2068 + k * 1.5]));
-      this.q.set(SET_X - 4 + k * 1.0, 0.03, 0);
-      this.p.lerp(this.q, flat);
-      sx = lerp(sx, 0.9, flat);
-      sy = lerp(sy, 0.05, flat);
-      sz = lerp(sz, 0.6, flat);
-      m.rotation.z = Math.PI * flat;
-      m.position.copy(this.p);
-      const s = chainIn * (1 - seg(v, [2280, 2300]));
-      m.scale.set(Math.max(0.001, sx * s), Math.max(0.001, sy * s), Math.max(0.001, sz * s));
+    // 06.14: the release record unrolls as a ribbon of beads; fades as the facts arrive.
+    const rec = seg(v, [1835, 1875]);
+    const recOut = 1 - seg(v, [1862, 1890]);
+    this.record.draw(rec);
+    this.record.fade(recOut);
+    this.recordBeads.forEach((b, k) => b.scale.setScalar(Math.max(0.001, easeOut(seg(v, [1840 + k * 6, 1850 + k * 6])) * recOut)));
+
+    // 07: does = lit ribbon, one bead per item (07.5); doesn't = dotted line, hollow rings (07.7).
+    const factsOut = 1 - seg(v, [2040, 2062]);
+    this.does.draw(seg(v, [1872, 1902]));
+    this.does.fade(factsOut);
+    this.doesBeads.forEach((b, k) => b.scale.setScalar(Math.max(0.001, easeOut(seg(v, [1905 + k * 10, 1913 + k * 10])) * factsOut)));
+    this.doesnt.set(seg(v, [1876, 1906]), 0.4 * factsOut);
+    this.rings.forEach((r, k) => {
+      r.scale.setScalar(Math.max(0.001, easeOut(seg(v, [1950 + k * 10, 1958 + k * 10])) * factsOut));
+      r.quaternion.set(camQuat.x, camQuat.y, camQuat.z, camQuat.w);
     });
-    // Timeline line (08.2).
-    const l = seg(v, [2080, 2110]);
-    this.line.visible = l > 0.01;
-    this.line.scale.x = Math.max(0.001, l);
-    fadeMat(this.lineMat, 1 - seg(v, [2270, 2295]));
+
+    // 08: the plan on one ribbon; NOW pulses (08.6).
+    // In portrait the timeline is a vertical list, so the flat plan ribbon stays hidden.
+    const planOut = portrait ? 0 : 1 - seg(v, [2272, 2295]);
+    this.plan.draw(seg(v, [2050, 2110]));
+    this.plan.fade(planOut);
+    this.nodes.forEach((n, k) => n.scale.setScalar(Math.max(0.001, easeOut(seg(v, [2120 + k * 12, 2130 + k * 12])) * planOut)));
+    const pulse = still ? 0.4 : (now * 0.5) % 1;
+    this.nowRing.visible = seg(v, [2120, 2130]) > 0 && planOut > 0.01;
+    this.nowRing.scale.setScalar(1 + pulse * 1.4);
+    this.nowMat.opacity = (1 - pulse) * 0.7 * planOut;
   }
 }

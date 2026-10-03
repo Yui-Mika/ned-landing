@@ -16,7 +16,7 @@ import { CLIP_FADE } from '../../motion/tokens';
 import { TEDDY_HEIGHT } from '../world';
 import { CLIPS, type ClipName, type ClipRequest, type Role, type TeddyRig } from './types';
 
-const LOOPING: ClipName[] = ['idle', 'walk', 'hold', 'think', 'sleepy'];
+const LOOPING: ClipName[] = ['idle'];
 
 /**
  * The team's model. Not used until config.TEDDY_MODEL_URL points at a .glb.

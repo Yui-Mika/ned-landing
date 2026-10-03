@@ -4,6 +4,7 @@ import { Preloader } from './components/Preloader';
 import { StaticScene } from './components/StaticScene';
 import { Phone } from './components/Phone';
 import { Bubbles } from './components/Bubbles';
+import { TeddyHero } from './components/TeddyHero';
 import { ctaHoverProps } from './components/ctaHover';
 import { Hero } from './chapters/Hero';
 import { Idea, Milestones, Problem, SceneLabels, TwoWays } from './chapters/Story';
@@ -136,6 +137,7 @@ export default function App() {
         </main>
 
         <div className="labels" aria-hidden="true">
+          <TeddyHero ready={ready} reduced={reduced} />
           <SceneLabels />
           <Bubbles ready={ready} reduced={reduced} />
         </div>

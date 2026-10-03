@@ -5,8 +5,9 @@ One persistent 3D scene, ten chapters (00–09), scroll is the only control. Als
 
 Stack: Vite · React 19 · TypeScript · Motion for React (`motion/react`) · three.js · Lenis · GitHub Pages.
 
-> **Prototype v0.3 (3 Oct 2026).** All ten chapters are in. Teddy is a **block placeholder** until the team's model arrives;
-> the app screens in chapter 06 are **proposed designs** until real screenshots exist.
+> **Prototype v0.4 (3 Oct 2026) · asset set "A · Ribbon".** All ten chapters are in. Teddy appears **in the hero only**
+> (2D art until the team's model arrives); every other chapter is told with abstract objects: ribbons, pebbles, a loop, gates,
+> coins. The app screens in chapter 06 are **proposed designs** until real screenshots exist.
 
 ## Run
 
@@ -21,8 +22,9 @@ URL flags: `?present=1` projector mode (PageDown / Space / → jump between 26 s
 
 ## How it is put together
 
-The motion map on the storyboard canvas (boards **MM-00 … MM-09**, "Motion system", "Teddy 3D") is the spec.
-Row ids such as `02.6` appear in code comments.
+The spec is the storyboard canvas: boards **RB-Frames … RB-Facts** ("Asset set · Direction A · Ribbon") for the objects,
+**AD-Coins** for the coin, and the motion map (**MM-00 … MM-09**) for timing. Row ids such as `02.6` appear in code comments.
+Where the MM boards still mention two Teddys or the box Fund, the Ribbon boards win.
 
 | Layer | Where | Driven by |
 |---|---|---|
@@ -31,10 +33,12 @@ Row ids such as `02.6` appear in code comments.
 | Page layer | `src/chapters/*`, `src/components/Reveal.tsx` | `useTransform(storyVh, …)`: `Words`, `Fade`, `Chapter`, `Anchored` |
 | 3D scene | `src/scene/Stage.ts` + `objects/*` | reads `storyVh.get()` every frame; every object is a function of vh |
 | Camera | `src/scene/camera.ts` | segments + lens shift (scene sits right of the copy) |
-| Teddys | `src/scene/teddy/*` | `Director` (story beats) → `TeddyRig` (placeholder or model) |
+| Ribbons, coins | `src/scene/ribbon.ts`, `coin.ts`, `paths.ts` | tube ribbons with draw-on and taper; milled-edge coin; shared centre lines |
+| Actors | `src/scene/objects/pebble.ts` | two pebbles (client abroad, freelancer in Vietnam); `PebbleDirector` gives the story beats |
+| Teddy (hero) | `src/components/TeddyHero.tsx`, `src/scene/teddy/*` | 2D art now; `GltfTeddy` takes over when a model URL is set |
 
-Reduced motion: no scrubbing; the story snaps between key states (`REDUCED_STATES`) behind a 300 ms dip; Teddy holds still poses.
-No WebGL: a still 2D frame (`StaticScene`, Teddy art fetched by `scripts/fetch-teddy.mjs`), copy reads in full.
+Reduced motion: no scrubbing; the story snaps between key states (`REDUCED_STATES`) behind a 300 ms dip; pebbles and Teddy hold still.
+No WebGL: a still 2D frame (`StaticScene`; Teddy art fetched by `scripts/fetch-teddy.mjs`, hero only), copy reads in full.
 
 ### Why three.js directly, not React Three Fiber
 
@@ -47,10 +51,9 @@ Swapping to R3F later is mechanical: each object's `update(v)` becomes a `useFra
 1. Put the file at `public/models/teddy.glb`.
 2. Set `TEDDY_MODEL_URL = 'models/teddy.glb'` in `src/config.ts`.
 
-The model needs (board "Teddy 3D · what the model needs"): one rig for both roles; accessory nodes `acc_client` and
-`acc_freelancer`; bones `head`, `hand_L`, `hand_R`; optional morph target `blink`; clips named exactly
-`idle walk wave give catch hold lock reach think headShake approve nod proud bye happy curious surprised sleepy`.
-Missing clips fall back to `idle`. The model is scaled to the scene's Teddy height. Until it loads, the block placeholders stay.
+Teddy appears in the hero only, so the model needs just two clips, named exactly `idle` and `wave` (wave plays once, then
+idle loops). It is scaled to the scene's Teddy height and stands right of the hero loop. Until it loads, the 2D art stays.
+Please send the 2D art at 1024 px or more as well: the current PNG is about 200 px.
 
 ## Copy rules
 
@@ -61,7 +64,8 @@ No partner names until confirmed. No "open source" claim until the repo has a LI
 
 ## Open items
 
-- Teddy model (GLB with clips) from the team.
+- Teddy model (GLB, clips `idle` + `wave`) and a larger 2D Teddy PNG from the team.
+- Licensed partner not confirmed: the partner stays an unnamed grey shape.
 - Real Milestone Lock screenshots for chapter 06 (`SCREENS_ARE_PROPOSED` in `src/config.ts`).
 - Exchange rate refresh before 8 Oct.
 - Waitlist: no email collected until storage inside Vietnam is decided (`WAITLIST_ENDPOINT`).

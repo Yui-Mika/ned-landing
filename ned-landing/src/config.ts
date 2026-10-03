@@ -7,8 +7,8 @@ export const GITHUB_URL = 'https://github.com/Tdat10052499/Unihackfest-2026';
 export const WAITLIST_ENDPOINT: string | null = null;
 
 /**
- * The team's Teddy model (.glb), relative to the site root, e.g. 'models/teddy.glb' in /public.
- * null = block placeholders. Spec: storyboard board "Teddy 3D · what the model needs".
+ * The team's Teddy model (.glb) for the hero, relative to the site root, e.g. 'models/teddy.glb' in /public.
+ * null = the 2D art. Teddy appears in the hero only; the model needs clips "idle" and "wave".
  */
 export const TEDDY_MODEL_URL: string | null = null;
 
@@ -16,4 +16,4 @@ export const TEDDY_MODEL_URL: string | null = null;
 export const SCREENS_ARE_PROPOSED = true;
 
 /** Coins in the 3D scene. Phones get fewer. */
-export const COIN_COUNT = { desktop: 48, phone: 24 } as const;
+export const COIN_COUNT = { desktop: 24, phone: 16 } as const;

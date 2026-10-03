@@ -1,26 +1,7 @@
 import type { Object3D } from 'three';
 
-/** Clip names exactly as the Teddy model must provide them (board "Teddy 3D · what the model needs"). */
-export const CLIPS = [
-  'idle',
-  'walk',
-  'wave',
-  'give',
-  'catch',
-  'hold',
-  'lock',
-  'reach',
-  'think',
-  'headShake',
-  'approve',
-  'nod',
-  'proud',
-  'bye',
-  'happy',
-  'curious',
-  'surprised',
-  'sleepy',
-] as const;
+/** Teddy appears in the hero only (3 Oct): the model needs two clips, named exactly. */
+export const CLIPS = ['idle', 'wave'] as const;
 
 export type ClipName = (typeof CLIPS)[number];
 export type Role = 'client' | 'freelancer';
@@ -35,8 +16,8 @@ export type ClipRequest = {
 };
 
 /**
- * The seam between the story and the model. BlockTeddy (placeholder) and GltfTeddy (the team's model)
- * both implement it, so the director never knows which one it drives.
+ * The seam between the story and the team's model (GltfTeddy). Until the model arrives the hero shows
+ * the 2D art in the page layer instead.
  */
 export interface TeddyRig {
   readonly role: Role;

@@ -123,15 +123,15 @@ export function SceneLabels() {
       {/* Role labels, hidden while the slot of light fills the screen (02.16–03.1). */}
       {([[128, 358], [398, 990]] as const).map((r) => (
         <Fragment key={r[0]}>
-          <Anchored name="tc-head" show={r} className="role-label">
+          <Anchored name="tc" show={r} className="role-label" dy={34}>
             {problem.labels.client}
           </Anchored>
-          <Anchored name="tf-head" show={r} className="role-label role-you">
+          <Anchored name="tf" show={r} className="role-label role-you" dy={34}>
             {problem.labels.you}
           </Anchored>
         </Fragment>
       ))}
-      <Anchored name="gate1" show={[740, 800]} className="stamp" dy={-14}>
+      <Anchored name="gate1" show={[740, 800]} className="stamp" dy={-10}>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4ADE80" strokeWidth="3" strokeLinecap="round">
           <path d="M5 12l5 5 9-10" />
         </svg>

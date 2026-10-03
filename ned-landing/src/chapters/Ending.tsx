@@ -142,7 +142,7 @@ export function Real() {
             </Fade>
           ))}
         </ol>
-        <div className="not-yet">
+        <Fade as="div" range={[2164, 2172]} className="not-yet">
           <Fade range={[2170, 2178]} className="k">
             {real.notYetTitle}
           </Fade>
@@ -153,7 +153,7 @@ export function Real() {
               </Fade>
             ))}
           </ul>
-        </div>
+        </Fade>
       </div>
     </Chapter>
   );

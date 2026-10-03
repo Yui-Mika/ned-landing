@@ -4,8 +4,10 @@ import { motionValue, type MotionValue } from 'motion/react';
 // page-layer elements that sit on top of them (role labels, bubbles, the wallet card…).
 
 export type AnchorName =
-  | 'tc-head'
-  | 'tf-head'
+  | 'tc'
+  | 'tf'
+  | 'teddy'
+  | 'teddy-top'
   | 'gate1'
   | 'wallet'
   | 'partner'
@@ -31,4 +33,6 @@ export const signals = {
   ctaHover: motionValue(0),
   /** True once the preloader has finished. */
   ready: motionValue(0),
+  /** 1 once the team's Teddy model is in the scene (the 2D art then hides). */
+  teddyModel: motionValue(0),
 };

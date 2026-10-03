@@ -10,12 +10,12 @@ const PROBLEM: Pose = { pos: [0, 1.4, 13], tgt: [0, 0.8, 0] };
 const SLOT: Pose = { pos: [0, 1.15, 1.5], tgt: [0, 1.1, 0] };
 const IDEA0: Pose = { pos: [0, 1.3, 5.5], tgt: [0, 1.0, 0] };
 const IDEA1: Pose = { pos: [0, 1.3, 12], tgt: [0, 0.95, 0] };
-const TRACK: Pose = { pos: [0, 4.4, 11.4], tgt: [0, 0.2, 0] };
-const TRUCK: Pose = { pos: [6, 4.4, 11.4], tgt: [6, 0.2, 0] };
+const TRACK: Pose = { pos: [0.3, 5.0, 12.6], tgt: [0.3, 0.1, -0.3] };
+const TRUCK: Pose = { pos: [6, 5.0, 12.6], tgt: [6, 0.1, -0.3] };
 const FORK0: Pose = { pos: [9, 6.5, 9.5], tgt: [10.2, 0, 0.4] };
 const BRANCH_A: Pose = { pos: [10.2, 5, 6.5], tgt: [11.5, 0.3, -2.6] };
 const BRANCH_B: Pose = { pos: [11.2, 4.2, 10], tgt: [11.8, 0.3, 2.6] };
-const KEY: Pose = { pos: [11.6, 2.6, 8.2], tgt: [12.0, 0.5, 2.7] };
+const KEY: Pose = { pos: [11.4, 3.2, 9.9], tgt: [11.9, 0.4, 2.8] };
 const BANK: Pose = { pos: [13.4, 2.6, 8.4], tgt: [13.8, 0.4, 3.0] };
 const APP: Pose = { pos: [13.0, 2.2, 9.0], tgt: [13.6, 0.6, 3.0] };
 const ROLE: Pose = { pos: [20, 0.7, 9], tgt: [20, 1.3, 0] };
@@ -69,10 +69,12 @@ const SHIFT: [number, number][] = [
   [380, 0],
   [381, 0.2],
   [600, 0.2],
-  [640, 0.12],
-  [1000, 0.12],
-  [1060, 0.24],
-  [1360, 0.24],
+  [640, 0.15],
+  [1000, 0.15],
+  [1060, 0.26],
+  [1200, 0.26],
+  [1240, 0.32],
+  [1360, 0.32],
   [1400, 0],
 ];
 
