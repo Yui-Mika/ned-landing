@@ -382,7 +382,7 @@ export const copy = {
       back: 'Back',
       title: 'Submit milestone 1',
       headline: 'Submitted · in review',
-      sub: 'Auto-release in 3 days unless @mia disputes. Remember to send @mia the delivery link.',
+      sub: 'Auto-release in 3 days. Remember to send @mia the delivery link.',
       fingerprint: 'Fingerprint',
       reviewBy: 'Review by',
       reviewByV: '15 Oct, 18:00',
@@ -402,7 +402,6 @@ export const copy = {
       amtSub: 'to VND via payout partner',
       cdBefore: 'Auto-release in ',
       cd: '2 days 17 h',
-      cdAfter: ' unless you dispute',
       checkLabel: 'Check a link',
       checkHelp: 'Paste the link @vinh sent you. We compare its fingerprint with the one saved on-chain.',
       link: 'https://example.com/vinh/landing-v1',
@@ -414,8 +413,6 @@ export const copy = {
       fees: { label: 'Fees', ned: 'N.E.D fee', nedV: 'None during the pilot', network: 'Network fee', networkV: '~0.000005 SOL', networkSub: 'devnet test SOL', partner: 'Payout partner fee', partnerV: 'Set by the partner' },
       simulated: 'SIMULATED',
       slide: 'Slide to release',
-      dispute: 'Dispute ',
-      disputeTag: '(P1 · if shipped)',
     },
     /**
      * phone/MilestoneReleased (contract A): `client` (who client · view intl; its prototype-only "DEMO · switch to
@@ -457,12 +454,12 @@ export const copy = {
       refund: {
         chip: 'Refunded to client',
         headline: '250.00 USDC refunded to @mia',
-        sub: 'Landing page design · Milestone 1 · the submission deadline passed, or the freelancer conceded.',
+        sub: 'Landing page design · Milestone 1 · the submission deadline passed.',
         receipt: [
           { k: 'Contract', v: 'Landing page design · Milestone 1' },
           { k: 'Amount', v: '250.00 USDC' },
           { k: 'To', v: '@mia (client)' },
-          { k: 'Reason', v: 'Deadline passed or conceded' },
+          { k: 'Reason', v: 'Deadline passed' },
         ],
       },
       freelancerVN: {
@@ -534,10 +531,10 @@ export const copy = {
       dest: 'VND via payout partner',
       msStatus: 'Submitted · review by 3 Oct, 00:41',
       milestones: [{ n: 1, amt: '250.00 USDC', amtSub: '', submitBy: '3 Oct, 00:40', reviewBy: '3 Oct, 00:41' }],
-      countdown: 'Auto-release unless you dispute',
+      countdown: 'Auto-release',
       now: 'now',
       cid: 'B3k8Qz…r2Fw',
-      actions: { review: 'Review milestone 1', dispute: 'Dispute (if shipped)' },
+      actions: { review: 'Review milestone 1' },
     },
     /** phone/ContractAccept · view vn (VND only; the board hides the USDC option in this view). SPEC amounts. */
     contractAccept: {

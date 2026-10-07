@@ -10,7 +10,8 @@ import { FONT, Screen, StatusBar, chipStyle, dotStyle, type Tone } from './parts
  * - `miaAccepted`  = ContractDetailMiaAccepted: role client · view intl · state accepted
  * - `vinhLocked`   = ContractDetailVinhLocked: role freelancer · view vn · state locked
  * - `logoSubmitted` = role client · view intl · contract B · state submitted; `left` = seconds on its review clock
- *   (chapter 08 drives it by scroll instead of the board's 1 s timer)
+ *   (chapter 08 drives it by scroll instead of the board's 1 s timer); its Dispute action and "unless you dispute"
+ *   are left out (disputes are not available, SPEC §12.5)
  * Markup and inline styles 1:1; each variant resolves the board's renderVals for its state. Left out: the
  * prototype-only "DEMO · switch to…" line, the board's 1 s timer (countdowns shown as at t = 0) and the entrance
  * animations. SPEC numbers.
@@ -109,10 +110,7 @@ function resolve(variant: ContractDetailVariant, left: number): View {
         msStatus: { text: logo.msStatus, tone: 'warning' },
         countdown: logo.countdown,
         cdWarn: left <= 0 || left < 60 * 0.1,
-        actions: [
-          { label: logo.actions.review, primary: true },
-          { label: logo.actions.dispute, primary: false },
-        ],
+        actions: [{ label: logo.actions.review, primary: true }],
       };
     case 'miaAccepted':
       return {

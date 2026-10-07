@@ -12,7 +12,8 @@ import { DevnetChip, FONT, Screen, StatusBar } from './parts';
  * Port of docs/design-reference/phone/MilestoneReview.dc.html (review 3 days). Markup and inline styles 1:1.
  * From scroll: the link field holds the board's matching sample, or its changed sample during one flash
  * (ch07LinkChanged), and the check result follows the board's own rule (fingerprints compared); the slider thumb
- * follows CH07_SLIDE. Left out: the board's 1 s countdown timer (shown as at t = 0) and the entrance animations.
+ * follows CH07_SLIDE. Left out: the board's 1 s countdown timer (shown as at t = 0), the entrance animations and
+ * the board's Dispute button and "unless you dispute" (disputes are not available, SPEC §12.5).
  */
 const s = copy.screens.milestoneReview;
 /** Thumb travel: track 358 px (390 − 2 × 16 gutter), padding 4 each side, thumb 50. */
@@ -112,7 +113,6 @@ export function MilestoneReviewScreen() {
           <span>
             {s.cdBefore}
             <strong style={{ fontFamily: FONT.mono }}>{s.cd}</strong>
-            {s.cdAfter}
           </span>
         </div>
         <div style={{ padding: 14, borderRadius: 20, background: '#FFFFFF' }}>
@@ -187,28 +187,6 @@ export function MilestoneReviewScreen() {
         >
           <Thumb />
           <div style={{ flex: 1, textAlign: 'center', marginLeft: -50, fontSize: 16, fontWeight: 600, color: '#6A22B0' }}>{s.slide}</div>
-        </a>
-        <a
-          style={{
-            height: 52,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            borderRadius: 9999,
-            background: '#F2EAFB',
-            border: 'none',
-            fontFamily: FONT.body,
-            fontSize: 16,
-            fontWeight: 600,
-            color: '#6A22B0',
-            textDecoration: 'none',
-            cursor: 'pointer',
-            width: '100%',
-          }}
-        >
-          {s.dispute}
-          <span style={{ fontSize: 11, fontWeight: 600, color: '#3730A3' }}>{s.disputeTag}</span>
         </a>
       </div>
     </Screen>
