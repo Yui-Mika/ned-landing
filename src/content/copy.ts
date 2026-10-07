@@ -354,6 +354,41 @@ export const copy = {
       primary: 'Submit milestone 1',
       secondary: 'Back to Home',
     },
+    /**
+     * phone/ContractDetailVinhLocked = phone/ContractDetail · role freelancer · view vn · state locked (shared labels from
+     * contractDetail). SPEC numbers and wording (board sample: ≈ 520,000 VND, "(estimate) · $20.00").
+     */
+    contractDetailVinhLocked: {
+      status: 'Locked · work in progress',
+      heroLabel: 'Locked for you',
+      heroAmt: '≈ 13,010,000 VND',
+      heroSubEstimate: 'example, estimated',
+      heroSubRest: ' · $500.00 · rate of 2 Oct 2026',
+      dest: 'VND via payout partner',
+      vault: 'Held by the program, not by N.E.D · ',
+      vaultAddress: '9vLt…Qm4x',
+      explorer: 'Explorer',
+      milestoneStatus: 'Locked · work in progress',
+      countdown: 'Submit by deadline',
+      // Board countdowns are seconds from a 1 s timer (840000 s, 1444800 s); here fixed, as the board shows them at t = 0.
+      milestones: [
+        { n: 1, amt: '≈ 6,500,000 VND', amtSub: '$250.00 · estimate', submitBy: '12 Oct, 18:00', reviewBy: '15 Oct, 18:00', cd: 'in 9 days' },
+        { n: 2, amt: '≈ 6,500,000 VND', amtSub: '$250.00 · estimate', submitBy: '19 Oct, 18:00', reviewBy: '22 Oct, 18:00', cd: 'in 16 days' },
+      ],
+      action: 'Submit milestone 1',
+    },
+    /** phone/MilestoneSubmitted = phone/MilestoneSubmit · view vn · done (prototype-only "DEMO · switch to @mia's phone" removed). */
+    milestoneSubmitted: {
+      back: 'Back',
+      title: 'Submit milestone 1',
+      headline: 'Submitted · in review',
+      sub: 'Auto-release in 3 days unless @mia disputes. Remember to send @mia the delivery link.',
+      fingerprint: 'Fingerprint',
+      reviewBy: 'Review by',
+      reviewByV: '15 Oct, 18:00',
+      explorer: 'View on Explorer',
+      home: 'Back to Home',
+    },
     /** phone/ContractAccept · view vn (VND only; the board hides the USDC option in this view). SPEC amounts. */
     contractAccept: {
       back: 'Back',
@@ -482,8 +517,7 @@ export const copy = {
      * SPEC total (board sample: 20.00 USDC).
      */
     walletPanel: {
-      handle: 'mia',
-      shortAddr: '9PZw…rhkW',
+      who: { mia: { handle: 'mia', shortAddr: '9PZw…rhkW' }, vinh: { handle: 'vinh', shortAddr: '4Fq8…Lw2c' } },
       devnet: 'Devnet · ',
       fullView: 'Open in full view',
       close: 'Close wallet',
@@ -507,6 +541,107 @@ export const copy = {
           note: 'No money moves yet. @vinh reads the brief from your invite link and confirms the same fingerprint when accepting.',
           confirm: 'Create',
         },
+        /** who vinh · action submit. SPEC amount and wording (board sample: ≈ 260,000 VND, "$10.00 · estimate"). */
+        submit: {
+          dialog: 'Confirm: Submit milestone 1',
+          title: 'Submit milestone 1',
+          rows: [
+            { k: 'Contract', v: 'Landing page design' },
+            { k: 'For', v: '@mia' },
+            { k: 'Amount', v: '≈ 6,500,000 VND', sub: '$250.00 · example, estimated · rate of 2 Oct' },
+            { k: 'Delivery fingerprint', v: '{fp}', sub: 'Saved on-chain with the chain clock', mono: true },
+            { k: 'Deadline', v: '12 Oct 2026, 18:00', sub: 'On time · 9 days left' },
+            { k: 'Network fee', v: '~0.000005 SOL', sub: 'devnet test SOL' },
+          ],
+          note: 'After you submit, @mia has until 15 Oct, 18:00 to review. If she does nothing by then, it is released to your bank in VND.',
+          confirm: 'Submit',
+        },
+      },
+    },
+    /**
+     * web/WebSubmit (who vinh). Board samples kept (they match SPEC: Figma · version 2214, GitHub · commit 3f9a1c2).
+     * SPEC amount and wording for VND (board sample: ≈ 260,000 VND, "$10.00 · estimate"). The prototype-only
+     * "DEMO · switch to @mia's computer" link is removed.
+     */
+    submit: {
+      brand: { mark: 'N.E.D', name: 'Workspace' },
+      devnet: 'Devnet · test money',
+      wallet: { handle: 'vinh', label: 'Your wallet, @vinh', sub: 'Vietnam view · VND' },
+      breadcrumb: { root: 'Workspace', sep: '/', contract: 'Landing page design', here: 'Milestone 1' },
+      heading: 'Submit milestone 1',
+      sub: 'Landing page design · Wireframes and visual design · for @mia',
+      timer: 'Submit by 12 Oct, 18:00 · 9 days left',
+      links: {
+        heading: 'Links to your work',
+        body: 'Use links that point at one fixed version (a Figma version, a Git commit, a shared file), so what @mia opens is what you delivered.',
+        list: [
+          { label: 'Figma · version 2214', url: 'https://www.figma.com/design/Lp7Qx/landing?version-id=2214' },
+          { label: 'GitHub · commit 3f9a1c2', url: 'https://github.com/vinh-ng/landing/tree/3f9a1c2' },
+        ],
+        pinned: 'Fixed version',
+        remove: 'Remove ',
+        addLabel: 'Add a link',
+        placeholder: 'https://',
+        add: 'Add',
+      },
+      files: {
+        heading: 'Files',
+        body: 'Files stay on your computer. We read each one here and keep only its fingerprint, so @mia can check the file you share with her is the same one.',
+        drop: 'Drop files here or choose files',
+        list: [
+          { name: 'landing-v1.fig', size: '4.2 MB', sha: '3f9a…c21e' },
+          { name: 'export-desktop.png', size: '1.1 MB', sha: 'b81d…07f4' },
+        ],
+        fingerprint: ' · fingerprint ',
+        remove: 'Remove ',
+      },
+      note: {
+        label: 'Note to @mia',
+        value: 'Both layouts are on the page “Final” in Figma. Components are named as in the brand guide.',
+        placeholder: 'What is in this delivery and where to look first.',
+      },
+      check: {
+        heading: 'Check against the brief',
+        count: (n: number, of: number) => `${n} of ${of} ticked`,
+        body: 'What @mia wrote under “Done when”. Only for you: ticks are not saved on-chain.',
+        items: ['Desktop and mobile layouts', 'Colours and fonts from the brand guide', 'Figma file with named components', 'Copy from the brief, no placeholder text'],
+      },
+      aside: {
+        label: 'Before you submit',
+        comesLabel: 'Comes to you after release',
+        comesWhole: '≈ 6,500,000',
+        comesUnit: ' VND',
+        comesSubEstimate: 'example, estimated',
+        comesSubRest: ' · $250.00 · rate of 2 Oct · to your bank via the payout partner',
+        askedTitle: 'What @mia asked for',
+        asked: 'A one-page landing site for our new budgeting app, desktop and mobile. Use the copy and the brand guide linked below. Milestone 1 is design only…',
+        briefFp: 'Brief fingerprint',
+        briefFpV: '0x2831…3b17',
+        accepted: 'You accepted',
+        readBrief: 'Read the full brief',
+        deliveryFp: 'Delivery fingerprint',
+        deliveryNote: 'Made from your links, file fingerprints and note. Only this goes on-chain; the delivery itself is encrypted with the contract key, so only you and @mia can read it.',
+        onTimeTitle: 'How on-time is decided',
+        onTime: 'The program accepts a submit only up to 12 Oct, 18:00 and records the time from the chain clock, not from your computer. After that, the milestone can be refunded to @mia.',
+        notAll: 'Some “Done when” items are not ticked. You can still submit; @mia may dispute.',
+        submit: 'Submit milestone 1',
+        submitNote: 'Opens your wallet to confirm. You cannot edit a delivery after submitting.',
+      },
+      done: {
+        heading: 'Submitted · in review',
+        body: '@mia sees your delivery in her Workspace and on her phone. If she does nothing by 15 Oct, 18:00, it is released to your bank in VND.',
+        recorded: 'Recorded at',
+        recordedV: '3 Oct 2026, 00:31 · chain clock',
+        deadline: 'Deadline',
+        deadlineV: '12 Oct 2026, 18:00',
+        onTime: 'On time',
+        fingerprint: 'Delivery fingerprint',
+        comes: 'Comes to you',
+        comesV: '≈ 6,500,000 VND',
+        comesSubEstimate: 'example, estimated',
+        comesSubRest: ' · $250.00 · rate of 2 Oct',
+        explorer: 'View on Explorer',
+        back: 'Back to Workspace',
       },
     },
     /**
@@ -559,6 +694,12 @@ export const copy = {
   },
   /** The invite-link chip (T8): the same string as the link field it lifts off (web/WebContractNew, created). */
   inviteLink: 'ned.app/c/7XqP2mWc#k=Qm4tY8vR2LkN9sQe',
+  /** Chapter 06 copy column: SPEC §6 row 06, exact wording. */
+  submit: {
+    headline: 'Submit before the deadline.',
+    l1: 'The time and a fingerprint of your work are recorded.',
+    l2: 'Your files stay on your computer. Only their fingerprints are saved.',
+  },
   /** Chapter 05 copy column: SPEC §6 row 05, exact wording. */
   lock: {
     headline: 'Your client locks it before you start.',
@@ -608,6 +749,6 @@ export const copy = {
   },
   later: {
     title: 'More chapters coming',
-    body: 'Chapter 06 and the rest of the story are next.',
+    body: 'Chapter 07 and the rest of the story are next.',
   },
 } as const;

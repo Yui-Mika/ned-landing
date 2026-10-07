@@ -4,9 +4,9 @@ import { Avatar } from '@/screens/phone/Avatar';
 import { FONT } from '@/screens/phone/parts';
 
 /**
- * Port of docs/design-reference/web/WebWalletPanel.dc.html, who mia, signed in, opened from a Workspace page (so it
- * has a close button). Markup and inline styles 1:1. Two modes:
- * - `sign` (chapter 03, action create): the confirm request.
+ * Port of docs/design-reference/web/WebWalletPanel.dc.html, signed in (who mia or vinh), opened from a Workspace page
+ * (so it has a close button). Markup and inline styles 1:1. Two modes:
+ * - `sign` (chapter 03: mia · action create; chapter 06: vinh · action submit): the confirm request.
  * - `app` (chapter 05): the mobile app itself, one 390 × 844 screen scaled to 86% with the board's 38 px top crop.
  * Width: 390 × 0.86 = 335 px (the board's default scale). Left out: the `.ned-pop` entrance animation and the
  * in-panel navigation (the screen comes from scroll).
@@ -32,16 +32,19 @@ const iconBtn: CSSProperties = {
   textDecoration: 'none',
 };
 
-type Props =
-  | { mode: 'sign'; action: 'create'; fingerprint: string }
+type Who = keyof typeof s.who;
+type Props = { who?: Who } & (
+  | { mode: 'sign'; action: 'create' | 'submit'; fingerprint: string }
   | {
       mode: 'app';
       /** The app screen shown in the panel (a phone board at 390 × 844). */
       screen: ReactNode;
-    };
+    }
+);
 
 export function WebWalletPanel(props: Props) {
   const dialog = props.mode === 'sign' ? s.sign[props.action].dialog : s.app.dialog;
+  const w = s.who[props.who ?? 'mia'];
   return (
     <div
       role="dialog"
@@ -81,13 +84,13 @@ export function WebWalletPanel(props: Props) {
         >
           N.E.D
         </span>
-        <Avatar seed={s.handle} size={28} />
+        <Avatar seed={w.handle} size={28} />
         <div style={{ flex: 1, minWidth: 0, lineHeight: 1.2 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>@{s.handle}</div>
+          <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>@{w.handle}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: '#5E5E6A' }}>
             <span style={{ width: 6, height: 6, borderRadius: 9999, background: '#F59E0B' }} />
             {s.devnet}
-            <span style={{ fontFamily: FONT.mono }}>{s.shortAddr}</span>
+            <span style={{ fontFamily: FONT.mono }}>{w.shortAddr}</span>
           </div>
         </div>
         <a aria-label={s.fullView} title={s.fullView} style={iconBtn}>
@@ -133,7 +136,7 @@ function AppBody({ screen }: { screen: ReactNode }) {
 }
 
 /** Signed in: confirm request (like an extension's approve window). */
-function SignBody({ action, fingerprint }: { action: 'create'; fingerprint: string }) {
+function SignBody({ action, fingerprint }: { action: 'create' | 'submit'; fingerprint: string }) {
   const a = s.sign[action];
   return (
     <div style={{ padding: '14px 16px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -186,7 +189,7 @@ function SignBody({ action, fingerprint }: { action: 'create'; fingerprint: stri
         </button>
         <button
           type="button"
-          data-tap-target="panel-create"
+          data-tap-target={`panel-${action}`}
           style={{ height: 50, borderRadius: 9999, border: 'none', background: '#7B2FBE', color: '#FFFFFF', fontFamily: 'inherit', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
         >
           {a.confirm}

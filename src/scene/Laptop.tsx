@@ -11,9 +11,10 @@ import { DeviceTag } from '@/components/DeviceTag';
 import { chapterAt } from '@/content/chapters';
 import { WebContractNewScreen } from '@/screens/web/WebContractNewScreen';
 import { WebWorkspaceScreen } from '@/screens/web/WebWorkspaceScreen';
+import { WebSubmitScreen } from '@/screens/web/WebSubmitScreen';
 import { ContractLockScreen } from '@/screens/phone/ContractLockScreen';
 import { ContractLockedScreen } from '@/screens/phone/ContractLockedScreen';
-import { ch03BriefAt, ch05PanelAt, laptopTracks, sampleLaptop, type BriefState, type LaptopScreen, type Owner, type PageScroll } from './poses';
+import { ch03BriefAt, ch05PanelAt, ch06ScanAt, ch06SubmitAt, laptopTracks, sampleLaptop, type BriefState, type LaptopScreen, type SubmitState, type Owner, type PageScroll } from './poses';
 import { registerFocusResolver, screenPointToWorld, offsetIn } from './focus';
 import { TAP_PX, drawTap } from './tap';
 import { SceneHtml } from './htmlLayer';
@@ -27,6 +28,12 @@ export const LAPTOP = {
 };
 /** The screen shows a 1440 × 900 CSS px web page (16:10); 1440 px fill 3.06 world units. */
 const PAGE = { desktop: { w: 1440, h: 900 }, portrait: { w: 480, h: 640 } };
+/**
+ * Portrait page size per screen. WebSubmit's sign panel is `position: fixed` on the board (top 76, ~670 px tall), so
+ * it cannot scroll into view: that page is taller, and the safe-area fit shrinks the card to match.
+ */
+const PAGE_SUBMIT_PORTRAIT = { w: PAGE.portrait.w, h: 780 };
+const portraitPage = (screen: LaptopScreen) => (screen === 'webSubmit' ? PAGE_SUBMIT_PORTRAIT : PAGE.portrait);
 const SCREEN_W = 3.06;
 export const PX_PER_UNIT = PAGE.desktop.w / SCREEN_W;
 /** Portrait browser card: frame + bar around a 480 × 640 page (the board's own narrower responsive layout). */
@@ -34,8 +41,12 @@ export const CARD = { pad: 10, bar: 34, worldW: 3.0 };
 const CARD_PX_W = PAGE.portrait.w + CARD.pad * 2;
 export const CARD_PX_PER_UNIT = CARD_PX_W / CARD.worldW;
 const DEG = Math.PI / 180;
+/** The tag's place below the base's front edge, (0, −t − 0.1, d/2 + 0.05) on the body, tilted 10° like the body. */
+const TAG_Y = (-LAPTOP.base.t - 0.1) * Math.cos(10 * DEG) - (LAPTOP.base.d / 2 + 0.05) * Math.sin(10 * DEG);
+const TAG_Z = (-LAPTOP.base.t - 0.1) * Math.sin(10 * DEG) + (LAPTOP.base.d / 2 + 0.05) * Math.cos(10 * DEG);
 
 const brief = copy.web.contractNew.milestones.list[0].crit;
+const submitUrls = copy.web.submit.links.list.map((l) => l.url);
 
 /**
  * Live laptop state after the safe-area fit: scale (the invite chip matches it so it lifts off at the field's size),
@@ -51,6 +62,44 @@ function useBriefState(): BriefState {
     if (next.added !== state.added || next.draft !== state.draft || next.panel !== state.panel || next.created !== state.created) setState(next);
   });
   return state;
+}
+
+/** Chapter 06 submit state from scroll; React state changes only when it actually changes (per typed character at most). */
+function useSubmitState(): SubmitState {
+  const [state, setState] = useState(() => ch06SubmitAt(scrollVh.get(), submitUrls));
+  useMotionValueEvent(scrollVh, 'change', (vh) => {
+    const n = ch06SubmitAt(vh, submitUrls);
+    if (n.links !== state.links || n.draft !== state.draft || n.files !== state.files || n.scanned !== state.scanned || n.checks !== state.checks || n.panel !== state.panel || n.done !== state.done)
+      setState(n);
+  });
+  return state;
+}
+
+function SubmitScreen({ size, children }: { size: { w: number; h: number }; children: React.ReactNode }) {
+  const state = useSubmitState();
+  return (
+    <WebSubmitScreen state={state} width={size.w} height={size.h}>
+      {children}
+    </WebSubmitScreen>
+  );
+}
+
+/**
+ * Scan line (landing layer, not part of the board): a plain thin line that passes down a dropped file's row
+ * (ch06ScanAt); the row's fingerprint shows once it has passed. Pure function of scroll. Reduced motion: no line
+ * (it would slide); the fingerprints still appear.
+ */
+function drawScan(line: HTMLDivElement, root: HTMLElement, vh: number, scrollY: number, reduced: boolean) {
+  const scan = reduced ? null : ch06ScanAt(vh);
+  const row = scan ? root.querySelector<HTMLElement>(`[data-file-row="${scan.row}"]`) : null;
+  if (!scan || !row) {
+    if (line.style.opacity !== '0') line.style.opacity = '0';
+    return;
+  }
+  const { x, y } = offsetIn(row, root);
+  line.style.opacity = '1';
+  line.style.width = `${row.offsetWidth}px`;
+  line.style.transform = `translate(${x}px, ${(y + row.offsetHeight * scan.p - scrollY - 1).toFixed(1)}px)`;
 }
 
 /** Chapter 05 wallet panel screen from scroll; React state changes only when it opens, switches or closes. */
@@ -92,14 +141,16 @@ function ScreenContent({
   rootRef,
   tapRef,
   panelRef,
+  scanRef,
 }: {
   screen: LaptopScreen;
   portrait: boolean;
   rootRef: React.RefObject<HTMLDivElement | null>;
   tapRef: React.RefObject<HTMLDivElement | null>;
   panelRef: React.RefObject<HTMLDivElement | null>;
+  scanRef: React.RefObject<HTMLDivElement | null>;
 }) {
-  const size = portrait ? PAGE.portrait : PAGE.desktop;
+  const size = portrait ? portraitPage(screen) : PAGE.desktop;
   /* Tap mark (landing layer, not part of the board): TAPS in poses.ts. */
   const tap = (
     <div
@@ -123,6 +174,17 @@ function ScreenContent({
         <WorkspaceScreen size={size} panelRef={panelRef}>
           {tap}
         </WorkspaceScreen>
+      ) : screen === 'webSubmit' ? (
+        <SubmitScreen size={size}>
+          <div
+            ref={scanRef}
+            aria-hidden="true"
+            data-scan-line=""
+            className="absolute top-0 left-0"
+            style={{ zIndex: 45, height: 2, opacity: 0, background: '#7B2FBE' }}
+          />
+          {tap}
+        </SubmitScreen>
       ) : (
         <BriefScreen size={size}>{tap}</BriefScreen>
       )}
@@ -150,6 +212,7 @@ export function Laptop({ reduced, portrait }: Props) {
   const rootEl = useRef<HTMLDivElement>(null);
   const tapEl = useRef<HTMLDivElement>(null);
   const panelEl = useRef<HTMLDivElement>(null);
+  const scanEl = useRef<HTMLDivElement>(null);
   // Screen and owner from the poses table (they switch while the laptop is hidden, or at T9 Owner turn).
   const [screen, setScreen] = useState<LaptopScreen>(() => sampleLaptop(laptopTracks.desktop, scrollVh.get()).screen);
   const [owner, setOwner] = useState<Owner>('client');
@@ -160,7 +223,7 @@ export function Laptop({ reduced, portrait }: Props) {
   // Un-zoomed, un-panned reference camera: the safe-area fit is done for the resting frame; the T5 Zoom works on top.
   const fit = useMemo(() => ({ cam: new THREE.PerspectiveCamera(), v: new THREE.Vector3(), c: [0, 1, 2, 3].map(() => new THREE.Vector3()) }), []);
 
-  const view = portrait ? PAGE.portrait : PAGE.desktop;
+  const view = portrait ? portraitPage(screen) : PAGE.desktop;
   const pxPerUnit = portrait ? CARD_PX_PER_UNIT : PX_PER_UNIT;
 
   useEffect(
@@ -234,6 +297,7 @@ export function Laptop({ reduced, portrait }: Props) {
         pageEl.style.transform = `translateY(${-y.toFixed(1)}px)`;
       }
       if (tapEl.current) drawTap(tapEl.current, root, 'laptop', vh, reduced, scrollY.current);
+      if (scanEl.current) drawScan(scanEl.current, root, vh, scrollY.current, reduced);
     }
   });
 
@@ -288,11 +352,11 @@ export function Laptop({ reduced, portrait }: Props) {
     laptopLive.scale = outer.current.scale.x;
   }
 
-  const screenHtml = <ScreenContent screen={screen} portrait={portrait} rootRef={rootEl} tapRef={tapEl} panelRef={panelEl} />;
+  const screenHtml = <ScreenContent screen={screen} portrait={portrait} rootRef={rootEl} tapRef={tapEl} panelRef={panelEl} scanRef={scanEl} />;
 
   if (portrait) {
     // Cropped browser card (SPEC §8): a generic browser frame, no laptop body.
-    const cardH = PAGE.portrait.h + CARD.bar + CARD.pad;
+    const cardH = view.h + CARD.bar + CARD.pad;
     return (
       <group ref={outer}>
         <group ref={body}>
@@ -312,18 +376,19 @@ export function Laptop({ reduced, portrait }: Props) {
               <div style={{ borderRadius: 12, overflow: 'hidden' }}>{screenHtml}</div>
             </div>
           </SceneHtml>
-          {/* Owner tag in the card's top bar (right), so it never sits under the copy above the card. */}
-          <SceneHtml transform distanceFactor={1} position={[CARD.worldW / 2 - 0.5, cardH / CARD_PX_PER_UNIT / 2 - CARD.bar / 2 / CARD_PX_PER_UNIT, 0.004]}>
-            <div
-              ref={(el) => {
-                fadeEls.current[1] = el;
-              }}
-              style={{ opacity: 0 }}
-            >
-              <DeviceTag owner={owner} device="computer" size="md" />
-            </div>
-          </SceneHtml>
         </group>
+        {/* Owner tag in the card's top bar (right), so it never sits under the copy above the card. Outside the turning
+            body, so it stays readable during T9 Owner turn. */}
+        <SceneHtml transform distanceFactor={1} position={[CARD.worldW / 2 - 0.5, cardH / CARD_PX_PER_UNIT / 2 - CARD.bar / 2 / CARD_PX_PER_UNIT, 0.004]}>
+          <div
+            ref={(el) => {
+              fadeEls.current[1] = el;
+            }}
+            style={{ opacity: 0 }}
+          >
+            <DeviceTag owner={owner} device="computer" size="md" />
+          </div>
+        </SceneHtml>
       </group>
     );
   }
@@ -374,18 +439,19 @@ export function Laptop({ reduced, portrait }: Props) {
             </SceneHtml>
           </group>
         </group>
-        {/* Owner tag just below the front edge of the base, facing the camera (cancels the body's 10° tilt). */}
-        <SceneHtml transform distanceFactor={1} position={[0, -base.t - 0.1, base.d / 2 + 0.05]} rotation={[-10 * DEG, 0, 0]}>
-          <div
-            ref={(el) => {
-              fadeEls.current[1] = el;
-            }}
-            style={{ opacity: 0 }}
-          >
-            <DeviceTag owner={owner} device="computer" size="lg" />
-          </div>
-        </SceneHtml>
       </group>
+      {/* Owner tag just below the front edge of the base (at the body's 10° tilt), facing the camera. Outside the
+          turning body, so it stays readable during T9 Owner turn. */}
+      <SceneHtml transform distanceFactor={1} position={[0, TAG_Y, TAG_Z]}>
+        <div
+          ref={(el) => {
+            fadeEls.current[1] = el;
+          }}
+          style={{ opacity: 0 }}
+        >
+          <DeviceTag owner={owner} device="computer" size="lg" />
+        </div>
+      </SceneHtml>
     </group>
   );
 }

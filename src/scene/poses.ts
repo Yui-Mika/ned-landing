@@ -44,7 +44,9 @@ export type PhoneScreen =
   | 'cdMiaAccepted'
   | 'lock'
   | 'lockedClient'
-  | 'lockedVN';
+  | 'lockedVN'
+  | 'cdVinhLocked'
+  | 'submitted';
 /** Device transform vocabulary, exactly as named in SPEC §5.3. */
 export type TransformName =
   | 'T1 Glide'
@@ -298,6 +300,74 @@ function ch05Phone(o: { from: Vec3; rotation: Vec3; size: number; park: Place; e
   ];
 }
 
+/**
+ * Chapter 06 · Work and submit (1360–1620 vh): your phone on ContractDetail (locked), then out (T1 Glide) · the client's
+ * computer fades in seen from behind · T9 Owner turn: it turns 180° on its base and is now Your computer (WebSubmit) ·
+ * the two links are typed and added · two files dropped, a thin scan line passes each (its fingerprint shows after)
+ * · the four "Done when" boxes ticked (T5 Zoom follows links → files → checks) · Submit → wallet panel (sign · submit)
+ * → Submitted · in review (T5 Zoom) · your phone back on MilestoneSubmitted.
+ */
+export const CH06 = {
+  toDetail: [1362, 1372] as [number, number],
+  phoneOut: [1380, 1398] as [number, number],
+  laptopIn: [1392, 1406] as [number, number],
+  turn: [1408, 1440] as [number, number],
+  links: [
+    [1452, 1466],
+    [1466, 1480],
+  ] as [number, number][],
+  files: [1490, 1498],
+  /** Each dropped file is scanned over this many vh; its fingerprint shows after. */
+  scan: 6,
+  checks: [1514, 1518, 1522, 1526],
+  submitTap: [1544, 1554] as [number, number],
+  panelAt: 1552,
+  panelTap: [1564, 1574] as [number, number],
+  doneAt: 1576,
+  phoneIn: [1600, 1614] as [number, number],
+};
+
+export type SubmitState = { links: number; draft: string; files: number; scanned: number; checks: number; panel: 'closed' | 'sign'; done: boolean };
+
+/** Chapter 06 WebSubmit state, a pure function of scroll. Typing: each URL over the first 85% of its window, added at the end. */
+export function ch06SubmitAt(vh: number, urls: readonly string[]): SubmitState {
+  let links = 0;
+  let draft = '';
+  CH06.links.forEach(([a, b], i) => {
+    if (vh >= b) links = i + 1;
+    else if (vh > a) draft = urls[i].slice(0, Math.round(urls[i].length * Math.min(1, (vh - a) / ((b - a) * 0.85))));
+  });
+  const files = CH06.files.filter((f) => vh >= f).length;
+  const scanned = CH06.files.filter((f) => vh >= f + CH06.scan).length;
+  const checks = CH06.checks.filter((c) => vh >= c).length;
+  const done = vh >= CH06.doneAt;
+  return { links, draft, files, scanned, checks, panel: !done && vh >= CH06.panelAt ? 'sign' : 'closed', done };
+}
+
+/** The scan line over a dropped file row: which row (data-file-row) and how far down it (0 … 1), or null. */
+export function ch06ScanAt(vh: number): { row: number; p: number } | null {
+  for (let i = 0; i < CH06.files.length; i++) {
+    const p = (vh - CH06.files[i]) / CH06.scan;
+    if (p >= 0 && p < 1) return { row: i, p };
+  }
+  return null;
+}
+
+function ch06Phone(o: { at: Vec3; rotation: Vec3; size: number; exit: Vec3; back: Place }): Pose[] {
+  const you = (vh: number, screen: PhoneScreen, extra: Partial<Pose> = {}): Pose => ({ vh, device: 'phone', position: o.at, rotation: o.rotation, size: o.size, screen, owner: 'you', ...extra });
+  const [pitch, yaw] = o.rotation;
+  return [
+    you(CH06.toDetail[0], 'lockedVN'),
+    you(CH06.toDetail[1], 'cdVinhLocked'),
+    you(CH06.phoneOut[0], 'cdVinhLocked'),
+    you(CH06.phoneOut[1], 'cdVinhLocked', { position: o.exit, rotation: [pitch, yaw + 20, 0], opacity: 0, transform: 'T1 Glide' }),
+    // Swapped while out of view: the submitted state.
+    you(CH06.phoneIn[0], 'submitted', { position: o.exit, rotation: [pitch, yaw + 20, 0], opacity: 0, screenSwitch: 'cut' }),
+    { vh: CH06.phoneIn[1], ...o.back, screen: 'submitted', owner: 'you', ease: 'easeOut', transform: 'T1 Glide' },
+    { vh: 1620, ...o.back, screen: 'submitted', owner: 'you' },
+  ];
+}
+
 /** Where the client's phone waits in chapter 05: in front of the laptop's right side (desktop); low right (portrait). */
 const CH05_PARK: Record<'desktop' | 'portrait', Place> = {
   desktop: { device: 'phone', position: [0.74, -0.27, 0.3], rotation: [2, 346, 0], size: 0.5 },
@@ -347,6 +417,9 @@ const phoneDesktop: Pose[] = [
 
   // Chapter 05 · Lock (1120–1360 vh): see CH05.
   ...ch05Phone({ from: [0.3, -0.04, 0], rotation: [2, -8, 0], size: 0.74, park: CH05_PARK.desktop, end: [0.3, -0.04, 0], endSize: 0.74, dock: true }),
+
+  // Chapter 06 · Work and submit (1360–1620 vh): see CH06. Back in front of the laptop's right side at the end.
+  ...ch06Phone({ at: [0.3, -0.04, 0], rotation: [2, 706, 0], size: 0.74, exit: [1.35, -0.12, 0], back: { ...CH05_PARK.desktop, rotation: [2, 706, 0] } }),
 ];
 
 // Portrait (SPEC §8): phone at 92% width rising from the bottom, top ~60% visible.
@@ -381,6 +454,15 @@ const phonePortrait: Pose[] = [
 
   // Chapter 05 (portrait): the T4 Dock is a crossfade between the phone and the browser card's panel.
   ...ch05Phone({ from: [0, -0.88, 0], rotation: [4, 0, 0], size: 0.86, park: CH05_PARK.portrait, end: [0, -0.88, 0], endSize: 0.86, dock: false }),
+
+  // Chapter 06 (portrait): out while the browser card works; back, rising from the bottom, once the card has gone.
+  ...ch06Phone({
+    at: [0, -0.88, 0],
+    rotation: [4, 710, 0],
+    size: 0.86,
+    exit: [1.6, -0.88, 0],
+    back: { device: 'phone', position: [0, -0.88, 0], rotation: [4, 710, 0], size: 0.86 },
+  }),
 ];
 
 /**
@@ -446,13 +528,15 @@ export const TAPS: { track: TrackName | 'laptop'; target: string; start: number;
   { track: 'laptop', target: 'panel-create', start: 778, end: 788 },
   { track: 'phone', target: 'accept', start: 946, end: 958 },
   { track: 'laptop', target: 'ws-lock', start: CH05.tap[0], end: CH05.tap[1] },
+  { track: 'laptop', target: 'sb-submit', start: CH06.submitTap[0], end: CH06.submitTap[1] },
+  { track: 'laptop', target: 'panel-submit', start: CH06.panelTap[0], end: CH06.panelTap[1] },
 ];
 
 /* ------------------------------------------------------------------------------------------------------------ */
 /* Laptop (chapter 03 on). A generic body; the screen shows a web board.                                        */
 /* ------------------------------------------------------------------------------------------------------------ */
 
-export type LaptopScreen = 'webContractNew' | 'webWorkspace';
+export type LaptopScreen = 'webContractNew' | 'webWorkspace' | 'webSubmit';
 
 /** Page scroll inside the laptop screen: an element (data-focus) placed at `at` (0 top … 1 bottom) of the screen. */
 export type PageScroll = { focus: string; at: number } | null;
@@ -515,7 +599,39 @@ const laptopCh05: LaptopPose[] = [
   { vh: CH05.laptopOut[1], ...L5, lid: 105, opacity: 0, page: PAGE_TOP },
 ];
 
-const laptopDesktop: LaptopPose[] = [...laptopCh03, ...laptopCh05];
+/**
+ * Chapter 06: T9 Owner turn (SPEC §5.3): the client's computer fades in seen from behind (yaw + 180°), turns 180° on
+ * its base and is Your computer on WebSubmit (owner and screen switch while it is edge-on). Then the page scrolls to
+ * each part of the form as it is filled.
+ */
+const L6 = { ...L, screen: 'webSubmit' as const, owner: 'you' as const };
+const BEHIND: Vec3 = [L.rotation[0], L.rotation[1] + 180, 0];
+const SB_LINKS: PageScroll = { focus: 'sb-links', at: 0.45 };
+const SB_FILES: PageScroll = { focus: 'sb-files', at: 0.5 };
+const SB_CHECK: PageScroll = { focus: 'sb-check', at: 0.5 };
+const SB_SUBMIT: PageScroll = { focus: 'sb-submit', at: 0.72 };
+function ch06Laptop(k: Omit<LaptopPose, 'vh' | 'page' | 'screen' | 'owner' | 'lid'>): LaptopPose[] {
+  const at = (vh: number, page: PageScroll, extra: Partial<LaptopPose> = {}): LaptopPose => ({ vh, ...k, ...L6, position: k.position, rotation: k.rotation, size: k.size, lid: 105, page, ...extra });
+  return [
+    at(CH06.laptopIn[0], PAGE_TOP, { rotation: BEHIND, owner: 'client', opacity: 0 }),
+    at(CH06.laptopIn[1], PAGE_TOP, { rotation: BEHIND, owner: 'client', ease: 'easeOut' }),
+    at(CH06.turn[0], PAGE_TOP, { rotation: BEHIND, owner: 'client' }),
+    at(CH06.turn[1], PAGE_TOP, { transform: 'T9 Owner turn' }),
+    at(CH06.links[0][0] - 6, PAGE_TOP),
+    at(CH06.links[0][0], SB_LINKS),
+    at(CH06.links[1][1] + 2, SB_LINKS),
+    at(CH06.files[0] - 4, SB_FILES),
+    at(CH06.files[1] + CH06.scan + 2, SB_FILES),
+    at(CH06.checks[0] - 4, SB_CHECK),
+    at(CH06.checks[3] + 4, SB_CHECK),
+    at(CH06.submitTap[0] - 4, SB_SUBMIT),
+    at(CH06.doneAt, SB_SUBMIT),
+    at(CH06.doneAt + 2, PAGE_TOP),
+  ];
+}
+const laptopCh06: LaptopPose[] = ch06Laptop({ position: L.position, rotation: L.rotation, size: L.size });
+
+const laptopDesktop: LaptopPose[] = [...laptopCh03, ...laptopCh05, ...laptopCh06];
 
 /** Portrait (SPEC §8): the laptop becomes a cropped browser card (the board's narrower responsive layout). */
 const laptopPortraitCh03: LaptopPose[] = laptopCh03.map((k) => {
@@ -556,7 +672,18 @@ const laptopPortraitCh05: LaptopPose[] = [
   { vh: CH05.laptopOut[1], ...P5, opacity: 0, page: PAGE_TOP },
 ];
 
-const laptopPortrait: LaptopPose[] = [...laptopPortraitCh03, ...laptopPortraitCh05];
+/** Chapter 06 (portrait): the browser card turns the same way; it fades out before your phone comes back. */
+const laptopPortraitCh06: LaptopPose[] = [
+  ...ch06Laptop({ position: P5.position, rotation: P5.rotation, size: P5.size }).map((k) => ({
+    ...k,
+    rotation: (k.rotation === BEHIND ? [0, 180, 0] : [0, 0, 0]) as Vec3,
+    page: k.page && { ...k.page, at: Math.min(k.page.at, 0.5) },
+  })),
+  { vh: CH06.phoneIn[0] - 4, ...P5, screen: 'webSubmit', owner: 'you', page: PAGE_TOP },
+  { vh: CH06.phoneIn[0] + 4, ...P5, screen: 'webSubmit', owner: 'you', opacity: 0, page: PAGE_TOP },
+];
+
+const laptopPortrait: LaptopPose[] = [...laptopPortraitCh03, ...laptopPortraitCh05, ...laptopPortraitCh06];
 
 export const laptopTracks = { desktop: laptopDesktop, portrait: laptopPortrait };
 
@@ -635,6 +762,19 @@ export const cameraTrack: CameraPose[] = [
   { vh: CH05.zoom[1], zoom: 1, fit: 1.75, focus: 'wallet-view', copyId: 'ch05-title', transform: 'T5 Zoom' },
   { vh: CH05.zoom[2], zoom: 1, fit: 1.75, focus: 'wallet-view', copyId: 'ch05-title' },
   { vh: CH05.zoom[3], zoom: 1, transform: 'T5 Zoom' },
+  // Chapter 06: push onto the form as it is filled (links → files → checks), then onto the submitted result.
+  { vh: CH06.links[0][0] - 6, zoom: 1 },
+  { vh: CH06.links[0][0] + 2, zoom: 1, fit: 1.75, focus: 'sb-links', copyId: 'ch06-title', transform: 'T5 Zoom' },
+  { vh: CH06.links[1][1] + 2, zoom: 1, fit: 1.75, focus: 'sb-links', copyId: 'ch06-title' },
+  { vh: CH06.files[0] - 2, zoom: 1, fit: 1.75, focus: 'sb-files', copyId: 'ch06-title' },
+  { vh: CH06.files[1] + CH06.scan + 2, zoom: 1, fit: 1.75, focus: 'sb-files', copyId: 'ch06-title' },
+  { vh: CH06.checks[0] - 2, zoom: 1, fit: 1.75, focus: 'sb-check', copyId: 'ch06-title' },
+  { vh: CH06.checks[3] + 4, zoom: 1, fit: 1.75, focus: 'sb-check', copyId: 'ch06-title' },
+  { vh: CH06.submitTap[0] - 6, zoom: 1, transform: 'T5 Zoom' },
+  { vh: CH06.doneAt + 2, zoom: 1 },
+  { vh: CH06.doneAt + 12, zoom: 1, fit: 1.75, focus: 'sb-done', copyId: 'ch06-title', transform: 'T5 Zoom' },
+  { vh: CH06.phoneIn[0] - 4, zoom: 1, fit: 1.75, focus: 'sb-done', copyId: 'ch06-title' },
+  { vh: CH06.phoneIn[0] + 6, zoom: 1, transform: 'T5 Zoom' },
 ];
 
 export const cameraZoom = (k: CameraPose, portrait: boolean) => (portrait ? (k.zoomPortrait ?? k.zoom) : k.zoom);

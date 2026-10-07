@@ -13,6 +13,8 @@ import { ContractNew1Screen, ContractNew2Screen, ContractNew3Screen } from './Co
 import { ContractDetailScreen } from './ContractDetailScreen';
 import { ContractAcceptScreen } from './ContractAcceptScreen';
 import { ContractLockScreen } from './ContractLockScreen';
+import { MilestoneSubmittedScreen } from './MilestoneSubmittedScreen';
+import { SUBMITTED_FP } from '@/screens/web/WebSubmitScreen';
 
 function Board({ screen, owner }: { screen: PhoneScreen; owner: Exclude<Owner, 'anyone'> }) {
   switch (screen) {
@@ -40,19 +42,23 @@ function Board({ screen, owner }: { screen: PhoneScreen; owner: Exclude<Owner, '
     case 'cn3':
       return <ContractNew3Screen />;
     case 'cdNew':
-      return <ContractDetailScreen state="created" />;
+      return <ContractDetailScreen variant="vinhNew" />;
     case 'accept':
       return <ContractAcceptScreen />;
     case 'cdAccepted':
-      return <ContractDetailScreen state="accepted" />;
+      return <ContractDetailScreen variant="vinhAccepted" />;
     case 'cdMiaAccepted':
-      return <ContractDetailScreen state="accepted" role="client" />;
+      return <ContractDetailScreen variant="miaAccepted" />;
     case 'lock':
       return <ContractLockScreen />;
     case 'lockedClient':
       return <ContractLockedScreen />;
     case 'lockedVN':
       return <ContractLockedScreen side="freelancerVN" />;
+    case 'cdVinhLocked':
+      return <ContractDetailScreen variant="vinhLocked" />;
+    case 'submitted':
+      return <MilestoneSubmittedScreen fingerprint={SUBMITTED_FP} />;
   }
 }
 

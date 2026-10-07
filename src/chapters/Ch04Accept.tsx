@@ -83,7 +83,7 @@ export function Ch04Accept({ stills = false }: { stills?: boolean }) {
               <StaticPhones
                 phones={[
                   { screen: <ContractAcceptScreen />, owner: 'you' },
-                  { screen: <ContractDetailScreen state="accepted" />, owner: 'you' },
+                  { screen: <ContractDetailScreen variant="vinhAccepted" />, owner: 'you' },
                 ]}
               />
             </div>
