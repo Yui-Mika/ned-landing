@@ -1,30 +1,11 @@
-import { useSyncExternalStore } from 'react';
+import { signals } from '../motion/anchors';
 
-// A tiny shared store: is the pointer over a call to action? Teddy leans toward it.
-let hovering = false;
-const listeners = new Set<() => void>();
-
-export function setCtaHover(value: boolean) {
-  if (hovering === value) return;
-  hovering = value;
-  listeners.forEach((l) => l());
-}
-
-export function useCtaHover() {
-  return useSyncExternalStore(
-    (cb) => {
-      listeners.add(cb);
-      return () => listeners.delete(cb);
-    },
-    () => hovering,
-    () => false,
-  );
-}
+// Is the pointer (or focus) on a call to action? Freelancer Teddy leans in, curious (motion map 09.9).
 
 /** Spread onto any CTA element. */
 export const ctaHoverProps = {
-  onPointerEnter: () => setCtaHover(true),
-  onPointerLeave: () => setCtaHover(false),
-  onFocus: () => setCtaHover(true),
-  onBlur: () => setCtaHover(false),
+  onPointerEnter: () => signals.ctaHover.set(1),
+  onPointerLeave: () => signals.ctaHover.set(0),
+  onFocus: () => signals.ctaHover.set(1),
+  onBlur: () => signals.ctaHover.set(0),
 };
