@@ -18,6 +18,8 @@ type Props = {
 
 /**
  * CSS/SVG poster of the hero phone. Sized in pure CSS (SVG viewBox), so it also shows with no JS.
+ * Positioned in the hero (absolute, not fixed), so without JS / WebGL it scrolls away with the hero
+ * instead of covering later chapters.
  * With JS: hidden until the hero intro is done (§16.1, no flash of a phone), then it enters like the
  * 3D phone, and fades out once the 3D phone takes over (or stays when there is no WebGL).
  */
@@ -48,7 +50,7 @@ export function PhonePoster({ stageReady }: Props) {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none fixed top-[calc(100svh-92vw*0.95)] left-1/2 z-0 -translate-x-1/2 md:top-1/2 md:left-[70%] md:-translate-y-1/2 portrait:max-lg:top-[calc(100svh-92vw*0.95)] portrait:max-lg:translate-y-0"
+      className="pointer-events-none absolute top-[calc(100svh-92vw*0.95)] left-1/2 z-0 -translate-x-1/2 md:top-[50svh] md:left-[70%] md:-translate-y-1/2 portrait:max-lg:top-[calc(100svh-92vw*0.95)] portrait:max-lg:translate-y-0"
     >
       <motion.div data-intro="" data-phone-poster="" animate={controls} className="flex flex-col items-center gap-4">
         <svg

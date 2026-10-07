@@ -51,8 +51,36 @@ export const copy = {
       status: 'Released when approved, or after the review time',
     },
   },
+  problem: {
+    headline: 'Today, the work comes first. The money comes later.',
+    // SPEC §6 row 01 gives only the headline and "both sides carry a risk". These two lines are a proposal:
+    // TODO(copy): confirm with the owner. Clients are never the villain here.
+    l1: 'Freelancers deliver the work, then wait for the money.',
+    l2: 'Clients are asked to send money up front, before they see any work.',
+  },
+  /** Chapter 01 screens: a generic messaging app (not N.E.D), then the N.E.D splash. */
+  chat: {
+    you: {
+      contact: 'Client',
+      files: ['Wireframes_v2.fig', 'Visual_design.pdf'],
+      sent: 'Files sent ✓',
+      receipt: 'Delivered',
+      daysLater: (n: number) => `${n} days later`,
+    },
+    client: {
+      contact: 'Freelancer',
+      clock: '9:41',
+      incoming: 'Hi! I can start on Monday. Can you send part of it up front?',
+      draft: "Send 500 USDC up front to someone I've never met?",
+    },
+    placeholder: 'Message',
+    send: 'Send',
+  },
+  splash: {
+    product: 'Milestone Lock',
+  },
   later: {
     title: 'More chapters coming',
-    body: 'Chapter 01 and the rest of the story are next.',
+    body: 'Chapter 02 and the rest of the story are next.',
   },
 } as const;

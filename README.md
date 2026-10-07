@@ -11,7 +11,8 @@ Next.js (App Router) · TypeScript · Tailwind v4 · Lenis · Motion (Framer Mot
 | --- | --- |
 | Skeleton (smooth scroll, fixed 3D stage, top bar, links) | Built |
 | 00 Hero (draggable 3D phone, Teddy, T1 glide) | Built |
-| 01–14, orbit nav, present mode, EN/VI | Not yet |
+| 01 The problem (generic chat app, clock from scroll, T3 split, N.E.D splash) | Built |
+| 02–14, orbit nav, present mode, EN/VI | Not yet |
 
 ## Run it
 

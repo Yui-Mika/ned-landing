@@ -30,6 +30,17 @@ export function useReducedMotionSafe(): boolean {
   );
 }
 
+const noopSubscribe = () => () => {};
+
+/** False on the server and while hydrating, true after. Lets JS-only start states stay out of the HTML. */
+export function useHydrated(): boolean {
+  return useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false,
+  );
+}
+
 export const isTouch = () =>
   typeof window !== 'undefined' && window.matchMedia('(hover: none), (pointer: coarse)').matches;
 

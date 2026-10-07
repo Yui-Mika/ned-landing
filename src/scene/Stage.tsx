@@ -78,6 +78,8 @@ export default function Stage({ eventSource, reduced, onReady }: Props) {
         <CameraRig />
         <HtmlLayerContext.Provider value={htmlLayer}>
           <Phone reduced={reduced} portrait={portrait} />
+          {/* Second phone for T3 Split (chapter 01); hidden behind yours the rest of the time. */}
+          <Phone reduced={reduced} portrait={portrait} track="phoneB" interactive={false} />
         </HtmlLayerContext.Provider>
         <Ready onReady={onReady} />
       </Canvas>

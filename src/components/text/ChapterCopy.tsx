@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { useTransform, type MotionValue } from 'motion/react';
-import { useReducedMotionSafe } from '@/motion/flags';
+import { useHydrated, useReducedMotionSafe } from '@/motion/flags';
 import { chapterById } from '@/content/chapters';
 import { scrollVh } from '@/motion/scroll';
 import { text } from '@/motion/tokens';
@@ -79,6 +79,7 @@ export type Scrub = {
  */
 export function useScrub(line: number, { blur = false }: { blur?: boolean } = {}): Scrub | null {
   const ctx = useChapterCopy();
+  const hydrated = useHydrated();
   // Hooks must run unconditionally; fall back to a window that never triggers when outside ChapterCopy.
   const plain = !ctx || ctx.reduced;
   const lines = ctx?.lines ?? 1;
@@ -98,6 +99,7 @@ export function useScrub(line: number, { blur = false }: { blur?: boolean } = {}
     return moving ? (blurPx ? 'opacity, transform, filter' : 'opacity, transform') : 'auto';
   });
 
-  if (!ctx) return null;
+  // Server HTML (and no-JS) carries no scrub styles, so copy is never server-rendered hidden (§14.4).
+  if (!ctx || !hydrated) return null;
   return { opacity, y, filter: blurPx ? filter : undefined, visibility, willChange };
 }

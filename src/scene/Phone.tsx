@@ -9,8 +9,9 @@ import { CAMERA_LAMBDA, easeFn, intro } from '@/motion/tokens';
 import { entranceProgress } from '@/motion/intro';
 import { copy } from '@/content/copy';
 import { DeviceTag, OWNER_COLOR } from '@/components/DeviceTag';
-import { HomeScreen, PHONE_SCREEN_PX } from '@/screens/phone/HomeScreen';
-import { samplePose, tracks, type Owner } from './poses';
+import { PHONE_SCREEN_PX } from '@/screens/phone/HomeScreen';
+import { PhoneScreenView } from '@/screens/phone/PhoneScreenView';
+import { samplePose, tracks, type Owner, type PhoneScreen, type TrackName } from './poses';
 import { usePhoneInteraction } from './usePhoneInteraction';
 import { SceneHtml } from './htmlLayer';
 
@@ -55,22 +56,33 @@ function glowTexture() {
   return new THREE.CanvasTexture(c);
 }
 
-type Props = { reduced: boolean; portrait: boolean };
+type Props = {
+  reduced: boolean;
+  portrait: boolean;
+  /** Which poses-table track drives this phone ('phoneB' = the second phone of a T3 Split). */
+  track?: TrackName;
+  /** Hero drag / flip / hover and the "Drag me" hint (your phone only). */
+  interactive?: boolean;
+};
 
-export function Phone({ reduced, portrait }: Props) {
+export function Phone({ reduced, portrait, track = 'phone', interactive = true }: Props) {
   const outer = useRef<THREE.Group>(null);
   const inner = useRef<THREE.Group>(null);
   const frontEl = useRef<HTMLDivElement>(null);
   const backEl = useRef<HTMLDivElement>(null);
   const tagEl = useRef<HTMLDivElement>(null);
   const hintEl = useRef<HTMLDivElement>(null);
+  const toEl = useRef<HTMLDivElement>(null);
+  const dimEl = useRef<HTMLDivElement>(null);
   const glowMat = useRef<THREE.MeshBasicMaterial>(null);
   const glowBase = useRef(0.28);
 
   const [inHero, setInHero] = useState(true);
   // Hero intro (§16): hidden until the sweep ends; drag / flip only once the entrance has finished.
   const [entered, setEntered] = useState(false);
-  const { handlers, step, hovered, interacted, flips } = usePhoneInteraction({ reduced, enabled: inHero && entered });
+  const { handlers, step, hovered, interacted, flips } = usePhoneInteraction({ reduced, enabled: interactive && inHero && entered });
+  // Screen crossfade layers (from the poses table); state changes only when a switch starts or ends.
+  const [layers, setLayers] = useState<{ from: PhoneScreen; to: PhoneScreen }>({ from: 'home', to: 'home' });
   const firstFrameAt = useRef<number | null>(null);
   const fadeMats = useRef<{ mat: THREE.Material; base: number; transparent: boolean }[] | null>(null);
 
@@ -99,7 +111,7 @@ export function Phone({ reduced, portrait }: Props) {
   useFrame((state, dt) => {
     if (!outer.current || !inner.current) return;
     const vh = scrollVh.get();
-    const pose = samplePose(portrait ? tracks.phone.portrait : tracks.phone.desktop, vh, reduced);
+    const pose = samplePose(portrait ? tracks[track].portrait : tracks[track].desktop, vh, reduced);
     const vp = state.viewport.getCurrentViewport(state.camera, [0, 0, 0]);
 
     // Intro entrance (§16.1): opacity 0 → 1, rises 24 px, scale 0.96 → 1 (reduced: 200 ms fade only).
@@ -139,6 +151,11 @@ export function Phone({ reduced, portrait }: Props) {
     }
     for (const el of [frontEl.current, tagEl.current, backEl.current]) if (el) el.style.opacity = String(opacity);
 
+    // Screen crossfade and dim, straight from the pose.
+    if (pose.screenFrom !== layers.from || pose.screenTo !== layers.to) setLayers({ from: pose.screenFrom, to: pose.screenTo });
+    if (toEl.current) toEl.current.style.opacity = String(pose.screenMix);
+    if (dimEl.current) dimEl.current.style.opacity = String(pose.dim);
+
     // Interaction offsets on top of the pose.
     tmp.ndc.copy(outer.current.position).project(state.camera);
     const o = step(dt, state.pointer, tmp.ndc);
@@ -165,7 +182,7 @@ export function Phone({ reduced, portrait }: Props) {
       colorTarget.set(OWNER_COLOR[facing ? frontOwner : backOwner]);
       glowMat.current.color.lerp(colorTarget, 1 - Math.exp(-CAMERA_LAMBDA * dt));
       glowBase.current = THREE.MathUtils.damp(glowBase.current, hovered ? 0.55 : 0.28, CAMERA_LAMBDA, dt);
-      glowMat.current.opacity = glowBase.current * opacity;
+      glowMat.current.opacity = glowBase.current * opacity * (1 - pose.dim);
     }
 
     // Hint enters with Teddy, just after the phone; fades after the first interaction or with scroll.
@@ -193,7 +210,7 @@ export function Phone({ reduced, portrait }: Props) {
 
       <group ref={inner}>
         {/* Body: six faces with visible thickness */}
-        <RoundedBox args={[BODY.w, BODY.h, BODY.d]} radius={BODY.r * 0.5} smoothness={5} {...handlers}>
+        <RoundedBox args={[BODY.w, BODY.h, BODY.d]} radius={BODY.r * 0.5} smoothness={5} {...(interactive ? handlers : {})}>
           <meshStandardMaterial color="#1A1A22" metalness={0.75} roughness={0.32} />
         </RoundedBox>
         {/* Side buttons */}
@@ -211,8 +228,15 @@ export function Phone({ reduced, portrait }: Props) {
           <meshBasicMaterial color="#05050A" />
         </mesh>
         <SceneHtml transform distanceFactor={400 / PX_PER_UNIT} position={[0, 0, BODY.d / 2 + 0.003]}>
-          <div ref={frontEl} data-phone-front="" style={{ opacity: 0 }}>
-            <HomeScreen owner={frontOwner} />
+          <div ref={frontEl} data-phone-front={track} className="relative" style={{ opacity: 0 }}>
+            <PhoneScreenView key={layers.from} screen={layers.from} owner={frontOwner} />
+            {layers.to !== layers.from && (
+              <div key={layers.to} ref={toEl} className="absolute inset-0" style={{ opacity: 0 }}>
+                <PhoneScreenView screen={layers.to} owner={frontOwner} />
+              </div>
+            )}
+            {/* Dim (landing layer, over the screen): "both dim" in chapter 01. */}
+            <div ref={dimEl} aria-hidden="true" className="absolute inset-0 rounded-[48px] bg-black" style={{ opacity: 0 }} />
           </div>
         </SceneHtml>
 
@@ -245,21 +269,23 @@ export function Phone({ reduced, portrait }: Props) {
       </group>
 
       {/* "Drag me" hint (right of the phone; above it on portrait). Fades after the first interaction. */}
-      <SceneHtml position={portrait ? [BODY.w / 2 - 0.04, BODY.h / 2 + 0.09, BODY.d / 2] : [BODY.w / 2 + 0.12, -0.35, 0]}>
-        <div
-          ref={hintEl}
-          data-phone-hint=""
-          style={{ opacity: 0 }}
-          className={`whitespace-nowrap font-mono text-[12px] tracking-wider text-muted uppercase ${portrait ? '-translate-x-full -translate-y-1/2 text-right' : '-translate-y-1/2'}`}
-        >
-          <span aria-hidden="true">{portrait ? '↓ ' : '← '}</span>
-          {copy.hero.dragHint}
-          <span className={portrait ? 'opacity-70' : 'block text-[11px] opacity-70'}>
-            {portrait ? ' · ' : ''}
-            {copy.hero.tapHint}
-          </span>
-        </div>
-      </SceneHtml>
+      {interactive && (
+        <SceneHtml position={portrait ? [BODY.w / 2 - 0.04, BODY.h / 2 + 0.09, BODY.d / 2] : [BODY.w / 2 + 0.12, -0.35, 0]}>
+          <div
+            ref={hintEl}
+            data-phone-hint=""
+            style={{ opacity: 0 }}
+            className={`whitespace-nowrap font-mono text-[12px] tracking-wider text-muted uppercase ${portrait ? '-translate-x-full -translate-y-1/2 text-right' : '-translate-y-1/2'}`}
+          >
+            <span aria-hidden="true">{portrait ? '↓ ' : '← '}</span>
+            {copy.hero.dragHint}
+            <span className={portrait ? 'opacity-70' : 'block text-[11px] opacity-70'}>
+              {portrait ? ' · ' : ''}
+              {copy.hero.tapHint}
+            </span>
+          </div>
+        </SceneHtml>
+      )}
     </group>
   );
 }

@@ -13,7 +13,9 @@ import { ScrollCue } from '@/components/ScrollCue';
 import { PhonePoster } from '@/components/PhonePoster';
 import { Teddy } from '@/components/Teddy';
 import { RefractionBand } from '@/components/hero/RefractionBand';
+import { ChapterGlow } from '@/components/ChapterGlow';
 import { Ch00Hero } from '@/chapters/Ch00Hero';
+import { Ch01Problem } from '@/chapters/Ch01Problem';
 
 // three.js and the scene load after first paint; the CSS poster holds the spot meanwhile.
 const Stage = dynamic(() => import('@/scene/Stage'), { ssr: false });
@@ -40,8 +42,9 @@ export default function Page() {
         </a>
         <SmoothScroll />
 
-        {/* Back to front: light band, 3D canvas (transparent), poster, copy. */}
+        {/* Back to front: light band / chapter glows, 3D canvas (transparent), poster, copy. */}
         <RefractionBand />
+        <ChapterGlow chapterId="01" />
         {webgl && <Stage eventSource={root} reduced={reduced} onReady={onReady} />}
         <PhonePoster stageReady={stageReady} />
         <Teddy />
@@ -51,9 +54,10 @@ export default function Page() {
 
         <main id="main" className="relative z-10">
           <Ch00Hero />
+          <Ch01Problem stills={webgl === false} />
 
-          {/* Placeholder until chapter 01 exists: gives the T1 glide room to finish. */}
-          <section aria-label={copy.later.title} className="flex h-svh items-center justify-end px-4 md:px-14">
+          {/* Placeholder until chapter 02 exists: room to see chapter 01's last pose. */}
+          <section aria-label={copy.later.title} className="mt-[100svh] flex h-svh items-center justify-end px-4 md:px-14">
             <div className="max-w-sm text-right">
               <p className="font-mono text-[12px] tracking-wider text-accent uppercase">01 →</p>
               <h2 className="mt-2 font-display text-[28px] font-bold text-ink">{copy.later.title}</h2>
