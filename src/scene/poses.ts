@@ -49,7 +49,12 @@ export type PhoneScreen =
   | 'submitted'
   | 'review'
   | 'releasedClient'
-  | 'releasedVN';
+  | 'releasedVN'
+  | 'logoSubmitted'
+  | 'anyoneRelease'
+  | 'anyoneRefund'
+  | 'releasedB'
+  | 'refunded';
 /** Device transform vocabulary, exactly as named in SPEC §5.3. */
 export type TransformName =
   | 'T1 Glide'
@@ -431,6 +436,72 @@ function ch07Phone(o: { at: Vec3; rotation: Vec3; size: number; left: Place }): 
   ];
 }
 
+/**
+ * Chapter 08 · If someone goes quiet (1900–2200 vh): your phone fades out of the split; the client's phone becomes
+ * phone A ("Approved", MilestoneReleased) and T6 Fans into three side by side. Phone B (anyone): the board's review
+ * clock counts to 0 with scroll → "Release now · anyone can" sheet, its slider moves with scroll → released.
+ * Phone C (anyone): "Not submitted · deadline passed" refund sheet, slider → "Refunded to client". Folds back at the end.
+ */
+export const CH08 = {
+  youOut: [1900, 1908] as [number, number],
+  fan: [1910, 1926] as [number, number],
+  /** The board's review clock (60 s review, 42 s left at t = 0) counts to 0 over this window. */
+  clock: [1932, 1972] as [number, number],
+  toSheetB: [1976, 1984] as [number, number],
+  slideB: [1990, 2014] as [number, number],
+  releasedB: [2018, 2026] as [number, number],
+  slideC: [2036, 2060] as [number, number],
+  refunded: [2064, 2072] as [number, number],
+  fold: [2178, 2194] as [number, number],
+};
+/** Seconds left on phone B's review clock (board: 42 s at t = 0), a pure function of scroll. */
+export const ch08ClockLeft = (vh: number) => Math.round(42 * (1 - Math.min(1, Math.max(0, (vh - CH08.clock[0]) / (CH08.clock[1] - CH08.clock[0])))));
+
+/** T6 Fan end poses for chapter 08: three phones side by side right of the copy column, never overlapping. */
+const FAN8: Record<'desktop' | 'portrait', { left: Place; centre: Place; right: Place }> = {
+  desktop: {
+    left: { device: 'phone', position: [-0.0625, -0.02, 0], rotation: [2, 726, 2], size: 0.56 },
+    centre: { device: 'phone', position: [0.3125, -0.02, 0], rotation: [2, 720, 0], size: 0.56 },
+    right: { device: 'phone', position: [0.6875, -0.02, 0], rotation: [2, 714, -2], size: 0.56 },
+  },
+  portrait: {
+    left: { device: 'phone', position: [-0.62, -0.62, 0], rotation: [4, 724, 2], size: 0.28 },
+    centre: { device: 'phone', position: [0, -0.62, 0], rotation: [4, 720, 0], size: 0.28 },
+    right: { device: 'phone', position: [0.62, -0.62, 0], rotation: [4, 716, -2], size: 0.28 },
+  },
+};
+
+/** Chapter 08, phone A (the client's phone from chapter 07): waits for your phone to leave, then leads the fan. */
+function ch08PhoneA(o: { from: Place; left: Place }): Pose[] {
+  const a = (vh: number, place: Place, extra: Partial<Pose> = {}): Pose => ({ vh, ...place, screen: 'releasedClient', owner: 'client', ...extra });
+  return [a(CH08.fan[0], o.from), a(CH08.fan[1], o.left, { ease: 'easeOut', transform: 'T6 Fan' }), a(CH08.fold[1], o.left), a(2200, o.left)];
+}
+
+/** Chapter 08, phones B and C: out from behind phone A (T6 Fan), their screens by scroll, folded back at the end. */
+function ch08Side(main: Pose[], to: Place, stops: { vh: number; screen: PhoneScreen }[]): Pose[] {
+  const first = stops[0].screen;
+  const last = stops[stops.length - 1].screen;
+  return [
+    { vh: CH08.fan[0], ...behind(main, CH08.fan[0]), screen: first, owner: 'anyone', screenSwitch: 'cut' },
+    { vh: CH08.fan[1], ...to, screen: first, owner: 'anyone', ease: 'easeOut', transform: 'T6 Fan' },
+    ...stops.map(({ vh, screen }): Pose => ({ vh, ...to, screen, owner: 'anyone' })),
+    { vh: CH08.fold[0], ...to, screen: last, owner: 'anyone' },
+    { vh: CH08.fold[1], ...behind(main, CH08.fold[1]), screen: last, owner: 'anyone', transform: 'T6 Fan' },
+  ];
+}
+const ch08B = (main: Pose[], to: Place) =>
+  ch08Side(main, to, [
+    { vh: CH08.toSheetB[0], screen: 'logoSubmitted' },
+    { vh: CH08.toSheetB[1], screen: 'anyoneRelease' },
+    { vh: CH08.releasedB[0], screen: 'anyoneRelease' },
+    { vh: CH08.releasedB[1], screen: 'releasedB' },
+  ]);
+const ch08C = (main: Pose[], to: Place) =>
+  ch08Side(main, to, [
+    { vh: CH08.refunded[0], screen: 'anyoneRefund' },
+    { vh: CH08.refunded[1], screen: 'refunded' },
+  ]);
+
 const phoneDesktop: Pose[] = [
   // Chapter 00 · Hero (0–140 vh). Phone rises 40 px and turns −40° → −18°, then T1 Glide to the left.
   { vh: 0, device: 'phone', position: [0.4, -0.12, 0], rotation: [4, -40, 0], size: 0.74, screen: 'home', owner: 'you' },
@@ -480,6 +551,9 @@ const phoneDesktop: Pose[] = [
 
   // Chapter 07 · Review and release (1620–1900 vh): see CH07.
   ...ch07Phone({ at: [0.3, -0.04, 0], rotation: [2, 352, 0], size: 0.74, left: SPLIT7.desktop.left }),
+
+  // Chapter 08 · If someone goes quiet (1900–2200 vh): see CH08.
+  ...ch08PhoneA({ from: SPLIT7.desktop.left, left: FAN8.desktop.left }),
 ];
 
 // Portrait (SPEC §8): phone at 92% width rising from the bottom, top ~60% visible.
@@ -516,6 +590,7 @@ const phonePortrait: Pose[] = [
   ...ch05Phone({ at: [0, -0.88, 0], rotation: [4, 0, 0], size: 0.86 }),
   ...ch06Phone({ at: [0, -0.88, 0], rotation: [4, 360, 0], size: 0.86 }),
   ...ch07Phone({ at: [0, -0.88, 0], rotation: [4, 360, 0], size: 0.86, left: SPLIT7.portrait.left }),
+  ...ch08PhoneA({ from: SPLIT7.portrait.left, left: FAN8.portrait.left }),
 ];
 
 /**
@@ -532,7 +607,10 @@ const phoneBDesktop: Pose[] = [
   // Chapter 07 T3 Split: your phone comes out from behind the client's, on MilestoneReleasedVN.
   { vh: CH07.split[0], ...behind(phoneDesktop, CH07.split[0]), screen: 'releasedVN', owner: 'you' },
   { vh: CH07.split[1], ...SPLIT7.desktop.right, screen: 'releasedVN', owner: 'you', ease: 'easeOut', transform: 'T3 Split' },
-  { vh: 1900, ...SPLIT7.desktop.right, screen: 'releasedVN', owner: 'you' },
+  { vh: 1898, ...SPLIT7.desktop.right, screen: 'releasedVN', owner: 'you' },
+  // Chapter 08: your phone leaves first (fades, shrinks a little), then comes back as phone B of the fan.
+  { vh: CH08.youOut[1], ...SPLIT7.desktop.right, size: SPLIT7.desktop.right.size * FADE_SCALE.phone, opacity: 0, screen: 'releasedVN', owner: 'you', ease: 'linear' },
+  ...ch08B(phoneDesktop, FAN8.desktop.centre),
 ];
 
 const phoneBPortrait: Pose[] = [
@@ -544,12 +622,14 @@ const phoneBPortrait: Pose[] = [
   ...t6Fan(phonePortrait, FAN.portrait.left, 'cn1'),
   { vh: CH07.split[0], ...behind(phonePortrait, CH07.split[0]), screen: 'releasedVN', owner: 'you' },
   { vh: CH07.split[1], ...SPLIT7.portrait.right, screen: 'releasedVN', owner: 'you', ease: 'easeOut', transform: 'T3 Split' },
-  { vh: 1900, ...SPLIT7.portrait.right, screen: 'releasedVN', owner: 'you' },
+  { vh: 1898, ...SPLIT7.portrait.right, screen: 'releasedVN', owner: 'you' },
+  { vh: CH08.youOut[1], ...SPLIT7.portrait.right, size: SPLIT7.portrait.right.size * FADE_SCALE.phone, opacity: 0, screen: 'releasedVN', owner: 'you', ease: 'linear' },
+  ...ch08B(phonePortrait, FAN8.portrait.centre),
 ];
 
 /** Third phone: only for the T6 Fan (chapter 03). */
-const phoneCDesktop: Pose[] = t6Fan(phoneDesktop, FAN.desktop.right, 'cn3');
-const phoneCPortrait: Pose[] = t6Fan(phonePortrait, FAN.portrait.right, 'cn3');
+const phoneCDesktop: Pose[] = [...t6Fan(phoneDesktop, FAN.desktop.right, 'cn3'), ...ch08C(phoneDesktop, FAN8.desktop.right)];
+const phoneCPortrait: Pose[] = [...t6Fan(phonePortrait, FAN.portrait.right, 'cn3'), ...ch08C(phonePortrait, FAN8.portrait.right)];
 
 export const tracks = {
   phone: { desktop: phoneDesktop, portrait: phonePortrait },

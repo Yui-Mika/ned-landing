@@ -9,6 +9,8 @@ import { FONT, Screen, StatusBar, chipStyle, dotStyle, type Tone } from './parts
  * - `vinhAccepted` = ContractDetailVinhAccepted: role freelancer · view vn · state accepted
  * - `miaAccepted`  = ContractDetailMiaAccepted: role client · view intl · state accepted
  * - `vinhLocked`   = ContractDetailVinhLocked: role freelancer · view vn · state locked
+ * - `logoSubmitted` = role client · view intl · contract B · state submitted; `left` = seconds on its review clock
+ *   (chapter 08 drives it by scroll instead of the board's 1 s timer)
  * Markup and inline styles 1:1; each variant resolves the board's renderVals for its state. Left out: the
  * prototype-only "DEMO · switch to…" line, the board's 1 s timer (countdowns shown as at t = 0) and the entrance
  * animations. SPEC numbers.
@@ -16,6 +18,9 @@ import { FONT, Screen, StatusBar, chipStyle, dotStyle, type Tone } from './parts
 const s = copy.screens.contractDetail;
 const mia = copy.screens.contractDetailMia;
 const locked = copy.screens.contractDetailVinhLocked;
+const logo = copy.screens.contractDetailLogo;
+/** Board fmt() for under an hour: m:ss. */
+const fmt = (sec: number) => (sec <= 0 ? '0:00' : `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`);
 const SHADOW = '0 1px 2px rgba(17,17,22,0.04), 0 6px 16px -6px rgba(17,17,22,0.10)';
 const simTag: CSSProperties = {
   display: 'inline-flex',
@@ -65,11 +70,15 @@ const estimate = (text: string, rest: string) => (
   </>
 );
 
-export type ContractDetailVariant = 'vinhNew' | 'vinhAccepted' | 'miaAccepted' | 'vinhLocked';
+export type ContractDetailVariant = 'vinhNew' | 'vinhAccepted' | 'miaAccepted' | 'vinhLocked' | 'logoSubmitted';
 
 type Milestone = { n: number; amt: string; amtSub: string; submitBy: string; reviewBy: string; cd?: string };
 type View = {
   name: string;
+  title?: string;
+  cid?: string;
+  /** Countdown row in the board's warning style (under 10% of the window left, or 0). */
+  cdWarn?: boolean;
   status: { text: string; tone: Tone };
   wait?: string;
   party: { seed: string; other: string; role: string; facts: string };
@@ -83,9 +92,28 @@ type View = {
   actions: { label: string; primary: boolean; tap?: string }[];
 };
 
-function resolve(variant: ContractDetailVariant): View {
+function resolve(variant: ContractDetailVariant, left: number): View {
   const vinhParty = { seed: 'mia', other: s.other, role: s.otherRole, facts: s.otherFacts };
   switch (variant) {
+    case 'logoSubmitted':
+      return {
+        name: 'cdLogoSubmitted',
+        title: logo.title,
+        cid: logo.cid,
+        status: { text: logo.statusBefore + fmt(Math.max(0, left)), tone: 'warning' },
+        party: { seed: 'vinh', other: logo.other, role: logo.otherRole, facts: logo.otherFacts },
+        hero: { label: logo.heroLabel, amt: logo.heroAmt, sub: logo.heroSub, dest: logo.dest, destSim: true },
+        funded: true,
+        notFunded: '',
+        milestones: logo.milestones.map((m) => ({ ...m, cd: left <= 0 ? logo.now : fmt(left) })),
+        msStatus: { text: logo.msStatus, tone: 'warning' },
+        countdown: logo.countdown,
+        cdWarn: left <= 0 || left < 60 * 0.1,
+        actions: [
+          { label: logo.actions.review, primary: true },
+          { label: logo.actions.dispute, primary: false },
+        ],
+      };
     case 'miaAccepted':
       return {
         name: 'cdMiaAccepted',
@@ -138,8 +166,8 @@ function resolve(variant: ContractDetailVariant): View {
   }
 }
 
-export function ContractDetailScreen({ variant }: { variant: ContractDetailVariant }) {
-  const v = resolve(variant);
+export function ContractDetailScreen({ variant, left = 0 }: { variant: ContractDetailVariant; left?: number }) {
+  const v = resolve(variant, left);
   return (
     <Screen name={v.name} style={{ background: '#F4F4F6', color: '#111116', display: 'flex', flexDirection: 'column' }}>
       <StatusBar />
@@ -169,7 +197,7 @@ export function ContractDetailScreen({ variant }: { variant: ContractDetailVaria
           data-focus="cd-title"
           style={{ flex: 1, minWidth: 0, margin: 0, fontFamily: FONT.display, fontSize: 18, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
         >
-          {s.title}
+          {v.title ?? s.title}
         </h1>
       </div>
 
@@ -368,8 +396,8 @@ export function ContractDetailScreen({ variant }: { variant: ContractDetailVaria
                   borderRadius: 10,
                   fontSize: 12,
                   fontWeight: 600,
-                  background: '#E6E6EB',
-                  color: '#3F3F49',
+                  background: v.cdWarn ? '#FFF5E1' : '#E6E6EB',
+                  color: v.cdWarn ? '#8A5300' : '#3F3F49',
                 }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
@@ -417,7 +445,7 @@ export function ContractDetailScreen({ variant }: { variant: ContractDetailVaria
           </a>
           <div style={{ ...footerRow, padding: '0 6px 0 14px', fontSize: undefined, fontWeight: undefined }}>
             <span style={{ fontSize: 13, color: '#5E5E6A' }}>
-              {s.contractId} <span style={{ fontFamily: FONT.mono, color: '#111116' }}>{s.cid}</span>
+              {s.contractId} <span style={{ fontFamily: FONT.mono, color: '#111116' }}>{v.cid ?? s.cid}</span>
             </span>
             <button
               type="button"

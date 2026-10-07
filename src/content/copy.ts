@@ -442,6 +442,29 @@ export const copy = {
           { k: 'Released by', v: 'You (@mia)' },
         ],
       },
+      /** who anyone · contract B (= phone/MilestoneReleasedB). SPEC amount (board sample: 10.00 USDC). */
+      anyone: {
+        headline: '250.00 USDC released to @vinh',
+        sub: 'Logo refresh · to VND via payout partner (simulated)',
+        receipt: [
+          { k: 'Contract', v: 'Logo refresh' },
+          { k: 'Amount', v: '250.00 USDC' },
+          { k: 'To', v: 'VND via payout partner (simulated)' },
+          { k: 'Released by', v: 'You (anyone can, after the review time)' },
+        ],
+      },
+      /** who refund · contract A (= phone/MilestoneRefunded). SPEC amount (board sample: 10.00 USDC). */
+      refund: {
+        chip: 'Refunded to client',
+        headline: '250.00 USDC refunded to @mia',
+        sub: 'Landing page design · Milestone 1 · the submission deadline passed, or the freelancer conceded.',
+        receipt: [
+          { k: 'Contract', v: 'Landing page design · Milestone 1' },
+          { k: 'Amount', v: '250.00 USDC' },
+          { k: 'To', v: '@mia (client)' },
+          { k: 'Reason', v: 'Deadline passed or conceded' },
+        ],
+      },
       freelancerVN: {
         headline: 'Released to payout partner',
         subAmount: '≈ 6,500,000 VND (',
@@ -454,6 +477,67 @@ export const copy = {
           { k: 'From', v: '@mia' },
         ],
       },
+    },
+    /**
+     * phone/ContractAnyoneAction: `release` (kind release, contract B "Logo refresh") and `refund`
+     * (= phone/ContractAnyoneActionRefund, contract A). SPEC amount (board sample: 10.00 USDC).
+     */
+    anyoneAction: {
+      back: 'Back',
+      devnet: 'Devnet · test money',
+      parties: 'client @mia · freelancer @vinh',
+      bgAmt: '250.00 USDC',
+      sheetLabel: 'Anyone action',
+      fees: { label: 'Fees', ned: 'N.E.D fee', nedV: 'None during the pilot', network: 'Network fee', networkV: '~0.000005 SOL', networkSub: 'devnet test SOL', partner: 'Payout partner fee', partnerV: 'Set by the partner' },
+      simulated: 'SIMULATED',
+      cancel: 'Cancel',
+      release: {
+        bgHead: 'Logo refresh',
+        bgTitle: 'Logo refresh',
+        bgStatus: 'Submitted · review time passed',
+        title: 'Release now',
+        text: "The review time has passed. Anyone can release this milestone to the freelancer's destination.",
+        rows: [
+          { k: 'Milestone', v: 'Logo refresh · 250.00 USDC' },
+          { k: 'Review time ended', v: '3 Oct, 00:41' },
+          { k: 'Goes to', v: 'VND via payout partner for @vinh (simulated)' },
+        ],
+        slide: 'Slide to release',
+      },
+      refund: {
+        bgHead: 'Landing page design',
+        bgTitle: 'Landing page design · Milestone 1',
+        bgStatus: 'Not submitted · deadline passed',
+        title: 'Refund now',
+        text: 'The submission deadline passed. Anyone can refund this milestone to the client.',
+        rows: [
+          { k: 'Milestone', v: 'Landing page design · Milestone 1' },
+          { k: 'Submission deadline', v: '12 Oct, 18:00 (passed)' },
+          { k: 'Goes to', v: '@mia (client)' },
+        ],
+        slide: 'Slide to refund',
+      },
+    },
+    /**
+     * phone/ContractDetail · role client · view intl · contract B ("Logo refresh") · state submitted: the board's clock
+     * (review time 60 s, 42 s left at t = 0) counts down with scroll in chapter 08. SPEC amount (board sample: 10.00 USDC).
+     */
+    contractDetailLogo: {
+      title: 'Logo refresh',
+      statusBefore: 'Submitted · review by 3 Oct, 00:41 · auto-release ',
+      other: '@vinh',
+      otherRole: 'FREELANCER',
+      otherFacts: 'Vinh · on N.E.D 9 days · phone not verified',
+      heroLabel: 'Locked for @vinh',
+      heroAmt: '250.00 USDC',
+      heroSub: '1 milestone · devnet test money',
+      dest: 'VND via payout partner',
+      msStatus: 'Submitted · review by 3 Oct, 00:41',
+      milestones: [{ n: 1, amt: '250.00 USDC', amtSub: '', submitBy: '3 Oct, 00:40', reviewBy: '3 Oct, 00:41' }],
+      countdown: 'Auto-release unless you dispute',
+      now: 'now',
+      cid: 'B3k8Qz…r2Fw',
+      actions: { review: 'Review milestone 1', dispute: 'Dispute (if shipped)' },
     },
     /** phone/ContractAccept · view vn (VND only; the board hides the USDC option in this view). SPEC amounts. */
     contractAccept: {
@@ -760,6 +844,13 @@ export const copy = {
   },
   /** The invite-link chip (T8): the same string as the link field it lifts off (web/WebContractNew, created). */
   inviteLink: 'ned.app/c/7XqP2mWc#k=Qm4tY8vR2LkN9sQe',
+  /** Chapter 08 copy column: SPEC §6 row 08, exact wording (three lines, no headline in the SPEC; the first leads). */
+  quiet: {
+    l1: "No answer by the review deadline? It's released to you on its own.",
+    l2: "Miss a submission deadline, and that milestone's money goes back to the client.",
+    l3: 'Deadlines run on their own: once one passes, anyone can trigger the next step.',
+    chip: 'Disputes over quality: planned after launch',
+  },
   /** Chapter 07 copy column and landing-layer block: SPEC §6 row 07, exact wording. */
   release: {
     headline: 'Your client checks the work, then releases it.',
@@ -825,6 +916,6 @@ export const copy = {
   },
   later: {
     title: 'More chapters coming',
-    body: 'Chapter 08 and the rest of the story are next.',
+    body: 'Chapter 09 and the rest of the story are next.',
   },
 } as const;

@@ -111,6 +111,9 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
   const [frontFlips, setFrontFlips] = useState(0);
   const frontOwner = frontFlips % 2 ? other(storyOwner) : storyOwner;
   const backOwner = flips % 2 ? other(storyOwner) : storyOwner;
+  // "Anyone" (grey, SPEC §4): a phone that stands for anyone triggering a step (chapter 08). Tags only; flips never apply.
+  const [anyone, setAnyone] = useState(false);
+  const tagOwner: Owner = anyone ? 'anyone' : frontOwner;
 
   const screenGeo = useMemo(() => roundedRect(SCREEN.w + 0.02, SCREEN.h + 0.02, SCREEN.r + 0.01), []);
   const glowTex = useMemo(() => glowTexture(), []);
@@ -222,12 +225,13 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
 
     const p = pose.owner === 'anyone' ? 'you' : pose.owner;
     if (p !== storyOwner) setStoryOwner(p);
+    if ((pose.owner === 'anyone') !== anyone) setAnyone(pose.owner === 'anyone');
     const hero = vh < INTERACTIVE_UNTIL_VH;
     if (hero !== inHero) setInHero(hero);
 
     // Glow in the owner colour, brighter on hover.
     if (glowMat.current) {
-      colorTarget.set(OWNER_COLOR[facing ? frontOwner : backOwner]);
+      colorTarget.set(OWNER_COLOR[anyone ? 'anyone' : facing ? frontOwner : backOwner]);
       glowMat.current.color.lerp(colorTarget, 1 - Math.exp(-CAMERA_LAMBDA * dt));
       glowBase.current = THREE.MathUtils.damp(glowBase.current, hovered ? 0.55 : 0.28, CAMERA_LAMBDA, dt);
       glowMat.current.opacity = glowBase.current * opacity * (1 - pose.dim) * (1 - dock);
@@ -310,7 +314,7 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
           position={portrait ? [-BODY.w / 2 + 0.24, BODY.h / 2 + 0.09, BODY.d / 2] : [0, -BODY.h / 2 - 0.13, BODY.d / 2]}
         >
           <div ref={tagEl} style={{ opacity: 0 }}>
-            <DeviceTag owner={frontOwner} size="md" />
+            <DeviceTag owner={tagOwner} size="md" />
           </div>
         </SceneHtml>
 
@@ -326,7 +330,7 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
         >
           <div ref={backEl} style={{ visibility: 'hidden' }} className="flex flex-col items-center gap-6">
             <span className="font-display text-[44px] font-bold tracking-tight text-white/80">{copy.site.wordmark}</span>
-            <DeviceTag owner={backOwner} size="lg" />
+            <DeviceTag owner={anyone ? 'anyone' : backOwner} size="lg" />
           </div>
         </SceneHtml>
       </group>

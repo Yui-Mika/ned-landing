@@ -3,7 +3,7 @@ import { DeviceTag } from '@/components/DeviceTag';
 import { PHONE_SCREEN_PX } from '@/screens/phone/size';
 
 /** No-WebGL fallback (SPEC §8): a chapter's phones as still screens beside its copy, each with its owner tag. */
-export function StaticPhones({ phones, scale = 0.42 }: { phones: { screen: ReactNode; owner: 'you' | 'client' }[]; scale?: number }) {
+export function StaticPhones({ phones, scale = 0.42 }: { phones: { screen: ReactNode; owner: 'you' | 'client' | 'anyone' }[]; scale?: number }) {
   return (
     <div aria-hidden="true" className="flex gap-4 md:gap-8">
       {phones.map(({ screen, owner }, i) => (

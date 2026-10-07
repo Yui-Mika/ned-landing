@@ -6,12 +6,19 @@ import { FONT, Screen, StatusBar, chipStyle, dotStyle } from './parts';
  * Port of docs/design-reference/phone/MilestoneReleased.dc.html (contract A). Markup and inline styles 1:1.
  * `client`: who client · view intl (its prototype-only "DEMO · switch to @vinh's phone" removed).
  * `freelancerVN`: = phone/MilestoneReleasedVN, who freelancer · view vn.
- * Teddy (happy, on success) is the board's image. Receipt amounts carry `data-focus` for the amount chip (chapter 07).
+ * `anyone`: = phone/MilestoneReleasedB, who anyone · contract B. `refund`: = phone/MilestoneRefunded, who refund.
+ * Teddy (happy, on success) is the board's image; the refund state shows the board's icon instead. Receipt amounts carry `data-focus` for the amount chip (chapter 07).
  * Left out: the entrance animations.
  */
 const s = copy.screens.milestoneReleased;
 
-export type MilestoneReleasedVariant = 'client' | 'freelancerVN';
+export type MilestoneReleasedVariant = 'client' | 'freelancerVN' | 'anyone' | 'refund';
+const NAME: Record<MilestoneReleasedVariant, string> = {
+  client: 'milestoneReleased',
+  freelancerVN: 'milestoneReleasedVN',
+  anyone: 'milestoneReleasedB',
+  refund: 'milestoneRefunded',
+};
 
 export function MilestoneReleasedScreen({ variant }: { variant: MilestoneReleasedVariant }) {
   const v = s[variant];
@@ -26,11 +33,13 @@ export function MilestoneReleasedScreen({ variant }: { variant: MilestoneRelease
         {f.subRest}
       </>
     );
-  } else sub = s.client.sub;
+  } else sub = s[variant].sub;
+  const refund = variant === 'refund';
+  const chip = refund ? { text: s.refund.chip, tone: 'neutral' as const } : { text: s.chip, tone: 'success' as const };
 
   return (
     <Screen
-      name={variant === 'client' ? 'milestoneReleased' : 'milestoneReleasedVN'}
+      name={NAME[variant]}
       style={{ background: '#F4F4F6', color: '#111116', display: 'flex', flexDirection: 'column' }}
     >
       <StatusBar />
@@ -66,11 +75,32 @@ export function MilestoneReleasedScreen({ variant }: { variant: MilestoneRelease
           position: 'relative',
         }}
       >
-        <img src="/design-assets/teddy-happy_22f5490f.png" alt={s.teddyAlt} style={{ width: 150, height: 116, objectFit: 'contain' }} />
+        {refund ? (
+          <div
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: 9999,
+              background: '#FFFFFF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: 'none',
+              boxShadow: '0 1px 2px rgba(17,17,22,0.04), 0 6px 16px -6px rgba(17,17,22,0.10)',
+            }}
+          >
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#4B4B57" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M9 14 4 9l5-5" />
+              <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+            </svg>
+          </div>
+        ) : (
+          <img src="/design-assets/teddy-happy_22f5490f.png" alt={s.teddyAlt} style={{ width: 150, height: 116, objectFit: 'contain' }} />
+        )}
         <div style={{ marginTop: 14 }}>
-          <span style={chipStyle('success')}>
-            <span style={dotStyle('success')} />
-            {s.chip}
+          <span style={chipStyle(chip.tone)}>
+            <span style={dotStyle(chip.tone)} />
+            {chip.text}
           </span>
         </div>
         <h1 style={{ margin: '12px 0 0', fontFamily: FONT.display, fontSize: 26, fontWeight: 700, lineHeight: 1.2 }}>{v.headline}</h1>
