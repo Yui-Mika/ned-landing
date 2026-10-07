@@ -1,61 +1,69 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
+import { useEffect } from 'react';
+import { motion, useAnimationControls } from 'motion/react';
+import { useReducedMotionSafe } from '@/motion/flags';
 import { HomeScreen, PHONE_SCREEN_PX } from '@/screens/phone/HomeScreen';
 import { DeviceTag } from './DeviceTag';
-import { isPortrait } from '@/motion/flags';
+import { useIntro } from '@/motion/intro';
+import { EASE_OUT, intro } from '@/motion/tokens';
 
-const BEZEL = 14;
+const BEZEL = 16;
 const FRAME = { w: PHONE_SCREEN_PX.w + BEZEL * 2, h: PHONE_SCREEN_PX.h + BEZEL * 2 };
 
+type Props = {
+  /** The 3D phone has drawn its first frame: hand over to it. */
+  stageReady: boolean;
+};
+
 /**
- * CSS poster of the hero phone: shown while the 3D chunk loads, and as the
- * no-WebGL fallback (same copy, same screen). Sits where the 3D phone starts.
+ * CSS/SVG poster of the hero phone. Sized in pure CSS (SVG viewBox), so it also shows with no JS.
+ * With JS: hidden until the hero intro is done (§16.1, no flash of a phone), then it enters like the
+ * 3D phone, and fades out once the 3D phone takes over (or stays when there is no WebGL).
  */
-export function PhonePoster({ visible }: { visible: boolean }) {
-  const [scale, setScale] = useState(0);
-  const [portrait, setPortrait] = useState(false);
+export function PhonePoster({ stageReady }: Props) {
+  const { phase } = useIntro();
+  const reduced = useReducedMotionSafe();
+  const controls = useAnimationControls();
+  const show = phase === 'done' && !stageReady;
 
   useEffect(() => {
-    const fit = () => {
-      const p = isPortrait();
-      setPortrait(p);
-      setScale(p ? (window.innerWidth * 0.92) / FRAME.w : (window.innerHeight * 0.78) / FRAME.h);
-    };
-    fit();
-    window.addEventListener('resize', fit);
-    return () => window.removeEventListener('resize', fit);
-  }, []);
-
-  if (!scale) return null;
+    // Inline hidden state on mount (the CSS guard covers the time before hydration).
+    if (phase !== 'done') {
+      controls.set(reduced ? { opacity: 0 } : { opacity: 0, y: intro.phone.rise, scale: intro.phone.scaleFrom });
+      return;
+    }
+    if (show) {
+      controls.start({
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        transition: { duration: (reduced ? intro.reducedFade : intro.phone.duration) / 1000, ease: EASE_OUT },
+      });
+    } else {
+      controls.start({ opacity: 0, transition: { duration: 0.3 } });
+    }
+  }, [phase, show, reduced, controls]);
 
   return (
-    <motion.div
+    <div
       aria-hidden="true"
-      className="pointer-events-none fixed z-0"
-      initial={false}
-      animate={{ opacity: visible ? 1 : 0 }}
-      transition={{ duration: 0.4 }}
-      style={
-        portrait
-          ? { left: '50%', top: '100%', x: '-50%', y: `-${FRAME.h * scale * 0.55}px` }
-          : { left: '70%', top: '50%', x: '-50%', y: '-50%' }
-      }
+      className="pointer-events-none fixed top-[calc(100svh-92vw*0.95)] left-1/2 z-0 -translate-x-1/2 md:top-1/2 md:left-[70%] md:-translate-y-1/2 portrait:max-lg:top-[calc(100svh-92vw*0.95)] portrait:max-lg:translate-y-0"
     >
-      <div style={{ width: FRAME.w * scale, height: FRAME.h * scale }}>
-        <div
-          className="origin-top-left rounded-[56px] bg-[#1A1A22] shadow-[0_40px_120px_rgba(123,47,190,0.35)]"
-          style={{ width: FRAME.w, height: FRAME.h, padding: BEZEL, transform: `scale(${scale})` }}
+      <motion.div data-intro="" data-phone-poster="" animate={controls} className="flex flex-col items-center gap-4">
+        <svg
+          viewBox={`0 0 ${FRAME.w} ${FRAME.h}`}
+          className="h-auto w-[92vw] md:h-[74svh] md:w-auto portrait:max-lg:h-auto portrait:max-lg:w-[92vw]"
         >
-          <HomeScreen owner="you" />
-        </div>
-      </div>
-      {!portrait && (
-        <div className="mt-4 flex justify-center">
+          <rect width={FRAME.w} height={FRAME.h} rx={60} fill="#1A1A22" />
+          <foreignObject x={BEZEL} y={BEZEL} width={PHONE_SCREEN_PX.w} height={PHONE_SCREEN_PX.h}>
+            <HomeScreen owner="you" />
+          </foreignObject>
+        </svg>
+        <div className="hidden md:block portrait:max-lg:hidden">
           <DeviceTag owner="you" size="md" />
         </div>
-      )}
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }

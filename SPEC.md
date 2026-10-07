@@ -293,3 +293,60 @@ Goal: text feels alive and smooth. On load it **reveals** itself; as the user sc
 14. Turn on reduced motion: no movement, only opacity fades.
 15. Screen reader (or DOM check): the headline is read once as a full sentence, not word by word.
 16. Open a phone screen in a device: its tokens match section 12 (background `#F4F4F6`, cards `#FFFFFF` radius 20, pill buttons 52 high, no outlines, no gradients inside the screen).
+
+---
+
+# ADDENDUM v3 (append after ADDENDUM v2 in SPEC.md)
+
+## 16. HERO INTRO: THE REFRACTION SWEEP (chapter 00)
+
+Goal: a short opening scene. The page loads with the copy visible on the left and the phone hidden. A band of purple light, seen through ribbed (fluted) glass, sweeps across the hero once. When the sweep finishes, the phone appears and stays. The band then keeps moving back and forth forever, as ambient background. The phone never hides again.
+
+### 16.1 Timeline (desktop)
+| t | What happens |
+|---|---|
+| 0 s | Page ready (fonts + first frame). Copy and buttons start the section 14.1 reveal. Phone, Teddy, "Drag me" hint and owner tag are **not visible** (opacity 0, not interactive). |
+| ~1.0 s | Headline's last word has started. **Sweep 1** begins: band travels **left → right**, once, 1.8 s. |
+| ~2.8 s | Sweep 1 ends. **Phone enters**: opacity 0 → 1, rises 24 px, scale 0.96 → 1, 700 ms, `EASE_OUT`. Interaction (drag / flip) is enabled when it finishes. |
+| ~3.1 s | Teddy and the "Drag me / Tap to flip" hint enter together with the phone (Teddy's wave starts then, not at the headline). |
+| 2.8 s on | **Loop**: band travels right → left, then left → right, forever (ping-pong), about 8 s per leg, gentle ease in-out. |
+
+- The phone is visible before the sweep ends **never**. This includes the CSS poster phone: while the intro is pending, the poster must be hidden too (no flash of a phone).
+- Skip: any scroll, click, key press or touch finishes the intro at once (band jumps into the loop, phone appears).
+- If the page loads part-way down (scroll restoration, anchor, orbit-nav jump) or the user returns to the top later, skip the intro and show the phone.
+- The intro is time-based. This is a decorative exception to section 5.1, like the load reveal in 14.1. Once the phone is in, its pose is a pure function of scroll again.
+
+### 16.2 Look of the band ("fluted / reeded glass")
+Reference idea: a dark scene covered by vertical glass ribs. A soft light moves behind the ribs, and every rib shows a slightly shifted slice of that light, so the light looks broken into vertical strips. Fine film grain over everything.
+- Colours (purple, light to deep): `#D4B5F7` → `#B87AED` → `#7B2FBE` → `#2A0B4D` → page background `#06060E`. Brightest at the centre of the band, fading to the dark background on both sides. No green, no other hue.
+- Ribs: vertical stripes, 48 px wide on desktop (28 px on mobile). Each stripe is slightly darker at its edges and lighter in its middle so it reads like a lens.
+- Band width about 30% of the viewport, soft edges, covering the full height of the hero.
+- Grain: 4–6% opacity noise, static.
+- Do not copy the reference image. Recreate the effect with the purple palette.
+
+### 16.3 Build
+- Version 1 (ship this): a DOM layer, no WebGL. One gradient element animated with `transform: translateX` (GPU), a ribbed mask made with `repeating-linear-gradient`, and an SVG noise overlay. Put it in `src/components/hero/RefractionBand.tsx`, behind the 3D canvas and the copy (transparent canvas on top).
+- Version 2 (optional, later): a fragment shader plane in the existing R3F canvas that truly refracts the gradient through the ribs. Only if time allows.
+- Intro state lives in one small store: `introPhase = 'pending' | 'sweeping' | 'done'`. The phone, poster, Teddy, hint and tag all read it. The phone's own opacity multiplies with its scroll-based pose, so scroll exits still work.
+- All timings, widths and colours go in `src/motion/tokens.ts` so the feel can be tuned in one place.
+
+### 16.4 Loop, scroll and performance
+- Animate only `transform` and `opacity`. No `filter: blur` on the moving layer. No layout properties.
+- Pause the loop when the tab is hidden and when the hero is far off screen (`scrollVh` > 140).
+- The band fades out with the hero between 60 and 140 vh. (Later chapters have their own backgrounds.)
+- Mobile: 28 px ribs, one gradient layer, slower loop (10 s per leg), no grain animation.
+
+### 16.5 Accessibility and fallbacks
+- Reduced motion: no sweep and no loop. Show a static band at the left-centre at low opacity, and show the phone immediately with a 200 ms fade.
+- No JavaScript, or no WebGL: phone (poster) and copy are visible immediately, band is a static image-less gradient. Content must never depend on the intro finishing.
+- Text contrast: the left copy must stay at least 4.5:1 against the brightest point of the band. If it fails, cap the band's opacity behind the left 45% of the hero at 0.5, or add a soft dark scrim under the text.
+- The band is decorative: `aria-hidden="true"`, no focus, no pointer events.
+
+### 16.6 Acceptance tests (add to section 15)
+17. Reload 5 times: copy shows first, the phone is invisible until sweep 1 ends, then enters and stays.
+18. Sweep 1 goes left → right once; then the loop goes right → left, then left → right, without a jump or a gap.
+19. The phone, Teddy and hint never disappear again, including after scrolling to the end of the hero and back to the top.
+20. Press a key or scroll during the sweep: the intro finishes immediately, no broken half-state.
+21. Reduced motion on: no movement of the band, the phone is visible immediately.
+22. Left copy passes the 4.5:1 contrast check at the brightest band position (measure it, do not eyeball).
+23. The band uses only the purple palette in 16.2 (no green).

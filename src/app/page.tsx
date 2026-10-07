@@ -2,15 +2,17 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { MotionConfig, useReducedMotion } from 'motion/react';
+import { MotionConfig } from 'motion/react';
 import { copy } from '@/content/copy';
-import { hasWebGL } from '@/motion/flags';
+import { hasWebGL, useReducedMotionSafe } from '@/motion/flags';
 import { useRevealGate } from '@/motion/reveal';
+import { useIntroController } from '@/motion/intro';
 import { SmoothScroll } from '@/components/SmoothScroll';
 import { TopBar } from '@/components/TopBar';
 import { ScrollCue } from '@/components/ScrollCue';
 import { PhonePoster } from '@/components/PhonePoster';
 import { Teddy } from '@/components/Teddy';
+import { RefractionBand } from '@/components/hero/RefractionBand';
 import { Ch00Hero } from '@/chapters/Ch00Hero';
 
 // three.js and the scene load after first paint; the CSS poster holds the spot meanwhile.
@@ -18,7 +20,7 @@ const Stage = dynamic(() => import('@/scene/Stage'), { ssr: false });
 
 export default function Page() {
   const root = useRef<HTMLDivElement>(null);
-  const reduced = useReducedMotion() ?? false;
+  const reduced = useReducedMotionSafe();
   const [webgl, setWebgl] = useState<boolean | null>(null);
   const [stageReady, setStageReady] = useState(false);
   const onReady = useCallback(() => setStageReady(true), []);
@@ -26,6 +28,8 @@ export default function Page() {
   useEffect(() => setWebgl(hasWebGL()), []);
   // Chapter 00 load reveal: starts once fonts and the first poster frame are ready (≤ 1.2 s).
   useRevealGate();
+  // Hero intro (§16): sweep, then the phone enters. Input or a mid-page load skips it.
+  useIntroController();
 
   return (
     <MotionConfig reducedMotion="user">
@@ -36,8 +40,10 @@ export default function Page() {
         </a>
         <SmoothScroll />
 
+        {/* Back to front: light band, 3D canvas (transparent), poster, copy. */}
+        <RefractionBand />
         {webgl && <Stage eventSource={root} reduced={reduced} onReady={onReady} />}
-        <PhonePoster visible={!stageReady} />
+        <PhonePoster stageReady={stageReady} />
         <Teddy />
 
         <TopBar />

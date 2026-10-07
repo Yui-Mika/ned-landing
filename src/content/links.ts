@@ -6,6 +6,8 @@ export type ProductLink = {
   id: 'workspace' | 'mobile' | 'hub';
   product: string;
   label: string;
+  /** Optional one-line description shown under the product name. */
+  description?: string;
   url: string;
   status: 'live' | 'coming-soon';
 };
@@ -26,10 +28,12 @@ export const links: ProductLink[] = [
     status: 'live',
   },
   {
+    // SPEC §13: jobs site / community hub, separate from the Workspace. Name and URL to be confirmed by the owner.
     id: 'hub',
-    product: 'Communication Hub',
-    label: 'Open the Communication Hub',
-    url: '', // TODO(asset): Communication Hub URL
+    product: 'Community Hub',
+    label: 'Open the Community Hub',
+    description: 'Find and post jobs, then lock the budget.',
+    url: '', // TODO(asset): Community Hub URL (keep empty → disabled "Coming soon", no href)
     status: 'coming-soon',
   },
 ];

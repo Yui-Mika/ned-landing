@@ -1,7 +1,8 @@
 'use client';
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { useReducedMotion, useTransform, type MotionValue } from 'motion/react';
+import { useTransform, type MotionValue } from 'motion/react';
+import { useReducedMotionSafe } from '@/motion/flags';
 import { chapterById } from '@/content/chapters';
 import { scrollVh } from '@/motion/scroll';
 import { text } from '@/motion/tokens';
@@ -30,7 +31,7 @@ type Props = { chapterId: string; lines: number; children: ReactNode; className?
  */
 export function ChapterCopy({ chapterId, lines, children, className }: Props) {
   const chapter = chapterById(chapterId);
-  const reduced = useReducedMotion() ?? false;
+  const reduced = useReducedMotionSafe();
   const mobile = useIsMobile();
   const value = useMemo<Ctx>(
     () => ({

@@ -94,6 +94,7 @@ export function LinkMenu({ variant = 'bar', align = 'right' }: Props) {
                       <Chip tone="muted" size="xs">{copy.topBar.testNetwork}</Chip>
                       {!l.url && <Chip tone="amber" size="xs">{copy.topBar.comingSoon}</Chip>}
                     </span>
+                    {l.description && <span className="mt-1 block text-[13px] text-muted">{l.description}</span>}
                   </>
                 );
                 return (

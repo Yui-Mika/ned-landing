@@ -1,20 +1,20 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { motion, useAnimationControls, useReducedMotion, useSpring, useTransform } from 'motion/react';
+import { motion, useAnimationControls, useSpring, useTransform } from 'motion/react';
 import { scrollVh } from '@/motion/scroll';
-import { isTouch } from '@/motion/flags';
-import { useRevealPhase } from '@/motion/reveal';
-import { EASE_OUT, spring, text } from '@/motion/tokens';
+import { isTouch, useReducedMotionSafe } from '@/motion/flags';
+import { useIntro } from '@/motion/intro';
+import { EASE_OUT, intro, spring } from '@/motion/tokens';
 
 /**
  * Teddy, hero only (SPEC §4, §12.4). Decorative: aria-hidden, no information lives only in him.
- * His wave starts with the headline (reveal step 3).
+ * Hidden until the hero intro is done; enters (and waves) 300 ms after the phone (§16.1).
  * Art: 2D set from the product repo (~240 px). TODO(asset): swap for the layered/hi-res art or a glb.
  */
 export function Teddy() {
-  const reduced = useReducedMotion() ?? false;
-  const phase = useRevealPhase();
+  const reduced = useReducedMotionSafe();
+  const { phase, doneAt } = useIntro();
   const controls = useAnimationControls();
   const box = useRef<HTMLDivElement>(null);
   const tilt = useSpring(0, spring.soft);
@@ -25,13 +25,14 @@ export function Teddy() {
   const y = useTransform(scrollVh, [85, 112], [0, reduced ? 0 : 60]);
   const visibility = useTransform(opacity, (o) => (o < 0.01 ? 'hidden' : 'visible'));
 
+  // Enters with the hint, just after the phone (§16.1); the wave starts then, not at the headline.
   useEffect(() => {
-    if (phase === 'pending') return;
-    if (phase === 'skip' || reduced) {
-      controls.start({ opacity: 1, y: 0, transition: { duration: text.reveal.reducedDuration / 1000 } });
+    if (phase !== 'done' || doneAt === null) return;
+    const start = Math.max(0, doneAt + intro.companionsDelay - performance.now()) / 1000;
+    if (reduced) {
+      controls.start({ opacity: 1, y: 0, transition: { duration: intro.reducedFade / 1000 } });
       return;
     }
-    const start = text.reveal.headline.delay / 1000;
     controls.start({
       opacity: 1,
       y: 0,
@@ -42,7 +43,7 @@ export function Teddy() {
         rotate: { duration: 1.6, delay: start + 0.2, ease: 'easeInOut' },
       },
     });
-  }, [phase, reduced, controls]);
+  }, [phase, doneAt, reduced, controls]);
 
   // Head follows the cursor (desktop only).
   useEffect(() => {
@@ -69,6 +70,7 @@ export function Teddy() {
       <motion.div style={{ rotate: tilt, x: lean, transformOrigin: '50% 90%' }}>
         {/* Decorative, so it may start hidden on the server (no copy lives here). */}
         <motion.img
+          data-teddy=""
           src="/teddy/waving.png"
           alt=""
           width={239}

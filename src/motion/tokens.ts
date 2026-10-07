@@ -43,6 +43,55 @@ export const text = {
   },
 };
 
+/**
+ * Hero intro: the refraction sweep (SPEC §16). Times in ms from the load-reveal start.
+ *   0 copy reveal · 1000 sweep 1 (L → R, 1.8 s) · 2800 phone enters (700 ms) · +300 Teddy + hint · then ping-pong loop.
+ */
+export const intro = {
+  sweepDelay: 1000,
+  sweepDuration: 1800,
+  /** Fallback: finish the intro this long after the sweep should have ended, even if the band hasn't reported. */
+  fallbackGrace: 1500,
+  phone: { duration: 700, rise: 24, scaleFrom: 0.96 },
+  /** Teddy and the "Drag me" hint follow the phone by this much. */
+  companionsDelay: 300,
+  /** Reduced motion: the phone fades in, nothing moves. */
+  reducedFade: 200,
+};
+
+/** The fluted-glass light band (SPEC §16.2). Positions are the band centre in vw. */
+export const band = {
+  /** Purple only, light → deep, then the page background (no other hue). */
+  colors: { light: '#D4B5F7', mid: '#B87AED', deep: '#7B2FBE', deepest: '#2A0B4D', bg: '#06060E' },
+  widthVw: 30,
+  /** Sweep 1 starts fully off-screen left and ends at the loop's right end. */
+  sweepFrom: -25,
+  loopFrom: 100,
+  loopTo: 0,
+  legSeconds: 8,
+  legSecondsMobile: 10,
+  /** Gentle symmetric ease for the ambient loop. */
+  loopEase: [0.45, 0, 0.55, 1] as const,
+  ribPx: 48,
+  ribPxMobile: 28,
+  /** Horizontal shift of the second (refracted) slice in each rib, desktop only. */
+  refractShiftPx: 14,
+  grainOpacity: 0.05,
+  /** Reduced motion / no JS: a still band at the left-centre, low opacity. */
+  staticAt: 25,
+  staticOpacity: 0.35,
+  /** Band fades out with the hero. */
+  fadeVh: [60, 140] as const,
+  /** Pause the loop past this scroll position. */
+  pauseAfterVh: 140,
+  /**
+   * Contrast guard (SPEC §16.5): band opacity behind the copy (left 45% on desktop, top on portrait).
+   * Measured (test 22): at 0.5 the muted sub-paragraph fell to 2.58:1 and the chip to 3.34:1; at 0.3 the
+   * sub still hit 4.18:1 at the cap's edge. 0.25 with the cap held to 50% width passes (see README).
+   */
+  copyCap: 0.25,
+};
+
 const cubic = (p1x: number, p1y: number, p2x: number, p2y: number) => {
   // Cubic-bezier easing (same curve as CSS), solved by Newton iterations.
   const bx = (t: number) => 3 * (1 - t) * (1 - t) * t * p1x + 3 * (1 - t) * t * t * p2x + t * t * t;

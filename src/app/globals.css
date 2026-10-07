@@ -18,10 +18,30 @@
   --color-vnd: #34d399;
   --color-usdc: #60a5fa;
 
-  /* Light app theme inside the devices */
-  --color-app: #f6f5fa;
-  --color-app-ink: #14141c;
-  --color-app-muted: #5f6270;
+  /* App screens inside the devices: the product design system (SPEC §12.1). Never used on the landing layer. */
+  --color-app: #f4f4f6;
+  --color-app-surface: #ffffff;
+  --color-app-fill: #eeeef2;
+  --color-app-muted-fill: #e6e6eb;
+  --color-app-hairline: #f0f0f3;
+  --color-app-ink: #111116;
+  --color-app-ink-2: #3f3f49;
+  --color-app-ink-3: #5e5e6a;
+  --color-app-disabled: #8a8a96;
+  --color-app-primary: #7b2fbe;
+  --color-app-primary-ink: #6a22b0;
+  --color-app-primary-tint: #f2eafb;
+  --color-app-teddy: #ede3fb;
+  --color-app-info: #eeeffe;
+  --color-app-info-ink: #3730a3;
+  --color-app-warning: #fff5e1;
+  --color-app-warning-ink: #8a5300;
+  --color-app-success: #e7f6ec;
+  --color-app-success-ink: #127a3a;
+  --color-app-neutral: #efeff3;
+  --color-app-neutral-ink: #4b4b57;
+  --color-app-error: #fdecec;
+  --color-app-error-ink: #b42318;
 
   --font-display: var(--nf-display), 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--nf-body), 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -60,6 +80,28 @@ body {
 /* Text reveal (SPEC §14.4): hidden start state only once JS has marked <html> (see layout.tsx). */
 .is-motion:not(.reveal-done) [data-reveal] {
   opacity: 0;
+}
+
+/* Hero intro (SPEC §16): with JS, the phone (poster) waits for the sweep; the band light waits until
+   it is parked off-screen. Without JS neither class rule applies, so the poster and a still band show. */
+.is-motion:not(.intro-done) [data-intro] {
+  opacity: 0;
+  visibility: hidden;
+}
+.is-motion:not(.band-ready) [data-band-light] {
+  visibility: hidden;
+}
+
+/* Contrast guard (§16.5): cap the band behind the copy. Desktop: held to 50% (the copy column ends at
+   ~45% on a 1024 px window), then ramps back to full. Portrait: the copy sits on top. */
+.refraction-band {
+  /* --cap comes from band.copyCap in tokens.ts (inline style). */
+  mask-image: linear-gradient(90deg, rgb(0 0 0 / var(--cap)) 0%, rgb(0 0 0 / var(--cap)) 50%, #000 64%);
+}
+@media (max-width: 767px), (orientation: portrait) and (max-width: 1024px) {
+  .refraction-band {
+    mask-image: linear-gradient(180deg, rgb(0 0 0 / var(--cap)) 0%, rgb(0 0 0 / var(--cap)) 55%, #000 70%);
+  }
 }
 
 /* Scroll cue: slow pulse after it has faded in. */

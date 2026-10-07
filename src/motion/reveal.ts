@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState, useSyncExternalStore } from 'react';
-import { useAnimationControls, useReducedMotion, type TargetAndTransition } from 'motion/react';
-import { PORTRAIT_QUERY } from './flags';
+import { useAnimationControls, type TargetAndTransition } from 'motion/react';
+import { PORTRAIT_QUERY, useReducedMotionSafe } from './flags';
 import { EASE_OUT, text } from './tokens';
 
 /**
@@ -83,7 +83,7 @@ type RevealStep = {
 export function useLoadReveal({ enabled = true, delay, duration, from = {}, onDone }: RevealStep) {
   const controls = useAnimationControls();
   const current = useRevealPhase();
-  const reduced = useReducedMotion() ?? false;
+  const reduced = useReducedMotionSafe();
 
   const hidden: TargetAndTransition = reduced ? { opacity: 0 } : { opacity: 0, ...from };
   const shown: TargetAndTransition = { opacity: 1, y: 0, filter: 'blur(0px)' };

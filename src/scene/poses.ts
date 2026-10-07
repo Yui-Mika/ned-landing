@@ -6,6 +6,7 @@ import { easeFn, type EaseName } from '@/motion/tokens';
  *
  * position: x, y are fractions of the half viewport at z = 0 (−1 left/bottom … 1 right/top); z in world units.
  * rotation: [pitch, yaw, roll] in degrees. Negative yaw turns the screen toward the left.
+ * opacity:  optional, default 1. Multiplied with the hero intro entrance (SPEC §16.3).
  * size:     on desktop, fraction of viewport HEIGHT the phone's height fills;
  *           on portrait, fraction of viewport WIDTH the phone's width fills.
  * ease:     easing used on the way INTO this keyframe from the previous one.
@@ -19,12 +20,13 @@ export type Pose = {
   position: [number, number, number];
   rotation: [number, number, number];
   size: number;
+  opacity?: number;
   screen: PhoneScreen;
   owner: Owner;
   ease?: EaseName;
 };
 
-export type Sampled = Omit<Pose, 'vh' | 'ease'>;
+export type Sampled = Omit<Pose, 'vh' | 'ease' | 'opacity'> & { opacity: number };
 
 // Chapter 00 · Hero (0–140 vh). Phone rises 40 px and turns −40° → −18°, then T1 Glide to the left.
 const phoneDesktop: Pose[] = [
@@ -60,7 +62,7 @@ const lerp3 = (a: [number, number, number], b: [number, number, number], t: numb
  * `still` (reduced motion): no in-between poses, a hard cut at each segment's midpoint.
  */
 export function samplePose(track: Pose[], vh: number, still = false): Sampled {
-  const strip = ({ vh: _vh, ease: _ease, ...rest }: Pose): Sampled => rest;
+  const strip = ({ vh: _vh, ease: _ease, opacity = 1, ...rest }: Pose): Sampled => ({ ...rest, opacity });
   if (vh <= track[0].vh) return strip(track[0]);
   const last = track[track.length - 1];
   if (vh >= last.vh) return strip(last);
@@ -76,6 +78,7 @@ export function samplePose(track: Pose[], vh: number, still = false): Sampled {
     position: lerp3(a.position, b.position, t),
     rotation: lerp3(a.rotation, b.rotation, t),
     size: lerp(a.size, b.size, t),
+    opacity: lerp(a.opacity ?? 1, b.opacity ?? 1, t),
     // Discrete fields switch at the midpoint of the segment.
     screen: t < 0.5 ? a.screen : b.screen,
     owner: t < 0.5 ? a.owner : b.owner,

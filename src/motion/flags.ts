@@ -1,3 +1,5 @@
+import { useSyncExternalStore } from 'react';
+
 /** Client-only environment checks. Call from effects or client-only modules. */
 
 /** Same query as the `--k` media query in globals.css. Keep the two in sync. */
@@ -8,6 +10,25 @@ export const isPortrait = () =>
 
 export const prefersReducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const REDUCED_QUERY = '(prefers-reduced-motion: reduce)';
+
+/**
+ * prefers-reduced-motion as a hook that is hydration-safe: `false` while hydrating (matching the server
+ * HTML), then the real value. Motion's own useReducedMotion reads the real value on the first client
+ * render, which makes reduced-motion visitors hit a hydration mismatch.
+ */
+export function useReducedMotionSafe(): boolean {
+  return useSyncExternalStore(
+    (onChange) => {
+      const mq = window.matchMedia(REDUCED_QUERY);
+      mq.addEventListener?.('change', onChange);
+      return () => mq.removeEventListener?.('change', onChange);
+    },
+    () => window.matchMedia(REDUCED_QUERY).matches,
+    () => false,
+  );
+}
 
 export const isTouch = () =>
   typeof window !== 'undefined' && window.matchMedia('(hover: none), (pointer: coarse)').matches;
