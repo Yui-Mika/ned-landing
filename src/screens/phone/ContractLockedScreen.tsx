@@ -3,12 +3,14 @@ import { copy } from '@/content/copy';
 import { DevnetChip, FONT, Screen, StatusBar } from './parts';
 
 /**
- * Port of docs/design-reference/phone/ContractLocked.dc.html (side client).
- * Markup and inline styles 1:1; strings from copy.screens.contractLocked. Left out: the prototype-only
+ * Port of docs/design-reference/phone/ContractLocked.dc.html: side client (hero flip, chapter 05 panel) or
+ * side freelancer · view vn (= phone/ContractLockedVN, chapter 05 end). Markup and inline styles 1:1; strings from
+ * copy.screens.contractLocked (+ contractLockedVN). Left out: the prototype-only
  * "DEMO · switch to @vinh's phone" link (its empty wrapper with margin-top 14 stays, as on the board)
  * and the boards' entrance animations. Hrefs to other boards are dropped (the screen is a picture).
  */
 const s = copy.screens.contractLocked;
+const vn = copy.screens.contractLockedVN;
 
 const ruleIcon: CSSProperties = {
   width: 32,
@@ -63,9 +65,10 @@ const pill: CSSProperties = {
   width: '100%',
 };
 
-export function ContractLockedScreen() {
+export function ContractLockedScreen({ side = 'client' }: { side?: 'client' | 'freelancerVN' }) {
+  const fl = side === 'freelancerVN';
   return (
-    <Screen name="contractLocked" style={{ background: '#F4F4F6', color: '#111116', display: 'flex', flexDirection: 'column' }}>
+    <Screen name={fl ? 'contractLockedVN' : 'contractLocked'} style={{ background: '#F4F4F6', color: '#111116', display: 'flex', flexDirection: 'column' }}>
       <StatusBar />
       <div style={{ padding: '0 16px', display: 'flex', justifyContent: 'flex-end' }}>
         <DevnetChip />
@@ -90,8 +93,18 @@ export function ContractLockedScreen() {
             </svg>
           </div>
         </div>
-        <h1 style={{ margin: '20px 0 0', fontFamily: FONT.display, fontSize: 28, fontWeight: 700 }}>{s.headline}</h1>
-        <p style={{ margin: '8px 0 0', fontSize: 14, lineHeight: 1.5, color: '#3F3F49' }}>{s.sub}</p>
+        <h1 style={{ margin: '20px 0 0', fontFamily: FONT.display, fontSize: 28, fontWeight: 700 }}>{fl ? vn.headline : s.headline}</h1>
+        <p style={{ margin: '8px 0 0', fontSize: 14, lineHeight: 1.5, color: '#3F3F49' }}>
+          {fl ? (
+            <>
+              {/* SPEC text: never under 11 px on screen (scale set by Phone.tsx). */}
+              <span style={{ fontSize: 'max(14px, calc(11px / var(--ned-screen-scale, 1)))' }}>{vn.subEstimate}</span>
+              {vn.subRest}
+            </>
+          ) : (
+            s.sub
+          )}
+        </p>
         <div style={{ marginTop: 22, width: '100%', textAlign: 'left' }}>
           <a
             style={{
@@ -141,8 +154,8 @@ export function ContractLockedScreen() {
         <div style={{ marginTop: 14 }} />
       </div>
       <div style={{ padding: '12px 24px 28px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <a style={{ ...pill, background: '#7B2FBE', color: '#FFFFFF' }}>{s.primary}</a>
-        <a style={{ ...pill, background: '#F2EAFB', color: '#6A22B0' }}>{s.secondary}</a>
+        <a style={{ ...pill, background: '#7B2FBE', color: '#FFFFFF' }}>{fl ? vn.primary : s.primary}</a>
+        <a style={{ ...pill, background: '#F2EAFB', color: '#6A22B0' }}>{fl ? vn.secondary : s.secondary}</a>
       </div>
     </Screen>
   );

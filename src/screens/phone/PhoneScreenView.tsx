@@ -12,6 +12,7 @@ import { ChatClientScreen, ChatYouScreen } from './ChatScreen';
 import { ContractNew1Screen, ContractNew2Screen, ContractNew3Screen } from './ContractNewScreens';
 import { ContractDetailScreen } from './ContractDetailScreen';
 import { ContractAcceptScreen } from './ContractAcceptScreen';
+import { ContractLockScreen } from './ContractLockScreen';
 
 function Board({ screen, owner }: { screen: PhoneScreen; owner: Exclude<Owner, 'anyone'> }) {
   switch (screen) {
@@ -44,6 +45,14 @@ function Board({ screen, owner }: { screen: PhoneScreen; owner: Exclude<Owner, '
       return <ContractAcceptScreen />;
     case 'cdAccepted':
       return <ContractDetailScreen state="accepted" />;
+    case 'cdMiaAccepted':
+      return <ContractDetailScreen state="accepted" role="client" />;
+    case 'lock':
+      return <ContractLockScreen />;
+    case 'lockedClient':
+      return <ContractLockedScreen />;
+    case 'lockedVN':
+      return <ContractLockedScreen side="freelancerVN" />;
   }
 }
 

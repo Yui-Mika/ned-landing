@@ -11,6 +11,7 @@ import { scrollVh } from '@/motion/scroll';
 import { Phone } from './Phone';
 import { Laptop } from './Laptop';
 import { InviteChip } from './InviteChip';
+import { LockStamp } from './LockStamp';
 import { HtmlLayerContext } from './htmlLayer';
 import { cameraZoom, sampleCamera, type CameraPose } from './poses';
 import { focusWorld } from './focus';
@@ -137,6 +138,8 @@ export default function Stage({ eventSource, reduced, onReady }: Props) {
           <Laptop reduced={reduced} portrait={portrait} />
           {/* The invite-link chip (T8 Lift-off). */}
           <InviteChip reduced={reduced} portrait={portrait} />
+          {/* The lock glyph stamp (chapter 05). */}
+          <LockStamp reduced={reduced} />
         </HtmlLayerContext.Provider>
         <Ready onReady={onReady} />
       </Canvas>

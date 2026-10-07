@@ -294,6 +294,66 @@ export const copy = {
       copy: 'Copy',
       action: 'Accept and choose where earnings go',
     },
+    /**
+     * phone/ContractDetailMiaAccepted = phone/ContractDetail · role client · view intl · state accepted (shared labels
+     * from contractDetail). SPEC numbers: 500.00 USDC, milestones 250.00 USDC (board sample: 20.00 / 10.00).
+     */
+    contractDetailMia: {
+      status: 'Ready to lock',
+      other: '@vinh',
+      otherRole: 'FREELANCER',
+      otherFacts: 'Vinh · on N.E.D 9 days · phone not verified',
+      heroLabel: 'Contract total',
+      heroAmt: '500.00 USDC',
+      heroSub: '2 milestones · devnet test money',
+      dest: 'VND via payout partner',
+      notFunded: 'Not locked yet · the client locks next',
+      milestones: [
+        { n: 1, amt: '250.00 USDC', amtSub: '', submitBy: '12 Oct, 18:00', reviewBy: '15 Oct, 18:00' },
+        { n: 2, amt: '250.00 USDC', amtSub: '', submitBy: '19 Oct, 18:00', reviewBy: '22 Oct, 18:00' },
+      ],
+      actions: { lock: 'Lock 500.00 USDC', close: 'Close contract' },
+    },
+    /** phone/ContractLock · balance enough. SPEC numbers: 500.00 USDC total, 250.00 per milestone (board sample: 20.00 / 10.00). */
+    contractLock: {
+      back: 'Back',
+      title: 'Lock for @vinh',
+      totalLabel: 'Total to lock',
+      total: '500.00 USDC',
+      totalSub: 'Landing page design · 2 milestones',
+      destLabel: 'Earnings go to',
+      dest: 'VND via payout partner',
+      simulated: 'SIMULATED',
+      milestones: [
+        { k: 'Milestone 1 · 250.00 USDC', v: 'by 12 Oct, 18:00' },
+        { k: 'Milestone 2 · 250.00 USDC', v: 'by 19 Oct, 18:00' },
+      ],
+      reviewLabel: 'Review time',
+      review: '3 days each',
+      rulesLabel: 'Contract rules',
+      rules: [
+        'Released when the client approves, or automatically after the review time.',
+        'Refunded to the client if a submission deadline is missed.',
+        'Nobody, including N.E.D, can move it any other way.',
+      ],
+      balanceLabel: 'Your balance',
+      balance: '500.00 USDC',
+      afterLabel: 'After locking',
+      after: '0.00 USDC',
+      fees: { label: 'Fees', ned: 'N.E.D fee', nedV: 'None during the pilot', network: 'Network fee', networkV: '~0.000005 SOL', networkSub: 'devnet test SOL', partner: 'Payout partner fee', partnerV: 'Set by the partner' },
+      slide: 'Slide to lock',
+    },
+    /**
+     * phone/ContractLockedVN = phone/ContractLocked · side freelancer · view vn (other strings as contractLocked).
+     * Board: "Locked ≈ 520,000 VND" and "(estimate) · $20.00. "; SPEC amount and wording ("example, estimated", ≥ 11 px).
+     */
+    contractLockedVN: {
+      headline: 'Locked ≈ 13,010,000 VND · you can start',
+      subEstimate: 'example, estimated',
+      subRest: ' · $500.00. @mia locked the full contract in the program vault. Submit milestone 1 by 12 Oct, 18:00.',
+      primary: 'Submit milestone 1',
+      secondary: 'Back to Home',
+    },
     /** phone/ContractAccept · view vn (VND only; the board hides the USDC option in this view). SPEC amounts. */
     contractAccept: {
       back: 'Back',
@@ -416,29 +476,96 @@ export const copy = {
         back: 'Back to Workspace',
       },
     },
-    /** web/WebWalletPanel · who mia · mode sign · action create. SPEC total (board sample: 20.00 USDC). */
+    /**
+     * web/WebWalletPanel · who mia. Header (signed in) shared by both modes; `sign` = mode sign (chapter 03: action
+     * create); `app` = mode app, the phone app itself at 86% (chapter 05: ContractLock, then ContractLocked).
+     * SPEC total (board sample: 20.00 USDC).
+     */
     walletPanel: {
-      dialog: 'Confirm: Create contract',
       handle: 'mia',
-      request: { before: 'Request from ', app: 'N.E.D Workspace', after: ' · ned.app' },
-      kicker: 'Confirm to sign',
-      title: 'Create contract',
-      rows: [
-        { k: 'Contract', v: 'Landing page design' },
-        { k: 'Freelancer', v: '@vinh' },
-        { k: 'Milestones', v: '2 · 500.00 USDC total', sub: 'Locked later, after @vinh accepts' },
-        { k: 'Brief fingerprint', v: '{fp}', sub: 'Saved on-chain, cannot change', mono: true },
-        { k: 'Network fee', v: '~0.000005 SOL', sub: 'devnet test SOL' },
-        { k: 'N.E.D fee', v: 'None during the pilot' },
+      shortAddr: '9PZw…rhkW',
+      devnet: 'Devnet · ',
+      fullView: 'Open in full view',
+      close: 'Close wallet',
+      app: { dialog: 'Your N.E.D Wallet', label: 'N.E.D Wallet' },
+      sign: {
+        request: { before: 'Request from ', app: 'N.E.D Workspace', after: ' · ned.app' },
+        kicker: 'Confirm to sign',
+        cancel: 'Cancel',
+        footer: 'Signed with the wallet linked to your Google account. N.E.D never holds your money.',
+        create: {
+          dialog: 'Confirm: Create contract',
+          title: 'Create contract',
+          rows: [
+            { k: 'Contract', v: 'Landing page design' },
+            { k: 'Freelancer', v: '@vinh' },
+            { k: 'Milestones', v: '2 · 500.00 USDC total', sub: 'Locked later, after @vinh accepts' },
+            { k: 'Brief fingerprint', v: '{fp}', sub: 'Saved on-chain, cannot change', mono: true },
+            { k: 'Network fee', v: '~0.000005 SOL', sub: 'devnet test SOL' },
+            { k: 'N.E.D fee', v: 'None during the pilot' },
+          ],
+          note: 'No money moves yet. @vinh reads the brief from your invite link and confirms the same fingerprint when accepting.',
+          confirm: 'Create',
+        },
+      },
+    },
+    /**
+     * web/WebWorkspace · who mia · panel open from "Lock in wallet". The board's mia samples are a later state (review,
+     * Logo refresh); chapter 05 is before the lock, so the samples follow the story: one contract (Logo refresh removed,
+     * as on HomeIntl), nothing locked yet, one need "Lock in wallet" (SPEC row 05) in the board's need card. Strings
+     * reused from boards: "Lock 500.00 USDC" and "Ready to lock" (phone/ContractDetail · client · accepted).
+     */
+    workspace: {
+      brand: { mark: 'N.E.D', name: 'Workspace' },
+      devnet: 'Devnet · test money',
+      wallet: { handle: 'mia', label: 'Your wallet, @mia', sub: 'USDC wallet' },
+      nav: {
+        label: 'Workspace',
+        overview: 'Overview',
+        contracts: 'Contracts',
+        newContract: 'New contract',
+        jobs: 'Jobs',
+        records: 'Records',
+        settings: 'Settings',
+        settingsSub: 'in wallet',
+      },
+      phoneCard: { title: 'On your phone too', body: 'Same Google sign-in, same wallet. Confirm steps from your phone when you are away.' },
+      greeting: 'Good afternoon,',
+      name: 'Mia',
+      cta: 'New contract',
+      stats: [
+        { label: 'Locked in your contracts', value: '0.00 USDC', sub: 'Held by the program, not by N.E.D' },
+        { label: 'Waiting for your review', value: '0', sub: '' },
+        { label: 'Active contracts', value: '1', sub: 'With @vinh' },
       ],
-      note: 'No money moves yet. @vinh reads the brief from your invite link and confirms the same fingerprint when accepting.',
-      cancel: 'Cancel',
-      confirm: 'Create',
-      footer: 'Signed with the wallet linked to your Google account. N.E.D never holds your money.',
+      needsTitle: 'Needs your action',
+      needs: [{ title: 'Lock 500.00 USDC', sub: 'Landing page design · @vinh accepted', when: 'Ready to lock', cta: 'Lock in wallet' }],
+      contractsTitle: 'Your contracts',
+      history: 'History',
+      table: { label: 'Your contracts', cols: ['Contract', 'Freelancer', 'Milestones', 'Next step', 'Amount', 'Status'] },
+      rows: [
+        {
+          seed: 'vinh',
+          title: 'Landing page design',
+          party: '@vinh',
+          ms: '0 of 2 done',
+          next: 'Lock 500.00 USDC',
+          amt: '500.00 USDC',
+          amtSub: 'to VND via payout partner',
+          status: 'Ready to lock',
+        },
+      ],
     },
   },
   /** The invite-link chip (T8): the same string as the link field it lifts off (web/WebContractNew, created). */
   inviteLink: 'ned.app/c/7XqP2mWc#k=Qm4tY8vR2LkN9sQe',
+  /** Chapter 05 copy column: SPEC §6 row 05, exact wording. */
+  lock: {
+    headline: 'Your client locks it before you start.',
+    l1: 'The whole amount, per milestone, held by the program.',
+    l2: 'Nobody, including N.E.D, can move the money any other way.',
+    chip: "You can see it's there",
+  },
   /** Chapter 04 copy column: SPEC §6 row 04, exact wording. */
   accept: {
     headline: 'You read the brief, then choose once where the money goes.',
@@ -481,6 +608,6 @@ export const copy = {
   },
   later: {
     title: 'More chapters coming',
-    body: 'Chapter 05 and the rest of the story are next.',
+    body: 'Chapter 06 and the rest of the story are next.',
   },
 } as const;

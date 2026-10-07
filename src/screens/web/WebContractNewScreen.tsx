@@ -4,6 +4,7 @@ import { Avatar } from '@/screens/phone/Avatar';
 import { FONT } from '@/screens/phone/parts';
 import type { BriefState } from '@/scene/poses';
 import { WebWalletPanel } from './WebWalletPanel';
+import { WebHeader } from './WebHeader';
 
 /**
  * Port of docs/design-reference/web/WebContractNew.dc.html (who: mia). Markup and inline styles 1:1.
@@ -59,92 +60,7 @@ const removeBtn = (size: number): CSSProperties => ({
 });
 
 function Header() {
-  const w = s.wallet;
-  return (
-    <header style={{ position: 'relative', zIndex: 30, background: '#FFFFFF' }}>
-      <div
-        style={{
-          maxWidth: 1280,
-          margin: '0 auto',
-          padding: '12px 24px',
-          boxSizing: 'border-box',
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          gap: '12px 20px',
-        }}
-      >
-        <a style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: '#111116' }}>
-          <span
-            aria-hidden="true"
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              background: '#7B2FBE',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontFamily: FONT.display,
-              fontSize: 12,
-              fontWeight: 700,
-              color: '#FFFFFF',
-            }}
-          >
-            {s.brand.mark}
-          </span>
-          <span style={{ fontFamily: FONT.display, fontSize: 18, fontWeight: 700 }}>{s.brand.name}</span>
-        </a>
-        <div style={{ flex: 1 }} />
-        <span
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 5,
-            height: 26,
-            padding: '0 10px',
-            borderRadius: 9999,
-            background: '#FFF5E1',
-            fontSize: 12,
-            fontWeight: 600,
-            color: '#8A5300',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          <span style={{ width: 6, height: 6, borderRadius: 9999, background: '#F59E0B' }} />
-          {s.devnet}
-        </span>
-        <div style={{ position: 'relative' }}>
-          <button
-            type="button"
-            aria-label={w.label}
-            style={{
-              height: 44,
-              padding: '0 12px 0 4px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              borderRadius: 9999,
-              background: '#F4F4F6',
-              color: '#111116',
-              fontFamily: 'inherit',
-              cursor: 'pointer',
-              border: 'none',
-            }}
-          >
-            <Avatar seed={w.handle} size={34} />
-            <span style={{ textAlign: 'left', lineHeight: 1.15 }}>
-              <span style={{ display: 'block', fontSize: 14, fontWeight: 600 }}>@{w.handle}</span>
-              <span style={{ display: 'block', fontSize: 11, color: '#5E5E6A' }}>{w.sub}</span>
-            </span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3F3F49" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="m6 9 6 6 6-6" />
-            </svg>
-          </button>
-        </div>
-      </div>
-    </header>
-  );
+  return <WebHeader brand={s.brand} devnet={s.devnet} wallet={s.wallet} />;
 }
 
 function Milestone({ i, crit, draft }: { i: number; crit: readonly string[]; draft: string }) {
@@ -594,7 +510,7 @@ export function WebContractNewScreen({ state, width, height, children }: Props) 
         <>
           <div aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 35, background: 'rgba(17,17,22,0.32)' }} />
           <div style={{ position: 'absolute', top: 76, right: Math.max(16, (width - 1280) / 2 + 24), zIndex: 40, maxWidth: width - 32 }}>
-            <WebWalletPanel fingerprint={fp} />
+            <WebWalletPanel mode="sign" action="create" fingerprint={fp} />
           </div>
         </>
       )}

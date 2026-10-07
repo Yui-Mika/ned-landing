@@ -18,6 +18,8 @@ import { easeFn, type EaseName } from '@/motion/tokens';
  *           where the change happens while the phone is edge-on).
  * via:      an in-between keyframe that only shapes motion (e.g. the edge-on moment of a flip).
  *           Skipped under reduced motion, so reduced motion cuts straight between the real stops.
+ * dock:     optional, default 0. T4 Dock (desktop): 0 = the pose above … 1 = docked in the laptop's wallet panel
+ *           (same place, size and angle as the panel's app screen; Phone.tsx measures it every frame).
  */
 export type Owner = 'you' | 'client' | 'anyone';
 /**
@@ -38,7 +40,11 @@ export type PhoneScreen =
   | 'cn3'
   | 'cdNew'
   | 'accept'
-  | 'cdAccepted';
+  | 'cdAccepted'
+  | 'cdMiaAccepted'
+  | 'lock'
+  | 'lockedClient'
+  | 'lockedVN';
 /** Device transform vocabulary, exactly as named in SPEC §5.3. */
 export type TransformName =
   | 'T1 Glide'
@@ -65,11 +71,13 @@ export type Pose = {
   transform?: TransformName;
   screenSwitch?: 'cut';
   via?: true;
+  dock?: number;
 };
 
-export type Sampled = Omit<Pose, 'vh' | 'ease' | 'opacity' | 'dim' | 'transform' | 'screenSwitch' | 'via'> & {
+export type Sampled = Omit<Pose, 'vh' | 'ease' | 'opacity' | 'dim' | 'transform' | 'screenSwitch' | 'via' | 'dock'> & {
   opacity: number;
   dim: number;
+  dock: number;
   /** Screen crossfade: `screenTo` is drawn over `screenFrom` at opacity `screenMix` (both equal when not switching). */
   screenFrom: PhoneScreen;
   screenTo: PhoneScreen;
@@ -122,6 +130,7 @@ function ch02Screens(position: Vec3, rotation: Vec3, size: number): Pose[] {
 /**
  * T2 Flip (SPEC §5.3, 20–30 vh): one full turn around the vertical axis at constant speed, moving from `from`
  * to `to`. Two `via` keyframes straddle the edge-on moment (yaw + 90°), where owner and screen switch (cut).
+ * Default: your phone on Home → the client's phone.
  */
 function t2Flip(o: {
   start: number;
@@ -132,7 +141,11 @@ function t2Flip(o: {
   sizeFrom: number;
   sizeTo: number;
   toScreen: PhoneScreen;
+  fromScreen?: PhoneScreen;
+  fromOwner?: Owner;
+  toOwner?: Owner;
 }): Pose[] {
+  const { fromScreen = 'home', fromOwner = 'you', toOwner = 'client' } = o;
   const [pitch, yaw, roll] = o.rotation;
   const span = o.end - o.start;
   const k = (f: number): Pick<Pose, 'vh' | 'position' | 'size'> => ({
@@ -143,9 +156,9 @@ function t2Flip(o: {
   const edge = 90 / 360;
   const half = 4 / 360;
   return [
-    { ...k(edge - half), device: 'phone', rotation: [pitch, yaw + 86, roll], screen: 'home', owner: 'you', ease: 'linear', via: true, transform: 'T2 Flip' },
-    { ...k(edge + half), device: 'phone', rotation: [pitch, yaw + 94, roll], screen: o.toScreen, owner: 'client', ease: 'linear', via: true, screenSwitch: 'cut', transform: 'T2 Flip' },
-    { ...k(1), device: 'phone', rotation: [pitch, yaw + 360, roll], screen: o.toScreen, owner: 'client', ease: 'linear', screenSwitch: 'cut', transform: 'T2 Flip' },
+    { ...k(edge - half), device: 'phone', rotation: [pitch, yaw + 86, roll], screen: fromScreen, owner: fromOwner, ease: 'linear', via: true, transform: 'T2 Flip' },
+    { ...k(edge + half), device: 'phone', rotation: [pitch, yaw + 94, roll], screen: o.toScreen, owner: toOwner, ease: 'linear', via: true, screenSwitch: 'cut', transform: 'T2 Flip' },
+    { ...k(1), device: 'phone', rotation: [pitch, yaw + 360, roll], screen: o.toScreen, owner: toOwner, ease: 'linear', screenSwitch: 'cut', transform: 'T2 Flip' },
   ];
 }
 
@@ -201,6 +214,96 @@ function ch04Phone(at: Vec3, rotation: Vec3, size: number, exit: Vec3, entry: Ve
   ];
 }
 
+/**
+ * Chapter 05 · Lock (1120–1360 vh), every beat a window of scroll:
+ * T2 Flip your phone → the client's (ContractDetailMiaAccepted) · the client's computer fades in, in place (WebWorkspace)
+ * · tap "Lock in wallet" · T4 Dock: the phone flies into the panel corner on ContractLock and becomes the wallet panel
+ * (86%) · T5 Zoom on the panel · slide to lock (thumb follows scroll; ContractLocked 4 vh after 100%) · lock glyph
+ * stamps (landing layer) · T4 undock · T2 Flip back to your phone on ContractLockedVN.
+ */
+export const CH05 = {
+  flip: [1122, 1146] as [number, number],
+  laptopIn: [1146, 1162] as [number, number],
+  tap: [1164, 1176] as [number, number],
+  toLock: [1170, 1178] as [number, number],
+  dock: [1178, 1200] as [number, number],
+  /** Docked phone fades out while the panel fades in (same screen, same place). Undock: the reverse. */
+  swapIn: [1200, 1206] as [number, number],
+  zoom: [1206, 1218, 1264, 1276] as [number, number, number, number],
+  slide: [1220, 1248] as [number, number],
+  stamp: [1254, 1262, 1268, 1276] as [number, number, number, number],
+  swapOut: [1282, 1288] as [number, number],
+  undock: [1288, 1310] as [number, number],
+  laptopOut: [1302, 1316] as [number, number],
+  flipBack: [1314, 1342] as [number, number],
+};
+/** Slide to lock: the thumb follows scroll over this window; the result shows 4 vh after 100%. */
+export const CH05_SLIDE = CH05.slide;
+export const CH05_LOCKED_AT = CH05.slide[1] + 4;
+
+/**
+ * Panel state in the Workspace (WebWorkspace, mode app): which app screen, and its opacity. It is open (invisible)
+ * for the whole dock flight, so the phone can measure where to land; it shows only while the phone is docked.
+ */
+export function ch05PanelAt(vh: number): { screen: 'lock' | 'locked' | null; opacity: number } {
+  const [a, b] = CH05.swapIn;
+  const [c, d] = CH05.swapOut;
+  if (vh < CH05.dock[0] || vh > CH05.undock[1]) return { screen: null, opacity: 0 };
+  const opacity = Math.min(1, (vh - a) / (b - a), (d - vh) / (d - c));
+  return { screen: vh >= CH05_LOCKED_AT ? 'locked' : 'lock', opacity: Math.max(0, opacity) };
+}
+
+function ch05Phone(o: { from: Vec3; rotation: Vec3; size: number; park: Place; end: Vec3; endSize: number; dock: boolean }): Pose[] {
+  const c = (vh: number, screen: PhoneScreen, extra: Partial<Pose> = {}): Pose => ({ vh, ...o.park, screen, owner: 'client', ...extra });
+  const parkRot = o.park.rotation;
+  // Desktop: T4 Dock into the panel. Portrait (SPEC §8): the dock becomes a crossfade, the phone stays where it is.
+  const docked = (vh: number, screen: PhoneScreen, extra: Partial<Pose> = {}) => c(vh, screen, o.dock ? { dock: 1, ...extra } : extra);
+  return [
+    ...t2Flip({
+      start: CH05.flip[0],
+      end: CH05.flip[1],
+      from: o.from,
+      to: o.park.position,
+      rotation: o.rotation,
+      sizeFrom: o.size,
+      sizeTo: o.park.size,
+      fromScreen: 'cdAccepted',
+      fromOwner: 'you',
+      toScreen: 'cdMiaAccepted',
+      toOwner: 'client',
+    }),
+    c(CH05.toLock[0], 'cdMiaAccepted'),
+    // The client taps "Lock in wallet" on the computer: the wallet (this phone) opens on ContractLock.
+    c(CH05.toLock[1], 'lock'),
+    docked(CH05.dock[1], 'lock', { ease: 'ease', transform: 'T4 Dock' }),
+    docked(CH05.swapIn[1], 'lock', { opacity: 0 }),
+    // While hidden: the panel's result screen.
+    docked(CH05.swapOut[0], 'lockedClient', { opacity: 0, screenSwitch: 'cut' }),
+    docked(CH05.swapOut[1], 'lockedClient'),
+    c(CH05.undock[1], 'lockedClient', { ease: 'ease', transform: 'T4 Dock' }),
+    ...t2Flip({
+      start: CH05.flipBack[0],
+      end: CH05.flipBack[1],
+      from: o.park.position,
+      to: o.end,
+      rotation: parkRot,
+      sizeFrom: o.park.size,
+      sizeTo: o.endSize,
+      fromScreen: 'lockedClient',
+      fromOwner: 'client',
+      toScreen: 'lockedVN',
+      toOwner: 'you',
+    }),
+    { vh: 1360, device: 'phone', position: o.end, rotation: [parkRot[0], parkRot[1] + 360, parkRot[2]], size: o.endSize, screen: 'lockedVN', owner: 'you' },
+  ];
+}
+
+/** Where the client's phone waits in chapter 05: in front of the laptop's right side (desktop); low right (portrait). */
+const CH05_PARK: Record<'desktop' | 'portrait', Place> = {
+  desktop: { device: 'phone', position: [0.74, -0.27, 0.3], rotation: [2, 346, 0], size: 0.5 },
+  portrait: { device: 'phone', position: [0.42, -1.2, 0.3], rotation: [4, 350, 0], size: 0.52 },
+};
+
 const phoneDesktop: Pose[] = [
   // Chapter 00 · Hero (0–140 vh). Phone rises 40 px and turns −40° → −18°, then T1 Glide to the left.
   { vh: 0, device: 'phone', position: [0.4, -0.12, 0], rotation: [4, -40, 0], size: 0.74, screen: 'home', owner: 'you' },
@@ -241,6 +344,9 @@ const phoneDesktop: Pose[] = [
   // Chapter 04 · Accept, and choose once (860–1120 vh). The client's phone leaves (T1 Glide); your phone (Vietnam)
   // rises dimmed on the new contract while the invite-link chip drops into it, then the dim lifts.
   ...ch04Phone([0.3, -0.04, 0], [2, -8, 0], 0.74, [1.35, -0.12, 0], [0.3, -1.8, 0]),
+
+  // Chapter 05 · Lock (1120–1360 vh): see CH05.
+  ...ch05Phone({ from: [0.3, -0.04, 0], rotation: [2, -8, 0], size: 0.74, park: CH05_PARK.desktop, end: [0.3, -0.04, 0], endSize: 0.74, dock: true }),
 ];
 
 // Portrait (SPEC §8): phone at 92% width rising from the bottom, top ~60% visible.
@@ -272,6 +378,9 @@ const phonePortrait: Pose[] = [
 
   // Chapter 04 (portrait): your phone rising from the bottom, top ~60% visible.
   ...ch04Phone([0, -0.88, 0], [4, 0, 0], 0.86, [1.6, -0.76, 0], [0, -2, 0]),
+
+  // Chapter 05 (portrait): the T4 Dock is a crossfade between the phone and the browser card's panel.
+  ...ch05Phone({ from: [0, -0.88, 0], rotation: [4, 0, 0], size: 0.86, park: CH05_PARK.portrait, end: [0, -0.88, 0], endSize: 0.86, dock: false }),
 ];
 
 /**
@@ -336,13 +445,14 @@ export const TAPS: { track: TrackName | 'laptop'; target: string; start: number;
   { track: 'laptop', target: 'create', start: 762, end: 772 },
   { track: 'laptop', target: 'panel-create', start: 778, end: 788 },
   { track: 'phone', target: 'accept', start: 946, end: 958 },
+  { track: 'laptop', target: 'ws-lock', start: CH05.tap[0], end: CH05.tap[1] },
 ];
 
 /* ------------------------------------------------------------------------------------------------------------ */
 /* Laptop (chapter 03 on). A generic body; the screen shows a web board.                                        */
 /* ------------------------------------------------------------------------------------------------------------ */
 
-export type LaptopScreen = 'webContractNew';
+export type LaptopScreen = 'webContractNew' | 'webWorkspace';
 
 /** Page scroll inside the laptop screen: an element (data-focus) placed at `at` (0 top … 1 bottom) of the screen. */
 export type PageScroll = { focus: string; at: number } | null;
@@ -376,7 +486,10 @@ const L_ZOOM = { rotation: [2, -2, 0] as Vec3, lid: 97 };
  * Safe-area rule (chapter 03): the laptop screen stays fully inside the frame at every vh, so it fades in and out
  * in place instead of sliding in from off-screen.
  */
-const laptopDesktop: LaptopPose[] = [
+/** Chapter 05: the client's computer on WebWorkspace, same place as in chapter 03 (fades in and out in place). */
+const L5 = { ...L, screen: 'webWorkspace' as const };
+
+const laptopCh03: LaptopPose[] = [
   { vh: 560, ...L, lid: 0, opacity: 0, page: PAGE_TOP },
   // Fades in, then the lid opens 0° → 105°.
   { vh: 584, ...L, lid: 12, page: PAGE_TOP, ease: 'easeOut' },
@@ -395,8 +508,17 @@ const laptopDesktop: LaptopPose[] = [
   { vh: 826, ...L, lid: 105, opacity: 0, page: PAGE_TOP },
 ];
 
+const laptopCh05: LaptopPose[] = [
+  { vh: CH05.laptopIn[0], ...L5, lid: 105, opacity: 0, page: PAGE_TOP },
+  { vh: CH05.laptopIn[1], ...L5, lid: 105, page: PAGE_TOP, ease: 'easeOut' },
+  { vh: CH05.laptopOut[0], ...L5, lid: 105, page: PAGE_TOP },
+  { vh: CH05.laptopOut[1], ...L5, lid: 105, opacity: 0, page: PAGE_TOP },
+];
+
+const laptopDesktop: LaptopPose[] = [...laptopCh03, ...laptopCh05];
+
 /** Portrait (SPEC §8): the laptop becomes a cropped browser card (the board's narrower responsive layout). */
-const laptopPortrait: LaptopPose[] = laptopDesktop.map((k) => {
+const laptopPortraitCh03: LaptopPose[] = laptopCh03.map((k) => {
   const shown = (k.opacity ?? 1) > 0;
   // While the wallet panel is open the card shrinks, so the whole panel (and its Create button) fits the screen.
   const panel = k.vh === 760 || k.vh === 806;
@@ -410,6 +532,31 @@ const laptopPortrait: LaptopPose[] = laptopDesktop.map((k) => {
     page: k.page === PAGE_DONE_WHEN ? { focus: 'm1-done', at: 0.2 } : k.page === PAGE_DONE_WHEN_LOW ? { focus: 'm1-done', at: 0.62 } : k.page,
   };
 });
+
+/**
+ * Chapter 05 (portrait): the browser card. The open panel (745 px) is taller than the card's page (640 px), so the
+ * page scrolls inside the card: the panel's top half while it opens, its slider while the thumb moves.
+ */
+const P5 = { position: [0, -0.39, 0] as Vec3, rotation: [0, 0, 0] as Vec3, size: 0.86, screen: 'webWorkspace' as const, owner: 'client' as const, lid: 105 };
+/** The narrow layout stacks the nav above the needs: the page scrolls to "Lock in wallet" for the tap. */
+const NEED_LOCK: PageScroll = { focus: 'ws-lock', at: 0.4 };
+const PANEL_TOP: PageScroll = { focus: 'wallet-view', at: 0.62 };
+const PANEL_SLIDER: PageScroll = { focus: 'wallet-view', at: 0.44 };
+const laptopPortraitCh05: LaptopPose[] = [
+  { vh: CH05.laptopIn[0], ...P5, opacity: 0, page: NEED_LOCK },
+  { vh: CH05.laptopIn[1], ...P5, page: NEED_LOCK, ease: 'easeOut' },
+  { vh: CH05.tap[1], ...P5, page: NEED_LOCK },
+  { vh: CH05.swapIn[0], ...P5, page: PAGE_TOP },
+  { vh: CH05.swapIn[1], ...P5, page: PANEL_TOP },
+  { vh: CH05.slide[0] - 2, ...P5, page: PANEL_TOP },
+  { vh: CH05.slide[0] + 6, ...P5, page: PANEL_SLIDER },
+  { vh: CH05.swapOut[0], ...P5, page: PANEL_SLIDER },
+  { vh: CH05.swapOut[1], ...P5, page: PAGE_TOP },
+  { vh: CH05.laptopOut[0], ...P5, page: PAGE_TOP },
+  { vh: CH05.laptopOut[1], ...P5, opacity: 0, page: PAGE_TOP },
+];
+
+const laptopPortrait: LaptopPose[] = [...laptopPortraitCh03, ...laptopPortraitCh05];
 
 export const laptopTracks = { desktop: laptopDesktop, portrait: laptopPortrait };
 
@@ -482,6 +629,12 @@ export const cameraTrack: CameraPose[] = [
   { vh: 990, zoom: 1.6, zoomPortrait: 1.25, focus: 'dest-cards', at: BESIDE_COPY_LOW, transform: 'T5 Zoom' },
   { vh: 1030, zoom: 1.6, zoomPortrait: 1.25, focus: 'dest-cards', at: BESIDE_COPY_LOW },
   { vh: 1044, zoom: 1, transform: 'T5 Zoom' },
+  // Chapter 05: push onto the wallet panel (as far as it fits beside the copy) for the slide and the stamp. Max 1.75×,
+  // not 1.6×: at 1.6× the panel's rule lines (board 14 px × 86%) measure 10.4 px on 1440 × 900, under SPEC §8's 11 px.
+  { vh: CH05.zoom[0], zoom: 1 },
+  { vh: CH05.zoom[1], zoom: 1, fit: 1.75, focus: 'wallet-view', copyId: 'ch05-title', transform: 'T5 Zoom' },
+  { vh: CH05.zoom[2], zoom: 1, fit: 1.75, focus: 'wallet-view', copyId: 'ch05-title' },
+  { vh: CH05.zoom[3], zoom: 1, transform: 'T5 Zoom' },
 ];
 
 export const cameraZoom = (k: CameraPose, portrait: boolean) => (portrait ? (k.zoomPortrait ?? k.zoom) : k.zoom);
@@ -579,10 +732,11 @@ export function samplePose(trackIn: Pose[], vh: number, still = false): Sampled 
     if (!stillTracks.has(trackIn)) stillTracks.set(trackIn, trackIn.filter((p) => !p.via));
     track = stillTracks.get(trackIn)!;
   }
-  const strip = ({ vh: _vh, ease: _ease, transform: _t, screenSwitch: _s, via: _v, opacity = 1, dim = 0, ...rest }: Pose): Sampled => ({
+  const strip = ({ vh: _vh, ease: _ease, transform: _t, screenSwitch: _s, via: _v, opacity = 1, dim = 0, dock = 0, ...rest }: Pose): Sampled => ({
     ...rest,
     opacity,
     dim,
+    dock,
     screenFrom: rest.screen,
     screenTo: rest.screen,
     screenMix: 1,
@@ -604,6 +758,7 @@ export function samplePose(trackIn: Pose[], vh: number, still = false): Sampled 
     size: lerp(a.size, b.size, t),
     opacity: lerp(a.opacity ?? 1, b.opacity ?? 1, t),
     dim: lerp(a.dim ?? 0, b.dim ?? 0, t),
+    dock: lerp(a.dock ?? 0, b.dock ?? 0, t),
     // Discrete fields switch at the midpoint of the segment.
     screen: t < 0.5 ? a.screen : b.screen,
     owner: t < 0.5 ? a.owner : b.owner,

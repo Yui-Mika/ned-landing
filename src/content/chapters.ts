@@ -53,7 +53,7 @@ export const chapterById = (id: string): Chapter => {
 };
 
 /** Chapters that are built so far. The page is only as long as these (plus a short spacer). */
-export const BUILT_UNTIL_VH = 1120;
+export const BUILT_UNTIL_VH = 1360;
 
 export function chapterAt(vh: number): Chapter {
   for (let i = chapters.length - 1; i >= 0; i--) if (vh >= chapters[i].start) return chapters[i];

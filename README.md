@@ -14,7 +14,9 @@ Next.js (App Router) · TypeScript · Tailwind v4 · Lenis · Motion (Framer Mot
 | 01 The problem (generic chat app, clock from scroll, T3 split, N.E.D splash) | Built |
 | 02 Sign in (onboarding boards, tap mark, T2 flip) | Built |
 | 03 The brief (laptop + WebContractNew, T5 zoom, wallet panel, T8 invite chip, T6 fan) | Built |
-| 04–14, orbit nav, present mode, EN/VI | Not yet |
+| 04 Accept, and choose once (invite chip drops in, T5 zoom on the destination, slide to accept) | Built |
+| 05 Lock (T2 flip, Workspace, T4 dock into the wallet panel, T5 zoom, slide to lock, lock stamp, undock) | Built |
+| 06–14, orbit nav, present mode, EN/VI | Not yet |
 
 ## Run it
 
@@ -37,7 +39,8 @@ npm run typecheck
 | `src/scene/Phone.tsx` | Generic phone body + real HTML screen (drei `<Html transform>`). |
 | `src/scene/Laptop.tsx` | Generic laptop body (lid on a hinge, 0°–105°) with a web board on its screen; a browser card on portrait. |
 | `src/scene/focus.ts` | Finds a `data-focus` element on any device screen in 3D (T5 Zoom camera, T8 chip). |
-| `src/screens/web/` | Web boards (WebContractNew, WebWalletPanel), ported 1:1 from `docs/design-reference/web`. |
+| `src/screens/web/` | Web boards (WebContractNew, WebWorkspace, WebWalletPanel sign/app modes), ported 1:1 from `docs/design-reference/web`. |
+| `src/scene/dock.ts` | T4 Dock target: where the phone sits when it is the wallet panel (measured every frame). |
 | `src/scene/usePhoneInteraction.ts` | Drag (±35° / ±15°, spring back), click to flip owner, hover tilt. |
 | `src/screens/phone/` | Phone screen templates (light app theme). |
 | `src/motion/scroll.ts` | The single scroll value `scrollVh` (story vh; K = 0.75 on phones). |

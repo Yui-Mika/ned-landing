@@ -5,11 +5,13 @@ import { FONT, Screen, StatusBar, chipStyle, dotStyle } from './parts';
 
 /**
  * Port of docs/design-reference/phone/ContractDetail.dc.html as used by ContractDetailVinhNew (state created) and
- * ContractDetailVinhAccepted (state accepted): role freelancer · view vn · contract A. Markup and inline styles 1:1.
+ * ContractDetailVinhAccepted (state accepted): role freelancer · view vn · contract A; and by
+ * ContractDetailMiaAccepted (`client`): role client · view intl · state accepted. Markup and inline styles 1:1.
  * Left out: the prototype-only "DEMO · switch to…" line, the board's 1 s timer (no countdowns in these states)
  * and the entrance animations. SPEC numbers.
  */
 const s = copy.screens.contractDetail;
+const mia = copy.screens.contractDetailMia;
 const SHADOW = '0 1px 2px rgba(17,17,22,0.04), 0 6px 16px -6px rgba(17,17,22,0.10)';
 const simTag: CSSProperties = {
   display: 'inline-flex',
@@ -37,10 +39,26 @@ const footerRow: CSSProperties = {
   fontWeight: 600,
 };
 
-export function ContractDetailScreen({ state }: { state: 'created' | 'accepted' }) {
+const btn: CSSProperties = {
+  height: 52,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderRadius: 9999,
+  background: '#7B2FBE',
+  fontSize: 16,
+  fontWeight: 600,
+  color: '#FFFFFF',
+  textDecoration: 'none',
+};
+const btn2: CSSProperties = { ...btn, background: '#FFFFFF', border: 'none', boxShadow: SHADOW, color: '#111116' };
+
+export function ContractDetailScreen({ state, role = 'freelancer' }: { state: 'created' | 'accepted'; role?: 'freelancer' | 'client' }) {
   const created = state === 'created';
+  const client = role === 'client';
+  const milestones = client ? mia.milestones : s.milestones;
   return (
-    <Screen name={created ? 'cdNew' : 'cdAccepted'} style={{ background: '#F4F4F6', color: '#111116', display: 'flex', flexDirection: 'column' }}>
+    <Screen name={client ? 'cdMiaAccepted' : created ? 'cdNew' : 'cdAccepted'} style={{ background: '#F4F4F6', color: '#111116', display: 'flex', flexDirection: 'column' }}>
       <StatusBar />
 
       <div style={{ padding: '4px 16px 0', display: 'flex', alignItems: 'center', gap: 10, position: 'relative', zIndex: 3 }}>
@@ -76,7 +94,7 @@ export function ContractDetailScreen({ state }: { state: 'created' | 'accepted' 
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
           <span style={chipStyle('info')}>
             <span style={dotStyle('info')} />
-            {created ? s.status.created : s.status.accepted}
+            {client ? mia.status : created ? s.status.created : s.status.accepted}
           </span>
           <span
             aria-label={s.devnet.aria}
@@ -102,7 +120,7 @@ export function ContractDetailScreen({ state }: { state: 'created' | 'accepted' 
           </span>
         </div>
 
-        {!created && (
+        {!created && !client && (
           <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '12px 14px', borderRadius: 16, background: '#EEEFFE', fontSize: 13, lineHeight: 1.5, color: '#3F3F49', border: 'none' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3730A3" strokeWidth="2" strokeLinecap="round" aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }}>
               <circle cx="12" cy="13" r="8" />
@@ -117,10 +135,10 @@ export function ContractDetailScreen({ state }: { state: 'created' | 'accepted' 
 
         {/* Party */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 20, background: '#FFFFFF' }}>
-          <Avatar seed="mia" size={42} />
+          <Avatar seed={client ? 'vinh' : 'mia'} size={42} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontFamily: FONT.mono, fontSize: 15, fontWeight: 700 }}>{s.other}</span>
+              <span style={{ fontFamily: FONT.mono, fontSize: 15, fontWeight: 700 }}>{client ? mia.other : s.other}</span>
               <span
                 style={{
                   height: 20,
@@ -134,10 +152,10 @@ export function ContractDetailScreen({ state }: { state: 'created' | 'accepted' 
                   alignItems: 'center',
                 }}
               >
-                {s.otherRole}
+                {client ? mia.otherRole : s.otherRole}
               </span>
             </div>
-            <div style={{ marginTop: 3, fontSize: 12, color: '#5E5E6A' }}>{s.otherFacts}</div>
+            <div style={{ marginTop: 3, fontSize: 12, color: '#5E5E6A' }}>{client ? mia.otherFacts : s.otherFacts}</div>
           </div>
         </div>
 
@@ -151,12 +169,18 @@ export function ContractDetailScreen({ state }: { state: 'created' | 'accepted' 
             boxShadow: '0 1px 2px rgba(123,47,190,0.06), 0 10px 28px -10px rgba(123,47,190,0.30)',
           }}
         >
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#3F3F49' }}>{s.heroLabel}</div>
-          <div style={{ marginTop: 8, fontFamily: FONT.display, fontSize: 32, fontWeight: 700, letterSpacing: -0.8 }}>{s.heroAmt}</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#3F3F49' }}>{client ? mia.heroLabel : s.heroLabel}</div>
+          <div style={{ marginTop: 8, fontFamily: FONT.display, fontSize: 32, fontWeight: 700, letterSpacing: -0.8 }}>{client ? mia.heroAmt : s.heroAmt}</div>
           <div style={{ marginTop: 4, fontSize: 12, color: '#3F3F49' }}>
-            {/* SPEC text: never under 11 px on screen (scale set by Phone.tsx). */}
-            <span style={{ fontSize: 'max(12px, calc(11px / var(--ned-screen-scale, 1)))' }}>{s.heroSubEstimate}</span>
-            {s.heroSubRest}
+            {client ? (
+              mia.heroSub
+            ) : (
+              <>
+                {/* SPEC text: never under 11 px on screen (scale set by Phone.tsx). */}
+                <span style={{ fontSize: 'max(12px, calc(11px / var(--ned-screen-scale, 1)))' }}>{s.heroSubEstimate}</span>
+                {s.heroSubRest}
+              </>
+            )}
           </div>
           <div
             style={{
@@ -171,7 +195,7 @@ export function ContractDetailScreen({ state }: { state: 'created' | 'accepted' 
             }}
           >
             <span style={{ color: '#3F3F49' }}>{s.destLabel}</span>
-            <span style={{ fontWeight: 600 }}>{created ? s.dest.created : s.dest.accepted}</span>
+            <span style={{ fontWeight: 600 }}>{client ? mia.dest : created ? s.dest.created : s.dest.accepted}</span>
             {!created && <span style={simTag}>{s.simulated}</span>}
           </div>
           <div
@@ -192,13 +216,13 @@ export function ContractDetailScreen({ state }: { state: 'created' | 'accepted' 
               <rect x="5" y="11" width="14" height="10" rx="2" />
               <path d="M8 11V7a4 4 0 0 1 8 0v4" />
             </svg>
-            {created ? s.notFunded.created : s.notFunded.accepted}
+            {client ? mia.notFunded : created ? s.notFunded.created : s.notFunded.accepted}
           </div>
         </div>
 
         {/* Milestones */}
         <h2 style={{ margin: '8px 4px 0', fontFamily: FONT.display, fontSize: 17, fontWeight: 700 }}>{s.milestonesTitle}</h2>
-        {s.milestones.map((m) => (
+        {milestones.map((m) => (
           <div key={m.n} role="group" aria-label={`Milestone ${m.n}, ${s.notLocked}`} style={{ padding: 14, borderRadius: 20, background: '#FFFFFF' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
               <span style={{ fontFamily: FONT.display, fontSize: 15, fontWeight: 700 }}>
@@ -274,25 +298,18 @@ export function ContractDetailScreen({ state }: { state: 'created' | 'accepted' 
         </div>
       </div>
 
-      {created && (
+      {(created || client) && (
         <div style={{ padding: '10px 16px 26px', display: 'flex', flexDirection: 'column', gap: 8, borderTop: '1px solid #F0F0F3', background: '#FFFFFF' }}>
-          <a
-            data-tap-target="accept"
-            style={{
-              height: 52,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: 9999,
-              background: '#7B2FBE',
-              fontSize: 16,
-              fontWeight: 600,
-              color: '#FFFFFF',
-              textDecoration: 'none',
-            }}
-          >
-            {s.action}
-          </a>
+          {client ? (
+            <>
+              <a style={btn}>{mia.actions.lock}</a>
+              <a style={btn2}>{mia.actions.close}</a>
+            </>
+          ) : (
+            <a data-tap-target="accept" style={btn}>
+              {s.action}
+            </a>
+          )}
         </div>
       )}
     </Screen>

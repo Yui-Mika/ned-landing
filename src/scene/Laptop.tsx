@@ -8,8 +8,12 @@ import * as THREE from 'three';
 import { scrollVh } from '@/motion/scroll';
 import { copy } from '@/content/copy';
 import { DeviceTag } from '@/components/DeviceTag';
+import { chapterAt } from '@/content/chapters';
 import { WebContractNewScreen } from '@/screens/web/WebContractNewScreen';
-import { ch03BriefAt, laptopTracks, sampleLaptop, type BriefState, type PageScroll } from './poses';
+import { WebWorkspaceScreen } from '@/screens/web/WebWorkspaceScreen';
+import { ContractLockScreen } from '@/screens/phone/ContractLockScreen';
+import { ContractLockedScreen } from '@/screens/phone/ContractLockedScreen';
+import { ch03BriefAt, ch05PanelAt, laptopTracks, sampleLaptop, type BriefState, type LaptopScreen, type Owner, type PageScroll } from './poses';
 import { registerFocusResolver, screenPointToWorld, offsetIn } from './focus';
 import { TAP_PX, drawTap } from './tap';
 import { SceneHtml } from './htmlLayer';
@@ -33,11 +37,11 @@ const DEG = Math.PI / 180;
 
 const brief = copy.web.contractNew.milestones.list[0].crit;
 
-/** The chapter whose copy column bounds the laptop's safe area (chapter 03). */
-const COPY_ID = 'ch03-title';
-
-/** Live laptop scale after the safe-area fit (the invite chip matches it so it lifts off at the field's size). */
-export const laptopLive = { scale: 0 };
+/**
+ * Live laptop state after the safe-area fit: scale (the invite chip matches it so it lifts off at the field's size),
+ * opacity, and the screen anchor (T4 Dock measures the wallet panel against it).
+ */
+export const laptopLive: { scale: number; opacity: number; anchor: THREE.Object3D | null } = { scale: 0, opacity: 0, anchor: null };
 
 /** Brief state from scroll; React state changes only when it actually changes (per typed character at most). */
 function useBriefState(): BriefState {
@@ -49,28 +53,79 @@ function useBriefState(): BriefState {
   return state;
 }
 
-function ScreenContent({ portrait, rootRef, tapRef }: { portrait: boolean; rootRef: React.RefObject<HTMLDivElement | null>; tapRef: React.RefObject<HTMLDivElement | null> }) {
+/** Chapter 05 wallet panel screen from scroll; React state changes only when it opens, switches or closes. */
+function usePanelScreen() {
+  const [screen, setScreen] = useState(() => ch05PanelAt(scrollVh.get()).screen);
+  useMotionValueEvent(scrollVh, 'change', (vh) => {
+    const next = ch05PanelAt(vh).screen;
+    if (next !== screen) setScreen(next);
+  });
+  return screen;
+}
+
+function BriefScreen({ size, children }: { size: { w: number; h: number }; children: React.ReactNode }) {
   const state = useBriefState();
+  return (
+    <WebContractNewScreen state={state} width={size.w} height={size.h}>
+      {children}
+    </WebContractNewScreen>
+  );
+}
+
+function WorkspaceScreen({ size, panelRef, children }: { size: { w: number; h: number }; panelRef: React.RefObject<HTMLDivElement | null>; children: React.ReactNode }) {
+  const panel = usePanelScreen();
+  return (
+    <WebWorkspaceScreen
+      width={size.w}
+      height={size.h}
+      panelRef={panelRef}
+      panel={panel === 'lock' ? <ContractLockScreen /> : panel === 'locked' ? <ContractLockedScreen /> : null}
+    >
+      {children}
+    </WebWorkspaceScreen>
+  );
+}
+
+function ScreenContent({
+  screen,
+  portrait,
+  rootRef,
+  tapRef,
+  panelRef,
+}: {
+  screen: LaptopScreen;
+  portrait: boolean;
+  rootRef: React.RefObject<HTMLDivElement | null>;
+  tapRef: React.RefObject<HTMLDivElement | null>;
+  panelRef: React.RefObject<HTMLDivElement | null>;
+}) {
   const size = portrait ? PAGE.portrait : PAGE.desktop;
+  /* Tap mark (landing layer, not part of the board): TAPS in poses.ts. */
+  const tap = (
+    <div
+      ref={tapRef}
+      aria-hidden="true"
+      data-tap-mark=""
+      className="absolute top-0 left-0 rounded-full"
+      style={{
+        zIndex: 50,
+        width: TAP_PX,
+        height: TAP_PX,
+        opacity: 0,
+        background: 'rgb(123 47 190 / 0.22)',
+        boxShadow: '0 0 0 2px rgb(123 47 190 / 0.55)',
+      }}
+    />
+  );
   return (
     <div ref={rootRef}>
-      <WebContractNewScreen state={state} width={size.w} height={size.h}>
-        {/* Tap mark (landing layer, not part of the board): TAPS in poses.ts. */}
-        <div
-          ref={tapRef}
-          aria-hidden="true"
-          data-tap-mark=""
-          className="absolute top-0 left-0 rounded-full"
-          style={{
-            zIndex: 50,
-            width: TAP_PX,
-            height: TAP_PX,
-            opacity: 0,
-            background: 'rgb(123 47 190 / 0.22)',
-            boxShadow: '0 0 0 2px rgb(123 47 190 / 0.55)',
-          }}
-        />
-      </WebContractNewScreen>
+      {screen === 'webWorkspace' ? (
+        <WorkspaceScreen size={size} panelRef={panelRef}>
+          {tap}
+        </WorkspaceScreen>
+      ) : (
+        <BriefScreen size={size}>{tap}</BriefScreen>
+      )}
     </div>
   );
 }
@@ -94,6 +149,10 @@ export function Laptop({ reduced, portrait }: Props) {
   const anchor = useRef<THREE.Group>(null);
   const rootEl = useRef<HTMLDivElement>(null);
   const tapEl = useRef<HTMLDivElement>(null);
+  const panelEl = useRef<HTMLDivElement>(null);
+  // Screen and owner from the poses table (they switch while the laptop is hidden, or at T9 Owner turn).
+  const [screen, setScreen] = useState<LaptopScreen>(() => sampleLaptop(laptopTracks.desktop, scrollVh.get()).screen);
+  const [owner, setOwner] = useState<Owner>('client');
   const fadeEls = useRef<(HTMLDivElement | null)[]>([]);
   const scrollY = useRef(0);
   const mats = useRef<THREE.Material[] | null>(null);
@@ -121,6 +180,11 @@ export function Laptop({ reduced, portrait }: Props) {
     const pose = sampleLaptop(portrait ? laptopTracks.portrait : laptopTracks.desktop, vh, reduced);
     const vp = stageViewport(state);
     const opacity = pose.opacity;
+    if (pose.screen !== screen) setScreen(pose.screen);
+    if (pose.owner !== owner) setOwner(pose.owner);
+    laptopLive.opacity = opacity;
+    laptopLive.anchor = anchor.current;
+    if (panelEl.current) panelEl.current.style.opacity = ch05PanelAt(vh).opacity.toFixed(3);
     outer.current.visible = opacity > 0.001;
     for (const el of fadeEls.current) if (el) el.style.opacity = String(opacity);
     if (!outer.current.visible) return;
@@ -130,7 +194,7 @@ export function Laptop({ reduced, portrait }: Props) {
     outer.current.scale.setScalar(scale);
     body.current.rotation.set(pose.rotation[0] * DEG, pose.rotation[1] * DEG, pose.rotation[2] * DEG);
     if (lidPivot.current) lidPivot.current.rotation.x = (90 - pose.lid) * DEG;
-    fitToSafeArea(state.camera as THREE.PerspectiveCamera, state.size);
+    fitToSafeArea(state.camera as THREE.PerspectiveCamera, state.size, `ch${chapterAt(vh).id}-title`);
 
     // The HTML screen is visible from behind too: hide it while it faces away (lid closing / closed).
     if (anchor.current && fadeEls.current[0]) {
@@ -177,7 +241,7 @@ export function Laptop({ reduced, portrait }: Props) {
    * Safe-area rule: shrink (never grow) and shift the laptop so its screen's projected box stays inside the safe
    * area, measured with an un-zoomed reference camera. Works for any window shape (16:10, 16:9, portrait).
    */
-  function fitToSafeArea(camera: THREE.PerspectiveCamera, size: { width: number; height: number }) {
+  function fitToSafeArea(camera: THREE.PerspectiveCamera, size: { width: number; height: number }, copyId: string) {
     if (!outer.current || !anchor.current) return;
     const cam = fit.cam;
     cam.fov = camera.fov;
@@ -204,7 +268,7 @@ export function Laptop({ reduced, portrait }: Props) {
       });
       return { l, t, r, b };
     };
-    const area = inset(safeArea(COPY_ID, portrait), 4);
+    const area = inset(safeArea(copyId, portrait), 4);
     let bb = box();
     const k = Math.min(1, (area.r - area.l) / (bb.r - bb.l), (area.b - area.t) / (bb.b - bb.t));
     if (k < 1) {
@@ -224,9 +288,7 @@ export function Laptop({ reduced, portrait }: Props) {
     laptopLive.scale = outer.current.scale.x;
   }
 
-  const screenHtml = (
-    <ScreenContent portrait={portrait} rootRef={rootEl} tapRef={tapEl} />
-  );
+  const screenHtml = <ScreenContent screen={screen} portrait={portrait} rootRef={rootEl} tapRef={tapEl} panelRef={panelEl} />;
 
   if (portrait) {
     // Cropped browser card (SPEC §8): a generic browser frame, no laptop body.
@@ -258,7 +320,7 @@ export function Laptop({ reduced, portrait }: Props) {
               }}
               style={{ opacity: 0 }}
             >
-              <DeviceTag owner="client" device="computer" size="md" />
+              <DeviceTag owner={owner} device="computer" size="md" />
             </div>
           </SceneHtml>
         </group>
@@ -320,7 +382,7 @@ export function Laptop({ reduced, portrait }: Props) {
             }}
             style={{ opacity: 0 }}
           >
-            <DeviceTag owner="client" device="computer" size="lg" />
+            <DeviceTag owner={owner} device="computer" size="lg" />
           </div>
         </SceneHtml>
       </group>
