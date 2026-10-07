@@ -33,7 +33,7 @@ export function syncScrollVh() {
 export function scrollToVh(vh: number, durationS = 1) {
   const top = vh * pxPerVh();
   if (lenis && !prefersReducedMotion()) {
-    lenis.scrollTo(top, { duration: durationS, easing: easeFn.inOut });
+    lenis.scrollTo(top, { duration: durationS, easing: easeFn.ease });
   } else {
     window.scrollTo({ top, behavior: 'auto' });
   }

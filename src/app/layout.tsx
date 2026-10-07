@@ -15,11 +15,23 @@ export const metadata: Metadata = {
   openGraph: { title: copy.site.title, description: copy.site.description, type: 'website' },
 };
 
+/**
+ * Text reveal guard (SPEC §14.4). Runs before first paint, only when JavaScript runs:
+ * `is-motion` lets globals.css hide [data-reveal] until the reveal takes over (no flash of text
+ * that then jumps). Without JS the class never appears and all copy is visible. Failsafe: if the app
+ * never starts the reveal, the text is shown after 2.5 s anyway.
+ */
+const REVEAL_GUARD = `(function(){var d=document.documentElement;d.classList.add('is-motion');setTimeout(function(){d.classList.add('reveal-done')},2500)})();`;
+
 export const viewport: Viewport = { themeColor: '#06060E', colorScheme: 'dark' };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
+    // suppressHydrationWarning: the head script adds classes to <html> before React hydrates.
+    <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: REVEAL_GUARD }} />
+      </head>
       <body>{children}</body>
     </html>
   );

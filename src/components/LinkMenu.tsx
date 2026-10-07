@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { links } from '@/content/links';
 import { copy } from '@/content/copy';
-import { ease } from '@/motion/tokens';
+import { EASE_OUT } from '@/motion/tokens';
 import { Chip } from './Chip';
 
 type Props = { variant?: 'bar' | 'hero'; align?: 'left' | 'right' };
@@ -46,6 +46,28 @@ export function LinkMenu({ variant = 'bar', align = 'right' }: Props) {
         {copy.topBar.demo} <span aria-hidden="true">↗</span>
       </button>
 
+      {/* Without JavaScript the menu can't open: list the product links plainly (SPEC §14.4). */}
+      {variant === 'hero' && (
+        <noscript>
+          <ul className="mt-3 flex flex-col gap-1 text-[14px]">
+            {links.map((l) => (
+              <li key={l.id}>
+                {l.url ? (
+                  <a href={l.url} target="_blank" rel="noopener" className="text-accent-soft underline">
+                    {l.label} ↗
+                  </a>
+                ) : (
+                  <span className="text-muted">
+                    {l.label} · {copy.topBar.comingSoon}
+                  </span>
+                )}{' '}
+                <span className="text-muted">· {copy.topBar.testNetwork}</span>
+              </li>
+            ))}
+          </ul>
+        </noscript>
+      )}
+
       <AnimatePresence>
         {open && (
           <motion.div
@@ -53,7 +75,7 @@ export function LinkMenu({ variant = 'bar', align = 'right' }: Props) {
             initial={{ opacity: 0, y: -6, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.98 }}
-            transition={{ duration: 0.22, ease: ease.out }}
+            transition={{ duration: 0.22, ease: EASE_OUT }}
             className={`absolute top-full z-50 mt-2 w-[min(340px,calc(100vw-32px))] rounded-2xl border border-white/10 bg-surface-2/95 p-2 shadow-2xl backdrop-blur ${
               align === 'right' ? 'right-0' : 'left-0'
             }`}

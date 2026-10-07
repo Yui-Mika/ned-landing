@@ -57,6 +57,27 @@ body {
   border-radius: 6px;
 }
 
+/* Text reveal (SPEC §14.4): hidden start state only once JS has marked <html> (see layout.tsx). */
+.is-motion:not(.reveal-done) [data-reveal] {
+  opacity: 0;
+}
+
+/* Scroll cue: slow pulse after it has faded in. */
+@keyframes cue-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-done .cue-pulse {
+    animation: cue-pulse 2.4s ease-in-out 1.6s infinite;
+  }
+}
+
 .skip-link {
   position: fixed;
   left: 16px;

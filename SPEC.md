@@ -179,3 +179,117 @@ For chapters 02–13, build the screens as real React components (8 phone templa
 10. Lighthouse numbers from section 8.
 
 If a requirement here conflicts with performance on a phone, cut in this order and tell me: (1) travelling chips except the amount chip in 07, (2) the phone fan in 03, (3) the second dock in 11, (4) rows streaming in 10, (5) the split in 01. NEVER cut: 02, 03 brief, 04 accept, 05 lock, 06 submit, 07 release + VND, 08 B and C, 13 disclosures.
+
+---
+
+# ADDENDUM v2 (append to the end of SPEC.md)
+
+Source: "NED Wallet Design System" canvas (Modern Minimal v2.1, 3 Oct 2026) + the product team's notes (7 Oct). Where this addendum conflicts with sections 1–11 above, **this addendum wins**.
+
+## 12. DESIGN SYSTEM ALIGNMENT (screens inside the phone and laptop)
+
+The landing page itself stays dark (section 4). But every **screen drawn inside a device** is the real product UI and must follow the product's design system exactly. Do not invent a look for these screens.
+
+### 12.1 App screen tokens (light theme)
+| Token | Value | Use |
+|---|---|---|
+| Background | `#F4F4F6` | screen background |
+| Surface | `#FFFFFF` | cards |
+| Fill | `#EEEEF2` | fields, tiles inside a card |
+| Muted fill | `#E6E6EB` | never a border |
+| Ink | `#111116` | main text |
+| Ink 2 | `#3F3F49` | secondary text |
+| Ink 3 | `#5E5E6A` | captions |
+| Disabled | `#8A8A96` | large / disabled text only |
+| Primary | `#7B2FBE` | main buttons, on-chain action (white text on it) |
+| Primary ink | `#6A22B0` | text on tint |
+| Primary tint | `#F2EAFB` | selected option, "Locked" status |
+| Teddy tile | `#EDE3FB` | the tile Teddy always sits on |
+| Info | tint `#EEEFFE` / text `#3730A3` | |
+| Locked | tint `#F2EAFB` / text `#6A22B0` | |
+| Warning | tint `#FFF5E1` / text `#8A5300` | refund, deadline |
+| Success | tint `#E7F6EC` / text `#127A3A` | released |
+| Neutral | tint `#EFEFF3` / text `#4B4B57` | |
+| Error | tint `#FDECEC` / text `#B42318` | |
+
+### 12.2 App type scale (inside screens)
+- Amount: Space Grotesk 700, 34/36 (e.g. "≈ 6,500,000 VND")
+- Page title: Space Grotesk 700, 30
+- Section / sheet title: Space Grotesk 700, 20
+- Row title: Inter 600, 15 · Body: Inter 400, 15 · Caption: Inter 400, 13, Ink 3
+- Addresses / fingerprints: Space Mono 400, 13
+
+### 12.3 App shape rules
+- Card radius **20**; sheet radius **28** (top corners); button = **pill, 52 px high**; avatar/icon **40**.
+- Spacing steps: 4 · 8 · 12 · 16 · 20 · 24; screen gutter 16; touch targets ≥ 44.
+- **No outlines around components** (tone and soft shadow instead). A hairline `#F0F0F3` is allowed only between rows of one list.
+- **No gradients, no glows, no blur, no shadows inside app screens.** (Glow, blur and gradients are allowed on the landing layer around the devices, never inside the screens.)
+- Status is always **text + colour**, never colour alone.
+- Phone screens are 390 × 844; the wallet panel inside the laptop is the same screen scaled to **86%**.
+
+### 12.4 Teddy rules inside screens
+- Teddy always sits on a lilac tile `#EDE3FB`, never floating on a screen. Never on amount entry, review or lock screens. (`happy` once per screen on success; `curious` for empty / not found.)
+- The hero Teddy next to the phone (section 4) is landing-layer and may float. Keep it only in chapter 00.
+
+### 12.5 Boards you must NOT turn into landing content
+The design canvas still contains archived or "if shipped" work. Ignore: Swap, xStocks, Simple Earn, T.E.D. bot, old wallet-mode Home (archived 3 Oct), and the **Dispute / split** boards (disputes are NOT available; keep the line "Disputes over quality: planned after launch").
+
+### 12.6 App motion tokens (use inside screens; landing uses 12.7 to 12.9)
+- Ease: `cubic-bezier(.2, 0, 0, 1)` · Ease-out: `cubic-bezier(.16, 1, .3, 1)`
+- Press: scale 0.98, 160 ms · colour/background change: 200 ms
+- Screen enter: fade 200 ms, then content rises 10 px over 360 ms, children **40 ms apart**
+- State change (form → Submitted / Released / Created): 320 ms
+- Wallet panel open: scale 0.97 → 1 from the top-right corner, 200 ms · Sheet: slides up 360 ms
+- Only `opacity` and `transform`. Motion never blocks a tap.
+- Replace section 5.3 "motion tokens" with these two curves for consistency: `EASE = [0.2, 0, 0, 1]`, `EASE_OUT = [0.16, 1, 0.3, 1]`.
+
+## 13. THIRD PRODUCT LINK = COMMUNITY HUB (confirm name)
+
+The design canvas has a **"Jobs site · community hub (separate from the Workspace)"**: overview landing, find jobs, job detail and apply, post a job (budget locked), applicants, legal. Treat this as the third link. Until the owner confirms the name and URL, keep the card as in section 2 (disabled, "Coming soon", no href) and use the label `Community Hub` (not "Communication Hub"). Description line for the card: "Find and post jobs, then lock the budget." (Keep the label and line in `links.ts` so they can be changed in one place.)
+Banned-word rules (section 7) apply to this card too: say "budget locked", never "escrow" or "deposit".
+
+## 14. TEXT ANIMATION SYSTEM (all copy on the page)
+
+Goal: text feels alive and smooth. On load it **reveals** itself; as the user scrolls down it **fades away in step with the scroll**; scrolling back up brings it back. (UI/UX terms: "staggered text reveal / fade-in-up" for the entrance, "scroll-linked (scrubbed) fade-out" for the exit.)
+
+### 14.1 Load reveal (chapter 00 only, plays once per page load)
+- Wait for fonts (`document.fonts.ready`) and for the first frame of the poster/3D, then start. Never show a flash of unstyled text; never delay beyond 1.2 s after load.
+- Sequence (all `EASE_OUT`):
+  1. Top bar: fades in, 400 ms.
+  2. Chip "Demo on a test network": 0 → 1 opacity, rises 12 px, 500 ms, delay 100 ms.
+  3. **Headline, word by word:** each word rises 0.5 em → 0, opacity 0 → 1, blur 8 px → 0 (blur on desktop only), 700 ms each, **stagger 60 ms per word**. Wrap each word in an overflow-hidden line mask so words appear to slide up from under a line.
+  4. Sub paragraph: one block, rises 16 px, 600 ms, starts 300 ms after the headline's last word starts.
+  5. Buttons ("Try the demo ↗", "Scroll"): rise 12 px, stagger 80 ms, 500 ms.
+  6. Scroll cue: fades in last, then pulses slowly.
+- Total reveal ≤ 1.6 s. Teddy's wave starts with step 3.
+- After the reveal finishes, **text state becomes a pure function of scroll** (14.2). The load reveal is the only time-based text motion (decorative exception to section 5.1).
+
+### 14.2 Scroll-linked exit and enter (every chapter's copy)
+- Each chapter has `copyIn` and `copyOut` vh windows in `chapters.ts` (default: enter over the first 12 vh of the chapter, exit over the last 12 vh; chapter 00 exits between 20 vh and 70 vh).
+- Exit (scrubbed by `scrollVh`, reversible): `opacity 1 → 0`, `translateY 0 → -32 px`, `blur 0 → 6 px` (blur desktop only), **lines leave one after another** (each line offset by 3 vh, so the headline dissolves top to bottom).
+- Enter (scrubbed): reverse of exit but rising from +32 px.
+- Implement with Framer Motion `useTransform(scrollVh, [a, b], [from, to])`. Never use `setState` on scroll. Apply to a wrapper's `opacity` and `transform` (and `filter` only on headlines).
+- Chapters 01–14 do **not** replay the time-based load reveal; their entrance is the scrubbed enter above.
+- If the page loads in the middle (scroll restoration, anchor, orbit-nav jump), skip the load reveal and show the state that matches `scrollVh`.
+
+### 14.3 Component contract
+- `<SplitText as="h1" text="…" mode="words" />`: splits into words, wraps each in a mask span, sets `aria-label` on the parent with the full text and `aria-hidden` on the spans, so screen readers read one clean headline.
+- `<RevealBlock delay>`: fade + rise for paragraphs, chips, buttons.
+- `<ChapterCopy chapterId>`: reads `copyIn/copyOut` and applies 14.2.
+- Motion constants live in `src/motion/tokens.ts` (durations, stagger, offsets) so the feel can be tuned in one place.
+
+### 14.4 Accessibility, fallbacks, performance
+- **Content must stay visible if JavaScript or animation fails.** Do not server-render text as `opacity: 0`. Add an `is-motion` class to `<html>` on mount and only then apply hidden start states, or use CSS `@supports (animation-timeline: scroll())` where possible (progressive enhancement, as the Community Hub design already does).
+- `prefers-reduced-motion`: no translate, no blur, no stagger; entrance is a 200 ms opacity fade; exit is a plain opacity fade on scroll.
+- Animate only `opacity`, `transform`, and (headlines only, desktop) `filter: blur`. No layout-affecting properties. `will-change` only while animating.
+- Mobile: no blur, stagger 40 ms, rise 20 px instead of 32.
+- Text must stay readable at rest: contrast ≥ 4.5:1 on `#06060E`.
+- Never animate legal and disclosure text (chapter 13 "What's real today" and footer): they fade in only, never blur or slide.
+
+## 15. ACCEPTANCE TESTS (add to section 11)
+11. Reload the page 5 times: the headline reveals word by word in under 1.6 s with no flash of unstyled or invisible-then-jump text.
+12. Scroll slowly from 0 to 70 vh and back: hero text fades, lifts and blurs in step with your finger, line by line, and returns exactly when you scroll up.
+13. Disable JavaScript: all copy and links are still visible.
+14. Turn on reduced motion: no movement, only opacity fades.
+15. Screen reader (or DOM check): the headline is read once as a full sentence, not word by word.
+16. Open a phone screen in a device: its tokens match section 12 (background `#F4F4F6`, cards `#FFFFFF` radius 20, pill buttons 52 high, no outlines, no gradients inside the screen).

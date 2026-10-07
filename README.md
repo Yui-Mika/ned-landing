@@ -35,7 +35,9 @@ npm run typecheck
 | `src/scene/usePhoneInteraction.ts` | Drag (±35° / ±15°, spring back), click to flip owner, hover tilt. |
 | `src/screens/phone/` | Phone screen templates (light app theme). |
 | `src/motion/scroll.ts` | The single scroll value `scrollVh` (story vh; K = 0.75 on phones). |
-| `src/motion/tokens.ts` | Eases, springs, camera λ. |
+| `src/motion/tokens.ts` | `EASE` / `EASE_OUT`, springs, camera λ, and all text-animation timings (`text.reveal`, `text.scrub`). |
+| `src/motion/reveal.ts` | Chapter 00 load reveal: gate (fonts + first frame, ≤ 1.2 s), phase store, `useLoadReveal`. |
+| `src/components/text/` | `SplitText`, `RevealBlock`, `ChapterCopy` (SPEC §14). Copy windows `copyIn` / `copyOut` live in `chapters.ts`. |
 | `ned-landing/` | Old Vite prototype (earlier story). Reference only; not part of the build. |
 
 ## How to change…

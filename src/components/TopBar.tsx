@@ -5,6 +5,8 @@ import { AnimatePresence, motion, useMotionValueEvent, useTransform } from 'moti
 import { copy } from '@/content/copy';
 import { chapterAt, chapters } from '@/content/chapters';
 import { scrollVh } from '@/motion/scroll';
+import { useLoadReveal } from '@/motion/reveal';
+import { text } from '@/motion/tokens';
 import { LinkMenu } from './LinkMenu';
 
 const STORY_END = chapters[chapters.length - 1].end;
@@ -17,9 +19,11 @@ export function TopBar() {
     if (c.id !== chapter.id) setChapter(c);
   });
   const progress = useTransform(scrollVh, [0, STORY_END], [0, 1]);
+  // Load reveal step 1: fade in.
+  const reveal = useLoadReveal({ delay: text.reveal.topBar.delay, duration: text.reveal.topBar.duration });
 
   return (
-    <header className="fixed inset-x-0 top-0 z-40 border-b border-white/5 bg-bg/60 backdrop-blur-md">
+    <motion.header data-reveal="" animate={reveal} className="fixed inset-x-0 top-0 z-40 border-b border-white/5 bg-bg/60 backdrop-blur-md">
       <div className="mx-auto flex h-14 items-center gap-4 px-4 md:px-8">
         {/* TODO(asset): real N.E.D wordmark */}
         <a href="#main" className="font-display text-[20px] font-bold tracking-tight text-ink">
@@ -49,6 +53,6 @@ export function TopBar() {
         className="absolute bottom-0 left-0 h-px w-full origin-left bg-accent"
         style={{ scaleX: progress }}
       />
-    </header>
+    </motion.header>
   );
 }

@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { MotionConfig, useReducedMotion } from 'motion/react';
 import { copy } from '@/content/copy';
 import { hasWebGL } from '@/motion/flags';
+import { useRevealGate } from '@/motion/reveal';
 import { SmoothScroll } from '@/components/SmoothScroll';
 import { TopBar } from '@/components/TopBar';
 import { ScrollCue } from '@/components/ScrollCue';
@@ -23,6 +24,8 @@ export default function Page() {
   const onReady = useCallback(() => setStageReady(true), []);
 
   useEffect(() => setWebgl(hasWebGL()), []);
+  // Chapter 00 load reveal: starts once fonts and the first poster frame are ready (≤ 1.2 s).
+  useRevealGate();
 
   return (
     <MotionConfig reducedMotion="user">

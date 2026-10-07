@@ -1,30 +1,35 @@
 'use client';
 
-import { motion, useReducedMotion, useTransform } from 'motion/react';
+import { useState } from 'react';
 import { copy } from '@/content/copy';
-import { chapters } from '@/content/chapters';
-import { scrollToVh, scrollVh } from '@/motion/scroll';
-import { ease } from '@/motion/tokens';
+import { chapterById, chapters } from '@/content/chapters';
+import { scrollToVh } from '@/motion/scroll';
+import { text } from '@/motion/tokens';
+import { useIsMobile } from '@/motion/reveal';
 import { Chip } from '@/components/Chip';
 import { LinkMenu } from '@/components/LinkMenu';
+import { ChapterCopy } from '@/components/text/ChapterCopy';
+import { RevealBlock } from '@/components/text/RevealBlock';
+import { SplitText } from '@/components/text/SplitText';
 
-const [hero, next] = chapters;
+const hero = chapterById('00');
+const next = chapters[1];
+const r = text.reveal;
+const headlineWords = copy.hero.headline.split(/\s+/).length;
 
-/** Chapter 00 · Hero (0–140 vh). The phone itself lives in the 3D stage; this is the copy column. */
+/** Chapter 00 · Hero (0–140 vh). The phone lives in the 3D stage; this is the copy column. */
 export function Ch00Hero() {
-  const reduced = useReducedMotion() ?? false;
-  const opacity = useTransform(scrollVh, [80, 115], [1, 0]);
-  const y = useTransform(scrollVh, [80, 115], [0, reduced ? 0 : -40]);
-  const visibility = useTransform(opacity, (o) => (o < 0.01 ? 'hidden' : 'visible'));
+  const mobile = useIsMobile();
+  // Scrub lines, top to bottom: chip · headline lines · sub · buttons.
+  const [headlineLines, setHeadlineLines] = useState(3);
+  const line = { chip: 0, headline: 1, sub: 1 + headlineLines, buttons: 2 + headlineLines };
 
-  const enter = (i: number) =>
-    reduced
-      ? {}
-      : {
-          initial: { opacity: 0, y: 18 },
-          animate: { opacity: 1, y: 0 },
-          transition: { duration: 0.8, delay: 0.15 + i * 0.08, ease: ease.out },
-        };
+  // Load reveal timeline (§14.1), all from tokens.
+  const lastWordStart = r.headline.delay + (headlineWords - 1) * (mobile ? r.headline.staggerMobile : r.headline.stagger);
+  const subStart = lastWordStart + r.sub.after;
+  const buttonsStart = subStart + r.buttons.after;
+  // The copy stays pinned until its exit window ends, then the section scrolls on.
+  const pinVh = hero.copyOut[1] - hero.start;
 
   return (
     <section
@@ -33,35 +38,49 @@ export function Ch00Hero() {
       className="relative"
       style={{ height: `calc(var(--k) * ${hero.end - hero.start}vh)` }}
     >
-      <div className="sticky top-0 flex h-svh items-start px-4 pt-20 md:items-center md:px-8 md:pt-0 lg:px-14">
-        <motion.div style={{ opacity, y, visibility }} className="relative z-10 w-full md:max-w-[34%] md:min-w-[400px]">
-          <motion.div {...enter(0)}>
-            <Chip>{copy.hero.chip}</Chip>
-          </motion.div>
-          <motion.h1
-            id="hero-title"
-            {...enter(1)}
-            className="mt-4 font-display text-[clamp(30px,4.2vw,60px)] leading-[1.02] font-bold tracking-[-0.02em] text-ink md:mt-6"
-          >
-            {copy.hero.headline}
-          </motion.h1>
-          <motion.p
-            {...enter(2)}
-            className="mt-3 max-w-[46ch] text-[14px] leading-relaxed text-muted md:mt-6 md:text-[17px]"
-          >
-            {copy.hero.sub}
-          </motion.p>
-          <motion.div {...enter(3)} className="mt-5 flex flex-wrap items-center gap-3 md:mt-8">
-            <LinkMenu variant="hero" align="left" />
-            <button
-              type="button"
-              onClick={() => scrollToVh(next.start, 1.1)}
-              className="rounded-full border border-white/15 px-6 py-3 text-[15px] font-medium text-ink transition-colors hover:border-accent/60 hover:bg-accent/10"
-            >
-              {copy.hero.ctaScroll} <span aria-hidden="true">↓</span>
-            </button>
-          </motion.div>
-        </motion.div>
+      <div style={{ height: `calc(var(--k) * ${pinVh}vh + 100svh)` }}>
+        <div className="sticky top-0 flex h-svh items-start px-4 pt-20 md:items-center md:px-8 md:pt-0 lg:px-14">
+          <ChapterCopy chapterId="00" lines={line.buttons + 1} className="relative z-10 w-full md:max-w-[34%] md:min-w-[400px]">
+            <RevealBlock line={line.chip} delay={r.chip.delay} duration={r.chip.duration} rise={r.chip.rise}>
+              <Chip>{copy.hero.chip}</Chip>
+            </RevealBlock>
+
+            <SplitText
+              as="h1"
+              id="hero-title"
+              text={copy.hero.headline}
+              lineStart={line.headline}
+              onLines={setHeadlineLines}
+              onRevealed={() => performance.mark('ned:reveal:headline')}
+              className="mt-4 font-display text-[clamp(30px,4.2vw,60px)] leading-[1.02] font-bold tracking-[-0.02em] text-ink md:mt-6"
+            />
+
+            <RevealBlock line={line.sub} delay={subStart} duration={r.sub.duration} rise={r.sub.rise}>
+              <p className="mt-3 max-w-[46ch] text-[14px] leading-relaxed text-muted md:mt-6 md:text-[17px]">{copy.hero.sub}</p>
+            </RevealBlock>
+
+            <div className="mt-5 flex flex-wrap items-center gap-3 md:mt-8">
+              {/* z-10 keeps the open product menu above the next button's transformed layer. */}
+              <RevealBlock line={line.buttons} delay={buttonsStart} duration={r.buttons.duration} rise={r.buttons.rise} className="relative z-10">
+                <LinkMenu variant="hero" align="left" />
+              </RevealBlock>
+              <RevealBlock
+                line={line.buttons}
+                delay={buttonsStart + r.buttons.stagger}
+                duration={r.buttons.duration}
+                rise={r.buttons.rise}
+              >
+                <button
+                  type="button"
+                  onClick={() => scrollToVh(next.start, 1.1)}
+                  className="rounded-full border border-white/15 px-6 py-3 text-[15px] font-medium text-ink transition-colors hover:border-accent/60 hover:bg-accent/10"
+                >
+                  {copy.hero.ctaScroll} <span aria-hidden="true">↓</span>
+                </button>
+              </RevealBlock>
+            </div>
+          </ChapterCopy>
+        </div>
       </div>
     </section>
   );
