@@ -79,6 +79,84 @@ export const copy = {
       },
       nav: { label: 'Main', home: 'Home', contracts: 'Contracts', records: 'Records', settings: 'Settings' },
     },
+    /**
+     * phone/HomeIntl (same markup as HomeVN) · view intl · clientStage locked · not empty · one contract only
+     * (board's "Logo refresh" sample removed, as on HomeVN). SPEC numbers: 500.00 USDC (board sample: 20.00).
+     */
+    homeIntl: {
+      greeting: 'Good morning,',
+      name: 'Mia',
+      handle: 'mia',
+      profileLabel: 'Your profile, Mia',
+      heroLabel: 'USDC balance',
+      heroWhole: '0.00',
+      heroUnit: ' USDC',
+      heroSub: 'Devnet test money',
+      flagTitle: 'US dollar · USDC is a dollar stablecoin',
+      flagLabel: 'Flag of the United States',
+      quickActions: 'Quick actions',
+      actions: {
+        newContract: { label: 'New contract', aria: 'New contract: lock USDC per milestone for a freelancer' },
+        receive: { label: 'Receive', aria: 'Receive USDC' },
+        send: { label: 'Send', aria: 'Send USDC' },
+      },
+      statA: { label: 'Locked in your contracts', value: '500.00 USDC' },
+      statB: { label: 'Locked for you', value: '0.00 USDC' },
+      needsTitle: 'Needs your action',
+      // Board: only "Release now: Logo refresh" in this state; with Logo refresh removed the list is empty and the
+      // board shows its no-needs box (its text is empty for the intl view).
+      noNeedsText: '',
+      contractsTitle: 'Your contracts',
+      seeAll: 'See all',
+      rows: [
+        { seed: 'vinh', title: 'Landing page design', party: 'to @vinh', deadline: 'Milestone 1 due 12 Oct', status: 'Locked · work in progress', tone: 'purple', total: '500.00 USDC', totalSub: 'total' },
+      ],
+      suggestedTitle: 'Suggested for you',
+      suggested: {
+        lock: 'Lock a milestone for a freelancer',
+        devnet: 'What devnet and "simulated" mean',
+        records: 'Keep a record of what you receive',
+      },
+      nav: { label: 'Main', home: 'Home', contracts: 'Contracts', records: 'Records', settings: 'Settings' },
+    },
+    /** phone/OnbWelcome (no states). */
+    onbWelcome: {
+      teddyAlt: 'Teddy, the N.E.D bear, waving hello',
+      headline: 'Get your earnings locked before you start.',
+      sub: 'Milestone contracts for freelancers and their clients abroad.',
+      points: [
+        'Clients lock the money for each milestone',
+        'Receive VND in Vietnam, or USDC abroad',
+        'Refund or release by deadline, written in code',
+      ],
+      google: 'Continue with Google',
+      googleMark: 'G',
+      legal: { before: 'By continuing you agree to our ', terms: 'Terms', and: ' and ', privacy: 'Privacy Policy', after: '.' },
+    },
+    /** phone/OnbSetup · returning false · step driven by scroll (board: a 1.1 s timer). */
+    onbSetup: {
+      steps: ['Signed in with Google', 'Securing your wallet', 'Checking for a N.E.D profile'],
+      working: { heading: 'Setting up your wallet…', sub: 'This takes a few seconds.' },
+      finished: { heading: 'Your account is ready', sub: 'Two quick steps: your consent, then your profile.' },
+      continue: 'Continue',
+      secured: 'Secured with MPC. No recovery phrase to write down.',
+    },
+    /** phone/OnbResidence · selected vn. */
+    onbResidence: {
+      back: 'Back',
+      progress: 'Step 3 of 3',
+      headline: 'Where do you live?',
+      sub: 'This decides how amounts are shown and where your earnings can go.',
+      groupLabel: 'Where you live',
+      vn: {
+        badge: 'VN',
+        title: 'I live in Vietnam',
+        body: "You'll see amounts in VND and receive earnings in your bank account through a payout partner. No crypto balance is shown.",
+      },
+      intl: { title: 'I live outside Vietnam', body: "You'll see USDC and receive earnings in your N.E.D wallet." },
+      note: 'You can change this in Settings.',
+      continue: 'Continue',
+    },
     /** phone/ContractLocked · side client. SPEC amount (board sample: 20.00 USDC). */
     contractLocked: {
       headline: '500.00 USDC locked',
@@ -109,6 +187,13 @@ export const copy = {
     l1: 'Freelancers deliver the work, then wait for the money.',
     l2: 'Clients are asked to send money up front, before they see any work.',
   },
+  /** Chapter 02 copy column: SPEC §6 row 02, exact wording. */
+  signIn: {
+    headline: 'Sign in with Google. Say where you live.',
+    l1: 'No seed phrase. Your wallet is set up when you sign in.',
+    l2: 'Live in Vietnam? The app shows only VND. You never hold crypto.',
+    small: 'You can change it in Settings.',
+  },
   /** Chapter 01 screens: a generic messaging app (not N.E.D), then the N.E.D splash. */
   chat: {
     you: {
@@ -129,6 +214,6 @@ export const copy = {
   },
   later: {
     title: 'More chapters coming',
-    body: 'Chapter 02 and the rest of the story are next.',
+    body: 'Chapter 03 and the rest of the story are next.',
   },
 } as const;

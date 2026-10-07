@@ -14,10 +14,17 @@ import { easeFn, type EaseName } from '@/motion/tokens';
  * ease:     easing used on the way INTO this keyframe from the previous one.
  * transform: the named device transform (SPEC §5.3) played on the way INTO this keyframe. A label for
  *           readers, the orbit nav and present mode; the motion itself is the keyframes.
+ * screenSwitch: 'cut' = the screen changes at the segment's midpoint instead of crossfading (T2 Flip,
+ *           where the change happens while the phone is edge-on).
+ * via:      an in-between keyframe that only shapes motion (e.g. the edge-on moment of a flip).
+ *           Skipped under reduced motion, so reduced motion cuts straight between the real stops.
  */
 export type Owner = 'you' | 'client' | 'anyone';
-/** home = N.E.D Home · chatYou / chatClient = a generic messaging app (chapter 01, not N.E.D) · splash = N.E.D splash. */
-export type PhoneScreen = 'home' | 'chatYou' | 'chatClient' | 'splash';
+/**
+ * home = Home for the owner (yours: HomeVN; flipped to the client: ContractLocked) · homeIntl = the client's Home
+ * · chatYou / chatClient = a generic messaging app (chapter 01, not N.E.D) · splash / onb* = onboarding boards.
+ */
+export type PhoneScreen = 'home' | 'homeIntl' | 'chatYou' | 'chatClient' | 'splash' | 'onbWelcome' | 'onbSetup' | 'onbResidence';
 /** Device transform vocabulary, exactly as named in SPEC §5.3. */
 export type TransformName =
   | 'T1 Glide'
@@ -42,9 +49,11 @@ export type Pose = {
   owner: Owner;
   ease?: EaseName;
   transform?: TransformName;
+  screenSwitch?: 'cut';
+  via?: true;
 };
 
-export type Sampled = Omit<Pose, 'vh' | 'ease' | 'opacity' | 'dim' | 'transform'> & {
+export type Sampled = Omit<Pose, 'vh' | 'ease' | 'opacity' | 'dim' | 'transform' | 'screenSwitch' | 'via'> & {
   opacity: number;
   dim: number;
   /** Screen crossfade: `screenTo` is drawn over `screenFrom` at opacity `screenMix` (both equal when not switching). */
@@ -78,6 +87,54 @@ function behind(track: Pose[], vh: number): Place & { opacity: 0 } {
   return { device: k.device, position: [x, y, z - 0.3], rotation: k.rotation, size: k.size, opacity: 0 };
 }
 
+type Vec3 = [number, number, number];
+
+/** Chapter 02 screen stops on a still phone (360–516 vh). Each switch crossfades over 12 vh. */
+function ch02Screens(position: Vec3, rotation: Vec3, size: number): Pose[] {
+  const at = (vh: number, screen: PhoneScreen, rot: Vec3 = rotation): Pose => ({ vh, device: 'phone', position, rotation: rot, size, screen, owner: 'you' });
+  const settled: Vec3 = [rotation[0], rotation[1] + 2, rotation[2]];
+  return [
+    at(374, 'onbWelcome', settled),
+    at(404, 'onbWelcome', settled), // the tap on "Continue with Google" plays 390–404 (TAPS)
+    at(416, 'onbSetup', settled),
+    at(456, 'onbSetup', settled), // steps tick 416 → 446, then "Your account is ready" (CH02_SETUP)
+    at(468, 'onbResidence', settled),
+    at(490, 'onbResidence', settled),
+    at(502, 'home', rotation),
+    at(516, 'home', rotation),
+  ];
+}
+
+/**
+ * T2 Flip (SPEC §5.3, 20–30 vh): one full turn around the vertical axis at constant speed, moving from `from`
+ * to `to`. Two `via` keyframes straddle the edge-on moment (yaw + 90°), where owner and screen switch (cut).
+ */
+function t2Flip(o: {
+  start: number;
+  end: number;
+  from: Vec3;
+  to: Vec3;
+  rotation: Vec3;
+  sizeFrom: number;
+  sizeTo: number;
+  toScreen: PhoneScreen;
+}): Pose[] {
+  const [pitch, yaw, roll] = o.rotation;
+  const span = o.end - o.start;
+  const k = (f: number): Pick<Pose, 'vh' | 'position' | 'size'> => ({
+    vh: o.start + span * f,
+    position: [0, 1, 2].map((i) => o.from[i] + (o.to[i] - o.from[i]) * f) as Vec3,
+    size: o.sizeFrom + (o.sizeTo - o.sizeFrom) * f,
+  });
+  const edge = 90 / 360;
+  const half = 4 / 360;
+  return [
+    { ...k(edge - half), device: 'phone', rotation: [pitch, yaw + 86, roll], screen: 'home', owner: 'you', ease: 'linear', via: true, transform: 'T2 Flip' },
+    { ...k(edge + half), device: 'phone', rotation: [pitch, yaw + 94, roll], screen: o.toScreen, owner: 'client', ease: 'linear', via: true, screenSwitch: 'cut', transform: 'T2 Flip' },
+    { ...k(1), device: 'phone', rotation: [pitch, yaw + 360, roll], screen: o.toScreen, owner: 'client', ease: 'linear', screenSwitch: 'cut', transform: 'T2 Flip' },
+  ];
+}
+
 const phoneDesktop: Pose[] = [
   // Chapter 00 · Hero (0–140 vh). Phone rises 40 px and turns −40° → −18°, then T1 Glide to the left.
   { vh: 0, device: 'phone', position: [0.4, -0.12, 0], rotation: [4, -40, 0], size: 0.74, screen: 'home', owner: 'you' },
@@ -99,6 +156,14 @@ const phoneDesktop: Pose[] = [
   // The split reverses: the client's phone folds back in; yours moves to the centre and shows the N.E.D splash.
   { vh: 346, device: 'phone', position: [-0.2, -0.03, 0], rotation: [1, 8, 0], size: 0.77, dim: DIM, screen: 'chatYou', owner: 'you', transform: 'T3 Split' },
   { vh: 360, device: 'phone', position: [0, -0.02, 0], rotation: [2, -6, 0], size: 0.82, screen: 'splash', owner: 'you', ease: 'easeOut' },
+
+  // Chapter 02 · Sign in, say where you live (360–560 vh). Your phone stays centred at 82%; screens change by
+  // scroll: Welcome → tap "Continue with Google" (TAPS) → Setup (steps: CH02_SETUP) → Residence → Home.
+  ...ch02Screens([0, -0.02, 0], [2, -6, 0], 0.82),
+  // T2 Flip (28 vh): one full turn at constant speed while gliding right; the back (owner tag) shows mid-turn and
+  // the phone comes back as the client's, on their Home. Owner and screen switch while it is edge-on.
+  ...t2Flip({ start: 516, end: 544, from: [0, -0.02, 0], to: [0.42, -0.04, 0], rotation: [2, -6, 0], sizeFrom: 0.82, sizeTo: 0.74, toScreen: 'homeIntl' }),
+  { vh: 560, device: 'phone', position: [0.42, -0.04, 0], rotation: [2, 354, 0], size: 0.74, screen: 'homeIntl', owner: 'client' },
 ];
 
 // Portrait (SPEC §8): phone at 92% width rising from the bottom, top ~60% visible.
@@ -116,6 +181,11 @@ const phonePortrait: Pose[] = [
   { vh: 332, ...SPLIT.portrait.left, dim: DIM, screen: 'chatYou', owner: 'you' },
   { vh: 346, device: 'phone', position: [-0.12, -0.84, 0], rotation: [4, 6, 0], size: 0.72, dim: DIM, screen: 'chatYou', owner: 'you', transform: 'T3 Split' },
   { vh: 360, device: 'phone', position: [0, -0.88, 0], rotation: [4, 0, 0], size: 0.86, screen: 'splash', owner: 'you', ease: 'easeOut' },
+
+  // Chapter 02 (portrait): copy on top, phone rising from the bottom; the flip parks it a little right.
+  ...ch02Screens([0, -0.88, 0], [4, 0, 0], 0.86),
+  ...t2Flip({ start: 516, end: 544, from: [0, -0.88, 0], to: [0.06, -0.88, 0], rotation: [4, 0, 0], sizeFrom: 0.86, sizeTo: 0.86, toScreen: 'homeIntl' }),
+  { vh: 560, device: 'phone', position: [0.06, -0.88, 0], rotation: [4, 360, 0], size: 0.86, screen: 'homeIntl', owner: 'client' },
 ];
 
 /**
@@ -157,6 +227,21 @@ export const CH01_CLOCK = {
   ],
 };
 
+/** Chapter 02 OnbSetup steps (board: one per 1.1 s; here one per 10 vh). 3 = finished ("Your account is ready"). */
+export const CH02_SETUP = { steps: [416, 426, 436, 446] };
+export function ch02SetupStep(vh: number): number {
+  let step = 0;
+  CH02_SETUP.steps.forEach((at, i) => {
+    if (vh >= at) step = i;
+  });
+  return step;
+}
+
+/** Tap marks on the landing layer (not part of the screen). The target element in the screen has data-tap-target. */
+export const TAPS: { track: TrackName; target: string; start: number; end: number }[] = [
+  { track: 'phone', target: 'google', start: 390, end: 404 },
+];
+
 export function ch01Days(vh: number): number | null {
   let days: number | null = null;
   for (const s of CH01_CLOCK.steps) if (vh >= s.vh) days = s.days;
@@ -174,8 +259,15 @@ const lerp3 = (a: [number, number, number], b: [number, number, number], t: numb
  * Pure function of scroll: same vh in, same pose out (back-scroll and jumps stay exact).
  * `still` (reduced motion): no in-between poses, a hard cut at each segment's midpoint.
  */
-export function samplePose(track: Pose[], vh: number, still = false): Sampled {
-  const strip = ({ vh: _vh, ease: _ease, transform: _t, opacity = 1, dim = 0, ...rest }: Pose): Sampled => ({
+const stillTracks = new WeakMap<Pose[], Pose[]>();
+
+export function samplePose(trackIn: Pose[], vh: number, still = false): Sampled {
+  let track = trackIn;
+  if (still) {
+    if (!stillTracks.has(trackIn)) stillTracks.set(trackIn, trackIn.filter((p) => !p.via));
+    track = stillTracks.get(trackIn)!;
+  }
+  const strip = ({ vh: _vh, ease: _ease, transform: _t, screenSwitch: _s, via: _v, opacity = 1, dim = 0, ...rest }: Pose): Sampled => ({
     ...rest,
     opacity,
     dim,
@@ -205,6 +297,6 @@ export function samplePose(track: Pose[], vh: number, still = false): Sampled {
     owner: t < 0.5 ? a.owner : b.owner,
     screenFrom: a.screen,
     screenTo: b.screen,
-    screenMix: a.screen === b.screen ? 1 : t,
+    screenMix: a.screen === b.screen ? 1 : b.screenSwitch === 'cut' ? (t < 0.5 ? 0 : 1) : t,
   };
 }

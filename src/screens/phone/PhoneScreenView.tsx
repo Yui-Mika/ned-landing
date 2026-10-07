@@ -2,9 +2,12 @@
 
 import type { Owner, PhoneScreen } from '@/scene/poses';
 import { PHONE_SCREEN_PX } from './size';
-import { HomeVNScreen } from './HomeVNScreen';
+import { HomeIntlScreen, HomeVNScreen } from './HomeScreen';
 import { ContractLockedScreen } from './ContractLockedScreen';
 import { OnbSplashScreen } from './OnbSplashScreen';
+import { OnbWelcomeScreen } from './OnbWelcomeScreen';
+import { OnbSetupScreen } from './OnbSetupScreen';
+import { OnbResidenceScreen } from './OnbResidenceScreen';
 import { ChatClientScreen, ChatYouScreen } from './ChatScreen';
 
 function Board({ screen, owner }: { screen: PhoneScreen; owner: Exclude<Owner, 'anyone'> }) {
@@ -16,8 +19,16 @@ function Board({ screen, owner }: { screen: PhoneScreen; owner: Exclude<Owner, '
       return <ChatYouScreen />;
     case 'chatClient':
       return <ChatClientScreen />;
+    case 'homeIntl':
+      return <HomeIntlScreen />;
     case 'splash':
       return <OnbSplashScreen />;
+    case 'onbWelcome':
+      return <OnbWelcomeScreen />;
+    case 'onbSetup':
+      return <OnbSetupScreen />;
+    case 'onbResidence':
+      return <OnbResidenceScreen />;
   }
 }
 

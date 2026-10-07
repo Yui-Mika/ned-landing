@@ -4,11 +4,12 @@ import { Avatar } from './Avatar';
 import { DevnetChip, FONT, Screen, StatusBar, TONE, chipStyle, dotStyle, type Tone } from './parts';
 
 /**
- * Port of docs/design-reference/phone/HomeVN.dc.html (view vn · stage locked · not empty).
- * Markup and inline styles 1:1; strings from copy.screens.homeVN (board strings, SPEC numbers).
- * Left out: the share sheet (closed in this state) and the boards' entrance animations.
+ * Port of docs/design-reference/phone/HomeVN.dc.html and HomeIntl.dc.html (one markup, `view` vn | intl).
+ * Markup and inline styles 1:1; strings from copy.screens.homeVN / homeIntl (board strings, SPEC numbers).
+ * Left out: the share sheet (closed in these states) and the boards' entrance animations.
  */
-const s = copy.screens.homeVN;
+const V = copy.screens.homeVN;
+const I = copy.screens.homeIntl;
 
 /** Board icon paths (renderVals P). */
 const ICON = {
@@ -64,12 +65,72 @@ const cardIcon: CSSProperties = {
   justifyContent: 'center',
 };
 
+/** Intl quick actions: 3 columns, icon above label. */
+const qaCol: CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 8,
+  minWidth: 0,
+  height: 84,
+  padding: '0 6px',
+  boxSizing: 'border-box',
+  borderRadius: 16,
+  background: '#F4F4F6',
+  color: '#111116',
+  fontFamily: 'inherit',
+  fontSize: 13,
+  fontWeight: 600,
+  lineHeight: 1.2,
+  textAlign: 'center',
+  textDecoration: 'none',
+  cursor: 'pointer',
+  border: 'none',
+};
+const qaColIcon = (bg: string): CSSProperties => ({
+  width: 38,
+  height: 38,
+  borderRadius: 9999,
+  background: bg,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexShrink: 0,
+});
+const qaColLabel: CSSProperties = { maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
+const qaColSvg = (stroke: string) =>
+  ({ width: 19, height: 19, viewBox: '0 0 24 24', fill: 'none', stroke, strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round' }) as const;
+
+/** US flag, as drawn on the board (20 × 20 viewBox). */
+function FlagUS() {
+  const stripes = Array.from({ length: 13 }, (_, n) => (
+    <rect key={n} y={((n * 20) / 13).toFixed(3)} width="20" height="1.538" fill={n % 2 ? '#FFFFFF' : '#B22234'} />
+  ));
+  const stars: [number, number][] = [];
+  [0.9, 2.75, 4.6, 6.45, 8.3].forEach((cy, row) => {
+    const xs = row % 2 ? [1.72, 3.37, 5.02, 6.67, 8.32] : [0.9, 2.55, 4.2, 5.85, 7.5, 9.15];
+    xs.forEach((cx) => stars.push([cx, cy]));
+  });
+  return (
+    <svg width="40" height="40" viewBox="0 0 20 20" role="img" aria-label={I.flagLabel} style={{ display: 'block' }}>
+      {stripes}
+      <rect width="10" height="10.769" fill="#3C3B6E" />
+      {stars.map(([cx, cy]) => (
+        <circle key={`${cx}-${cy}`} cx={cx.toFixed(2)} cy={cy.toFixed(2)} r="0.42" fill="#FFFFFF" />
+      ))}
+    </svg>
+  );
+}
+
 const tab: CSSProperties = { flex: 1, height: 56, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, textDecoration: 'none' };
 const tabLabel: CSSProperties = { fontSize: 11, fontWeight: 500, color: '#5E5E6A' };
 
-export function HomeVNScreen() {
+export function HomeScreen({ view }: { view: 'vn' | 'intl' }) {
+  const vn = view === 'vn';
+  const s = vn ? V : I;
   return (
-    <Screen name="homeVN" style={{ background: '#F4F4F6', color: '#111116', display: 'flex', flexDirection: 'column' }}>
+    <Screen name={vn ? 'homeVN' : 'homeIntl'} style={{ background: '#F4F4F6', color: '#111116', display: 'flex', flexDirection: 'column' }}>
       <StatusBar />
 
       <div style={{ padding: '6px 20px 0', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -110,46 +171,86 @@ export function HomeVNScreen() {
                 <span style={{ fontSize: 20 }}>{s.heroUnit}</span>
               </div>
               <div style={{ marginTop: 6, fontSize: 13, color: '#5E5E6A' }}>
-                {/* SPEC text: never under 11 px on screen, whatever the device scale (set by Phone.tsx). */}
-                <span style={{ fontSize: 'max(13px, calc(11px / var(--ned-screen-scale, 1)))' }}>{s.heroSubEstimate}</span>
-                {s.heroSubRest}
+                {vn ? (
+                  <>
+                    {/* SPEC text: never under 11 px on screen, whatever the device scale (set by Phone.tsx). */}
+                    <span style={{ fontSize: 'max(13px, calc(11px / var(--ned-screen-scale, 1)))' }}>{V.heroSubEstimate}</span>
+                    {V.heroSubRest}
+                  </>
+                ) : (
+                  I.heroSub
+                )}
               </div>
             </div>
             <div title={s.flagTitle} style={{ width: 40, height: 40, borderRadius: 9999, overflow: 'hidden', flexShrink: 0 }}>
-              <svg width="40" height="40" viewBox="0 0 20 20" role="img" aria-label={s.flagLabel} style={{ display: 'block' }}>
-                <rect width="20" height="20" fill="#DA251D" />
-                <polygon
-                  points="10.00,4.00 11.35,8.15 15.71,8.15 12.18,10.71 13.53,14.85 10.00,12.29 6.47,14.85 7.82,10.71 4.29,8.15 8.65,8.15"
-                  fill="#FFCD00"
-                />
-              </svg>
+              {vn ? (
+                <svg width="40" height="40" viewBox="0 0 20 20" role="img" aria-label={V.flagLabel} style={{ display: 'block' }}>
+                  <rect width="20" height="20" fill="#DA251D" />
+                  <polygon
+                    points="10.00,4.00 11.35,8.15 15.71,8.15 12.18,10.71 13.53,14.85 10.00,12.29 6.47,14.85 7.82,10.71 4.29,8.15 8.65,8.15"
+                    fill="#FFCD00"
+                  />
+                </svg>
+              ) : (
+                <FlagUS />
+              )}
             </div>
           </div>
           <div style={{ marginTop: 16 }}>
-            <div role="group" aria-label={s.quickActions} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              <button type="button" aria-label={s.share.aria} style={qa}>
+            {!vn && (
+              <div role="group" aria-label={I.quickActions} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                <a aria-label={I.actions.newContract.aria} style={qaCol}>
+                  <span aria-hidden="true" style={qaColIcon('#7B2FBE')}>
+                    <svg {...qaColSvg('#FFFFFF')}>
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                  </span>
+                  <span style={qaColLabel}>{I.actions.newContract.label}</span>
+                </a>
+                <a aria-label={I.actions.receive.aria} style={qaCol}>
+                  <span aria-hidden="true" style={qaColIcon('#FFFFFF')}>
+                    <svg {...qaColSvg('#6A22B0')}>
+                      <path d="M12 4v13M6 11l6 6 6-6M5 20h14" />
+                    </svg>
+                  </span>
+                  <span style={qaColLabel}>{I.actions.receive.label}</span>
+                </a>
+                <a aria-label={I.actions.send.aria} style={qaCol}>
+                  <span aria-hidden="true" style={qaColIcon('#FFFFFF')}>
+                    <svg {...qaColSvg('#6A22B0')}>
+                      <path d="M12 20V7M6 13l6-6 6 6M5 4h14" />
+                    </svg>
+                  </span>
+                  <span style={qaColLabel}>{I.actions.send.label}</span>
+                </a>
+              </div>
+            )}
+            {vn && (
+            <div role="group" aria-label={V.quickActions} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <button type="button" aria-label={V.share.aria} style={qa}>
                 <span aria-hidden="true" style={qaIcon('#7B2FBE')}>
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13" />
                   </svg>
                 </span>
                 <span style={{ minWidth: 0 }}>
-                  <span style={qaLabel}>{s.share.label}</span>
-                  <span style={qaSub}>{s.share.sub}</span>
+                  <span style={qaLabel}>{V.share.label}</span>
+                  <span style={qaSub}>{V.share.sub}</span>
                 </span>
               </button>
-              <a aria-label={s.records.aria} style={qa}>
+              <a aria-label={V.records.aria} style={qa}>
                 <span aria-hidden="true" style={qaIcon('#FFFFFF')}>
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6A22B0" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 20V10M10 20V4M16 20v-7M2 20h20" />
                   </svg>
                 </span>
                 <span style={{ minWidth: 0 }}>
-                  <span style={qaLabel}>{s.records.label}</span>
-                  <span style={qaSub}>{s.records.sub}</span>
+                  <span style={qaLabel}>{V.records.label}</span>
+                  <span style={qaSub}>{V.records.sub}</span>
                 </span>
               </a>
             </div>
+            )}
           </div>
           <div style={{ margin: '16px -16px 0', borderTop: '1px solid #F0F0F3' }} />
           <div style={{ padding: '12px 0 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -167,7 +268,9 @@ export function HomeVNScreen() {
           <h2 style={sectionTitle}>{s.needsTitle}</h2>
         </div>
         <div style={list}>
-          {s.needs.map((n) => {
+          {/* Board: <sc-for needs> then <sc-if noNeeds> with noNeedsText. */}
+          {!vn && <div style={{ padding: 16, fontSize: 14, lineHeight: 1.5, color: '#5E5E6A' }}>{I.noNeedsText}</div>}
+          {(vn ? V.needs : []).map((n) => {
             const c = TONE[n.tone as Tone];
             return (
               <a key={n.title} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', textDecoration: 'none', color: '#111116' }}>
@@ -223,17 +326,28 @@ export function HomeVNScreen() {
           <h2 style={sectionTitle}>{s.suggestedTitle}</h2>
         </div>
         <div style={{ margin: '0 -16px', padding: '0 16px', display: 'flex', gap: 10, overflow: 'hidden' }}>
-          <button
-            type="button"
-            style={{ ...card, padding: 0, border: 'none', overflow: 'hidden', background: '#EDE3FB', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}
-          >
-            <img
-              src="/design-assets/teddy-waving_5bb51609.png"
-              alt=""
-              style={{ position: 'absolute', left: '50%', top: 18, width: 140, height: 110, marginLeft: -70, objectFit: 'contain' }}
-            />
-            <span style={cardText}>{s.suggested.share}</span>
-          </button>
+          {vn ? (
+            <button
+              type="button"
+              style={{ ...card, padding: 0, border: 'none', overflow: 'hidden', background: '#EDE3FB', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}
+            >
+              <img
+                src="/design-assets/teddy-waving_5bb51609.png"
+                alt=""
+                style={{ position: 'absolute', left: '50%', top: 18, width: 140, height: 110, marginLeft: -70, objectFit: 'contain' }}
+              />
+              <span style={cardText}>{V.suggested.share}</span>
+            </button>
+          ) : (
+            <a style={{ ...card, overflow: 'hidden', background: '#EDE3FB' }}>
+              <img
+                src="/design-assets/teddy-happy_22f5490f.png"
+                alt=""
+                style={{ position: 'absolute', left: '50%', top: 18, width: 140, height: 110, marginLeft: -70, objectFit: 'contain' }}
+              />
+              <span style={cardText}>{I.suggested.lock}</span>
+            </a>
+          )}
           <a style={{ ...card, background: '#E3EDFC' }}>
             <div style={cardIcon}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1D4ED8" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
@@ -301,3 +415,6 @@ export function HomeVNScreen() {
     </Screen>
   );
 }
+
+export const HomeVNScreen = () => <HomeScreen view="vn" />;
+export const HomeIntlScreen = () => <HomeScreen view="intl" />;

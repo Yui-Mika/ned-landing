@@ -74,21 +74,24 @@ export function Screen({ name, style, children }: { name: string; style?: CSSPro
   );
 }
 
-/** Status bar, identical on every phone board. */
-export function StatusBar() {
+/**
+ * Status bar as on the boards. 'onb' (OnbWelcome, OnbSetup): lighter 4th signal bar, green battery, no aria-hidden.
+ */
+export function StatusBar({ variant = 'app' }: { variant?: 'app' | 'onb' }) {
+  const onb = variant === 'onb';
   return (
     <div style={{ padding: '12px 24px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 2 }}>
       <div style={{ fontSize: 14, fontWeight: 600, color: '#111116' }}>{copy.screens.status.clock}</div>
       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-        <svg width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden="true">
+        <svg width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden={onb ? undefined : true}>
           <rect x="0" y="4" width="3" height="8" rx="1" fill="#111116" />
           <rect x="4" y="2" width="3" height="10" rx="1" fill="#111116" />
           <rect x="8" y="0" width="3" height="12" rx="1" fill="#111116" />
-          <rect x="12" y="2" width="3" height="10" rx="1" fill="#C9C9D2" />
+          <rect x="12" y="2" width="3" height="10" rx="1" fill={onb ? '#D4D4DC' : '#C9C9D2'} />
         </svg>
-        <svg width="24" height="12" viewBox="0 0 24 12" fill="none" aria-hidden="true">
+        <svg width="24" height="12" viewBox="0 0 24 12" fill="none" aria-hidden={onb ? undefined : true}>
           <rect x="0.5" y="0.5" width="21" height="11" rx="2" stroke="#8A8A96" />
-          <rect x="2" y="2" width="15" height="8" rx="1" fill="#111116" />
+          <rect x="2" y="2" width="15" height="8" rx="1" fill={onb ? '#22C55E' : '#111116'} />
           <rect x="22.5" y="3.5" width="2" height="5" rx="1" fill="#8A8A96" />
         </svg>
       </div>

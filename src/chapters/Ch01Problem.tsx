@@ -3,36 +3,13 @@
 import { useState } from 'react';
 import { copy } from '@/content/copy';
 import { chapterById } from '@/content/chapters';
-import { DeviceTag } from '@/components/DeviceTag';
+import { StaticPhones } from '@/components/StaticPhones';
 import { ChapterCopy } from '@/components/text/ChapterCopy';
 import { RevealBlock } from '@/components/text/RevealBlock';
 import { SplitText } from '@/components/text/SplitText';
-import { PHONE_SCREEN_PX } from '@/screens/phone/size';
 import { ChatClientScreen, ChatYouScreen } from '@/screens/phone/ChatScreen';
 
 const ch = chapterById('01');
-
-/** No-WebGL fallback (SPEC §8): the two phones of the split as still screens beside the copy. */
-function Stills() {
-  const scale = 0.42;
-  const still = (screen: React.ReactNode, owner: 'you' | 'client') => (
-    <figure className="flex flex-col items-center gap-3">
-      <div
-        className="overflow-hidden rounded-[22px] bg-[#1A1A22] p-[6px]"
-        style={{ width: PHONE_SCREEN_PX.w * scale + 12, height: PHONE_SCREEN_PX.h * scale + 12 }}
-      >
-        <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>{screen}</div>
-      </div>
-      <DeviceTag owner={owner} />
-    </figure>
-  );
-  return (
-    <div aria-hidden="true" className="flex gap-4 md:gap-8">
-      {still(<ChatYouScreen />, 'you')}
-      {still(<ChatClientScreen />, 'client')}
-    </div>
-  );
-}
 
 /**
  * Chapter 01 · The problem (140–360 vh). The phones live in the 3D stage (poses.ts); this is the copy
@@ -57,7 +34,12 @@ export function Ch01Problem({ stills = false }: { stills?: boolean }) {
         <div className="sticky top-0 flex h-svh flex-col items-stretch justify-start gap-8 px-4 pt-20 md:flex-row md:items-center md:justify-end md:px-8 md:pt-0 lg:px-14">
           {stills && (
             <div className="order-2 flex justify-center md:order-1 md:mr-auto">
-              <Stills />
+              <StaticPhones
+                phones={[
+                  { screen: <ChatYouScreen />, owner: 'you' },
+                  { screen: <ChatClientScreen />, owner: 'client' },
+                ]}
+              />
             </div>
           )}
           <ChapterCopy
