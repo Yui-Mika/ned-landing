@@ -24,7 +24,18 @@ export type Owner = 'you' | 'client' | 'anyone';
  * home = Home for the owner (yours: HomeVN; flipped to the client: ContractLocked) · homeIntl = the client's Home
  * · chatYou / chatClient = a generic messaging app (chapter 01, not N.E.D) · splash / onb* = onboarding boards.
  */
-export type PhoneScreen = 'home' | 'homeIntl' | 'chatYou' | 'chatClient' | 'splash' | 'onbWelcome' | 'onbSetup' | 'onbResidence';
+export type PhoneScreen =
+  | 'home'
+  | 'homeIntl'
+  | 'chatYou'
+  | 'chatClient'
+  | 'splash'
+  | 'onbWelcome'
+  | 'onbSetup'
+  | 'onbResidence'
+  | 'cn1'
+  | 'cn2'
+  | 'cn3';
 /** Device transform vocabulary, exactly as named in SPEC §5.3. */
 export type TransformName =
   | 'T1 Glide'
@@ -135,6 +146,34 @@ function t2Flip(o: {
   ];
 }
 
+/** T6 Fan end poses (chapter 03): the client's phone in the middle, steps 1 and 3 fanned out on either side. */
+const FAN: Record<'desktop' | 'portrait', { centre: Place; left: Place; right: Place }> = {
+  desktop: {
+    centre: { device: 'phone', position: [0.3, -0.12, 0.4], rotation: [2, 360, 0], size: 0.54 },
+    left: { device: 'phone', position: [0.0, -0.16, 0.15], rotation: [2, 14, 7], size: 0.48 },
+    right: { device: 'phone', position: [0.6, -0.16, 0.15], rotation: [2, -14, -7], size: 0.48 },
+  },
+  portrait: {
+    centre: { device: 'phone', position: [0, -0.76, 0.4], rotation: [4, 360, 0], size: 0.48 },
+    left: { device: 'phone', position: [-0.5, -0.8, 0.15], rotation: [4, 14, 7], size: 0.4 },
+    right: { device: 'phone', position: [0.5, -0.8, 0.15], rotation: [4, -14, -7], size: 0.4 },
+  },
+};
+
+/**
+ * T6 Fan (SPEC §5.3, 30–40 vh): one phone fans into three, then folds back. This builds one of the side phones:
+ * hidden behind the centre phone, fanned out 828 → 840, held, folded back 848 → 860.
+ */
+function t6Fan(centre: Pose[], to: Place, screen: PhoneScreen): Pose[] {
+  const hidden = (vh: number): Pose => ({ vh, ...behind(centre, vh), screen, owner: 'client' });
+  return [
+    hidden(828),
+    { vh: 840, ...to, screen, owner: 'client', ease: 'easeOut', transform: 'T6 Fan' },
+    { vh: 848, ...to, screen, owner: 'client' },
+    { ...hidden(860), transform: 'T6 Fan' },
+  ];
+}
+
 const phoneDesktop: Pose[] = [
   // Chapter 00 · Hero (0–140 vh). Phone rises 40 px and turns −40° → −18°, then T1 Glide to the left.
   { vh: 0, device: 'phone', position: [0.4, -0.12, 0], rotation: [4, -40, 0], size: 0.74, screen: 'home', owner: 'you' },
@@ -164,6 +203,13 @@ const phoneDesktop: Pose[] = [
   // the phone comes back as the client's, on their Home. Owner and screen switch while it is edge-on.
   ...t2Flip({ start: 516, end: 544, from: [0, -0.02, 0], to: [0.42, -0.04, 0], rotation: [2, -6, 0], sizeFrom: 0.82, sizeTo: 0.74, toScreen: 'homeIntl' }),
   { vh: 560, device: 'phone', position: [0.42, -0.04, 0], rotation: [2, 354, 0], size: 0.74, screen: 'homeIntl', owner: 'client' },
+
+  // Chapter 03 · The brief (560–860 vh). The client's phone glides out as the laptop slides in (T1 Glide), waits
+  // off-screen, and glides back on ContractNew2 for the T6 Fan (phoneB / phoneC carry steps 1 and 3).
+  { vh: 584, device: 'phone', position: [1.35, -0.04, 0], rotation: [2, 334, 0], size: 0.74, opacity: 0, screen: 'homeIntl', owner: 'client', transform: 'T1 Glide' },
+  { vh: 800, device: 'phone', position: [1.35, -0.04, 0], rotation: [2, 334, 0], size: 0.66, opacity: 0, screen: 'cn2', owner: 'client', screenSwitch: 'cut' },
+  { vh: 828, ...FAN.desktop.centre, screen: 'cn2', owner: 'client', ease: 'easeOut', transform: 'T1 Glide' },
+  { vh: 860, ...FAN.desktop.centre, screen: 'cn2', owner: 'client' },
 ];
 
 // Portrait (SPEC §8): phone at 92% width rising from the bottom, top ~60% visible.
@@ -186,6 +232,12 @@ const phonePortrait: Pose[] = [
   ...ch02Screens([0, -0.88, 0], [4, 0, 0], 0.86),
   ...t2Flip({ start: 516, end: 544, from: [0, -0.88, 0], to: [0.06, -0.88, 0], rotation: [4, 0, 0], sizeFrom: 0.86, sizeTo: 0.86, toScreen: 'homeIntl' }),
   { vh: 560, device: 'phone', position: [0.06, -0.88, 0], rotation: [4, 360, 0], size: 0.86, screen: 'homeIntl', owner: 'client' },
+
+  // Chapter 03 (portrait): out to the right while the browser card rises; back for the fan.
+  { vh: 584, device: 'phone', position: [1.6, -0.88, 0], rotation: [4, 340, 0], size: 0.86, opacity: 0, screen: 'homeIntl', owner: 'client', transform: 'T1 Glide' },
+  { vh: 800, device: 'phone', position: [1.6, -0.7, 0], rotation: [4, 340, 0], size: 0.5, opacity: 0, screen: 'cn2', owner: 'client', screenSwitch: 'cut' },
+  { vh: 828, ...FAN.portrait.centre, screen: 'cn2', owner: 'client', ease: 'easeOut', transform: 'T1 Glide' },
+  { vh: 860, ...FAN.portrait.centre, screen: 'cn2', owner: 'client' },
 ];
 
 /**
@@ -198,6 +250,7 @@ const phoneBDesktop: Pose[] = [
   { vh: 318, ...SPLIT.desktop.right, screen: 'chatClient', owner: 'client' },
   { vh: 332, ...SPLIT.desktop.right, dim: DIM, screen: 'chatClient', owner: 'client' },
   { vh: 346, ...behind(phoneDesktop, 346), dim: DIM, screen: 'chatClient', owner: 'client', transform: 'T3 Split' },
+  ...t6Fan(phoneDesktop, FAN.desktop.left, 'cn1'),
 ];
 
 const phoneBPortrait: Pose[] = [
@@ -206,11 +259,17 @@ const phoneBPortrait: Pose[] = [
   { vh: 318, ...SPLIT.portrait.right, screen: 'chatClient', owner: 'client' },
   { vh: 332, ...SPLIT.portrait.right, dim: DIM, screen: 'chatClient', owner: 'client' },
   { vh: 346, ...behind(phonePortrait, 346), dim: DIM, screen: 'chatClient', owner: 'client', transform: 'T3 Split' },
+  ...t6Fan(phonePortrait, FAN.portrait.left, 'cn1'),
 ];
+
+/** Third phone: only for the T6 Fan (chapter 03). */
+const phoneCDesktop: Pose[] = t6Fan(phoneDesktop, FAN.desktop.right, 'cn3');
+const phoneCPortrait: Pose[] = t6Fan(phonePortrait, FAN.portrait.right, 'cn3');
 
 export const tracks = {
   phone: { desktop: phoneDesktop, portrait: phonePortrait },
   phoneB: { desktop: phoneBDesktop, portrait: phoneBPortrait },
+  phoneC: { desktop: phoneCDesktop, portrait: phoneCPortrait },
 };
 export type TrackName = keyof typeof tracks;
 
@@ -238,9 +297,200 @@ export function ch02SetupStep(vh: number): number {
 }
 
 /** Tap marks on the landing layer (not part of the screen). The target element in the screen has data-tap-target. */
-export const TAPS: { track: TrackName; target: string; start: number; end: number }[] = [
+export const TAPS: { track: TrackName | 'laptop'; target: string; start: number; end: number }[] = [
   { track: 'phone', target: 'google', start: 390, end: 404 },
+  { track: 'laptop', target: 'create', start: 762, end: 772 },
+  { track: 'laptop', target: 'panel-create', start: 778, end: 788 },
 ];
+
+/* ------------------------------------------------------------------------------------------------------------ */
+/* Laptop (chapter 03 on). A generic body; the screen shows a web board.                                        */
+/* ------------------------------------------------------------------------------------------------------------ */
+
+export type LaptopScreen = 'webContractNew';
+
+/** Page scroll inside the laptop screen: an element (data-focus) placed at `at` (0 top … 1 bottom) of the screen. */
+export type PageScroll = { focus: string; at: number } | null;
+
+export type LaptopPose = {
+  vh: number;
+  position: Vec3;
+  rotation: Vec3;
+  /** Desktop: fraction of viewport WIDTH the laptop base fills. Portrait (browser card): fraction of viewport width. */
+  size: number;
+  /** Lid angle in degrees: 0 closed … 105 open. Ignored on portrait (browser card). */
+  lid: number;
+  opacity?: number;
+  page: PageScroll;
+  screen: LaptopScreen;
+  owner: Owner;
+  ease?: EaseName;
+  transform?: TransformName;
+};
+
+const PAGE_TOP: PageScroll = null;
+const PAGE_DONE_WHEN: PageScroll = { focus: 'm1-done', at: 0.5 };
+/** At 1×: the "Done when" list low on the screen, so the summary's fingerprint stays in view above. */
+const PAGE_DONE_WHEN_LOW: PageScroll = { focus: 'm1-done', at: 0.88 };
+
+const laptopDesktop: LaptopPose[] = [
+  { vh: 560, position: [1.7, -0.5, 0], rotation: [10, -24, 0], size: 0.66, lid: 0, opacity: 0, page: PAGE_TOP, screen: 'webContractNew', owner: 'client' },
+  // Slides in (T1 Glide), then the lid opens 0° → 105°.
+  { vh: 588, position: [0.32, -0.44, 0], rotation: [10, -6, 0], size: 0.66, lid: 12, page: PAGE_TOP, screen: 'webContractNew', owner: 'client', ease: 'easeOut', transform: 'T1 Glide' },
+  { vh: 608, position: [0.32, -0.44, 0], rotation: [10, -6, 0], size: 0.66, lid: 105, page: PAGE_TOP, screen: 'webContractNew', owner: 'client' },
+  { vh: 632, position: [0.32, -0.44, 0], rotation: [10, -6, 0], size: 0.66, lid: 105, page: PAGE_TOP, screen: 'webContractNew', owner: 'client' },
+  // The page scrolls to milestone 1 ("Done when"); T5 Zoom happens on the camera track.
+  { vh: 650, position: [0.32, -0.44, 0], rotation: [10, -6, 0], size: 0.66, lid: 105, page: PAGE_DONE_WHEN, screen: 'webContractNew', owner: 'client' },
+  { vh: 704, position: [0.32, -0.44, 0], rotation: [10, -6, 0], size: 0.66, lid: 105, page: PAGE_DONE_WHEN, screen: 'webContractNew', owner: 'client' },
+  { vh: 716, position: [0.32, -0.44, 0], rotation: [10, -6, 0], size: 0.66, lid: 105, page: PAGE_DONE_WHEN_LOW, screen: 'webContractNew', owner: 'client' },
+  { vh: 748, position: [0.32, -0.44, 0], rotation: [10, -6, 0], size: 0.66, lid: 105, page: PAGE_DONE_WHEN_LOW, screen: 'webContractNew', owner: 'client' },
+  // Back to the top: Create → wallet panel → created.
+  { vh: 760, position: [0.32, -0.44, 0], rotation: [10, -6, 0], size: 0.66, lid: 105, page: PAGE_TOP, screen: 'webContractNew', owner: 'client' },
+  { vh: 806, position: [0.32, -0.44, 0], rotation: [10, -6, 0], size: 0.66, lid: 105, page: PAGE_TOP, screen: 'webContractNew', owner: 'client' },
+  // Out, making room for the fan.
+  { vh: 826, position: [1.7, -0.6, 0], rotation: [10, -24, 0], size: 0.66, lid: 105, opacity: 0, page: PAGE_TOP, screen: 'webContractNew', owner: 'client', transform: 'T1 Glide' },
+];
+
+/** Portrait (SPEC §8): the laptop becomes a cropped browser card (the board's narrower responsive layout). */
+const laptopPortrait: LaptopPose[] = laptopDesktop.map((k) => {
+  const shown = (k.opacity ?? 1) > 0;
+  // While the wallet panel is open the card shrinks, so the whole panel (and its Create button) fits the screen.
+  const panel = k.vh === 760 || k.vh === 806;
+  return {
+    ...k,
+    position: !shown ? [0, -1.9, 0] : panel ? [0, -0.27, 0] : [0, -0.39, 0],
+    rotation: [0, 0, 0],
+    size: panel ? 0.72 : 0.92,
+    // Zoomed, the list sits near the card's top so the card stays below the copy.
+    page: k.page === PAGE_DONE_WHEN ? { focus: 'm1-done', at: 0.2 } : k.page === PAGE_DONE_WHEN_LOW ? { focus: 'm1-done', at: 0.62 } : k.page,
+  };
+});
+
+export const laptopTracks = { desktop: laptopDesktop, portrait: laptopPortrait };
+
+export type LaptopSampled = Omit<LaptopPose, 'vh' | 'ease' | 'transform' | 'page' | 'opacity'> & {
+  opacity: number;
+  pageFrom: PageScroll;
+  pageTo: PageScroll;
+  pageMix: number;
+};
+
+export function sampleLaptop(track: LaptopPose[], vh: number, still = false): LaptopSampled {
+  const out = (a: LaptopPose, b: LaptopPose, t: number): LaptopSampled => ({
+    position: lerp3(a.position, b.position, t),
+    rotation: lerp3(a.rotation, b.rotation, t),
+    size: lerp(a.size, b.size, t),
+    lid: lerp(a.lid, b.lid, t),
+    opacity: lerp(a.opacity ?? 1, b.opacity ?? 1, t),
+    screen: t < 0.5 ? a.screen : b.screen,
+    owner: t < 0.5 ? a.owner : b.owner,
+    pageFrom: a.page,
+    pageTo: b.page,
+    pageMix: t,
+  });
+  if (vh <= track[0].vh) return out(track[0], track[0], 1);
+  const last = track[track.length - 1];
+  if (vh >= last.vh) return out(last, last, 1);
+  let i = 1;
+  while (track[i].vh < vh) i++;
+  const a = track[i - 1];
+  const b = track[i];
+  const raw = (vh - a.vh) / (b.vh - a.vh);
+  return out(a, b, still ? (raw < 0.5 ? 0 : 1) : easeFn[b.ease ?? 'ease'](raw));
+}
+
+/* ------------------------------------------------------------------------------------------------------------ */
+/* Camera (T5 Zoom). zoom 1 = the default stage; focus = a data-focus element inside a device screen.          */
+/* ------------------------------------------------------------------------------------------------------------ */
+
+/** `at`: where the focus should sit on screen (fractions of the half viewport), clear of the copy column. */
+export type CameraPose = {
+  vh: number;
+  zoom: number;
+  /** Portrait zoom when it differs (the zoomed detail must still fit the narrow screen). */
+  zoomPortrait?: number;
+  focus?: string;
+  at?: { desktop: [number, number]; portrait: [number, number] };
+  ease?: EaseName;
+  transform?: TransformName;
+};
+
+const BESIDE_COPY = { desktop: [0.45, 0] as [number, number], portrait: [0, -0.27] as [number, number] };
+
+/** T5 Zoom (SPEC §5.3, 40–70 vh): push 1.6× onto the "Done when" list while the first items are typed, then pull out. */
+export const cameraTrack: CameraPose[] = [
+  { vh: 0, zoom: 1 },
+  { vh: 650, zoom: 1 },
+  { vh: 664, zoom: 1.6, zoomPortrait: 1.3, focus: 'm1-done', at: BESIDE_COPY, transform: 'T5 Zoom' },
+  { vh: 704, zoom: 1.6, zoomPortrait: 1.3, focus: 'm1-done', at: BESIDE_COPY },
+  { vh: 716, zoom: 1, transform: 'T5 Zoom' },
+];
+
+export const cameraZoom = (k: CameraPose, portrait: boolean) => (portrait ? (k.zoomPortrait ?? k.zoom) : k.zoom);
+
+export function sampleCamera(vh: number, still = false, portrait = false) {
+  const t0 = cameraTrack[0];
+  if (vh <= t0.vh) return { zoom: cameraZoom(t0, portrait), from: t0, to: t0, mix: 1 };
+  const last = cameraTrack[cameraTrack.length - 1];
+  if (vh >= last.vh) return { zoom: cameraZoom(last, portrait), from: last, to: last, mix: 1 };
+  let i = 1;
+  while (cameraTrack[i].vh < vh) i++;
+  const a = cameraTrack[i - 1];
+  const b = cameraTrack[i];
+  const raw = (vh - a.vh) / (b.vh - a.vh);
+  const t = still ? (raw < 0.5 ? 0 : 1) : easeFn[b.ease ?? 'ease'](raw);
+  return { zoom: lerp(cameraZoom(a, portrait), cameraZoom(b, portrait), t), from: a, to: b, mix: t };
+}
+
+/* ------------------------------------------------------------------------------------------------------------ */
+/* Invite-link chip (T8 Lift-off). `at` is a place (fractions of the half viewport) or a data-focus element.    */
+/* ------------------------------------------------------------------------------------------------------------ */
+
+export type ChipPose = { vh: number; at: Vec3 | { focus: string }; scale: number; opacity: number; ease?: EaseName; transform?: TransformName };
+
+const chipDesktop: ChipPose[] = [
+  { vh: 790, at: { focus: 'invite-link' }, scale: 1, opacity: 0 },
+  // Appears exactly over the link field, then lifts off the screen as a flat chip (T8).
+  { vh: 794, at: { focus: 'invite-link' }, scale: 1, opacity: 1 },
+  { vh: 814, at: [0.3, 0.7, 0.8], scale: 1.25, opacity: 1, ease: 'easeOut', transform: 'T8 Lift-off' },
+  { vh: 860, at: [0.3, 0.7, 0.8], scale: 1.25, opacity: 1 },
+];
+const chipPortrait: ChipPose[] = chipDesktop.map((k) => (Array.isArray(k.at) ? { ...k, at: [0, -0.04, 0.8] as Vec3, scale: 0.9 } : k));
+
+export const chipTracks = { desktop: chipDesktop, portrait: chipPortrait };
+
+/* ------------------------------------------------------------------------------------------------------------ */
+/* Chapter 03 brief state on the laptop screen (WebContractNew), a pure function of scroll.                      */
+/* ------------------------------------------------------------------------------------------------------------ */
+
+/**
+ * The four "Done when" items of milestone 1 are typed into the board's own "Add something you can check" field
+ * and added one by one (the board's add flow). Each window: typing over the first 85%, added at the end.
+ */
+export const CH03_TYPING: [number, number][] = [
+  [664, 684],
+  [684, 704],
+  [716, 732],
+  [732, 748],
+];
+export const CH03_CREATE = { panelAt: 772, createdAt: 790 };
+
+export type BriefState = { added: number; draft: string; panel: 'closed' | 'sign'; created: boolean };
+
+export function ch03BriefAt(vh: number, items: readonly string[]): BriefState {
+  let added = 0;
+  let draft = '';
+  CH03_TYPING.forEach(([a, b], i) => {
+    if (vh >= b) added = i + 1;
+    else if (vh > a) {
+      const p = Math.min(1, (vh - a) / ((b - a) * 0.85));
+      draft = items[i].slice(0, Math.round(items[i].length * p));
+    }
+  });
+  const created = vh >= CH03_CREATE.createdAt;
+  const panel = !created && vh >= CH03_CREATE.panelAt ? 'sign' : 'closed';
+  return { added, draft, panel, created };
+}
 
 export function ch01Days(vh: number): number | null {
   let days: number | null = null;

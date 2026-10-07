@@ -47,8 +47,7 @@ export function OnbSetupScreen() {
       <StatusBar variant="onb" />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '70px 28px 0', position: 'relative', zIndex: 1 }}>
-        {/* TODO(asset): the board's image (/_blob/3385a7c81923ce262d24f4cda7f87bcd, 200 × 156) is not in docs/design-assets. */}
-        <div style={{ width: 200, height: 156 }} />
+        <img src="/design-assets/teddy-thinking_3385a7c8.png" alt="" style={{ width: 200, height: 156, objectFit: 'contain' }} />
         <h1 style={{ margin: '26px 0 0', fontFamily: FONT.display, fontSize: 24, fontWeight: 700, textAlign: 'center' }}>
           {finished ? s.finished.heading : s.working.heading}
         </h1>

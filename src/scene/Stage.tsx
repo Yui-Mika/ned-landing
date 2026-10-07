@@ -7,20 +7,47 @@ import * as THREE from 'three';
 import { copy } from '@/content/copy';
 import { CAMERA_LAMBDA } from '@/motion/tokens';
 import { isPortrait } from '@/motion/flags';
+import { scrollVh } from '@/motion/scroll';
 import { Phone } from './Phone';
+import { Laptop } from './Laptop';
+import { InviteChip } from './InviteChip';
 import { HtmlLayerContext } from './htmlLayer';
+import { cameraZoom, sampleCamera, type CameraPose } from './poses';
+import { focusWorld } from './focus';
 
 const CAMERA = { fov: 30, z: 6.2 };
 
-/** Damped camera (λ = 6). Later chapters add camera keyframes to the poses table; the hero holds still. */
-function CameraRig() {
-  const camera = useThree((s) => s.camera);
-  const target = useRef(new THREE.Vector3(0, 0, CAMERA.z));
+/**
+ * Damped camera (λ = 6) driven by the camera track in poses.ts. T5 Zoom: the camera pans straight (no turn) so
+ * the focus element sits at the centre, and camera.zoom pushes in. Reduced motion: hard cuts, no damping.
+ */
+function CameraRig({ reduced, portrait }: { reduced: boolean; portrait: boolean }) {
+  const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
+  const viewport = useThree((s) => s.viewport);
+  const tmp = useRef({ a: new THREE.Vector3(), b: new THREE.Vector3(), t: new THREE.Vector3() }).current;
   useFrame((_, dt) => {
-    camera.position.x = THREE.MathUtils.damp(camera.position.x, target.current.x, CAMERA_LAMBDA, dt);
-    camera.position.y = THREE.MathUtils.damp(camera.position.y, target.current.y, CAMERA_LAMBDA, dt);
-    camera.position.z = THREE.MathUtils.damp(camera.position.z, target.current.z, CAMERA_LAMBDA, dt);
-    camera.lookAt(0, 0, 0);
+    const cam = sampleCamera(scrollVh.get(), reduced, portrait);
+    const vp = viewport.getCurrentViewport(camera, [camera.position.x, camera.position.y, 0]);
+    // Camera spot for one keyframe: the focus placed at `at` on screen at that keyframe's zoom (or the origin).
+    const spot = (k: CameraPose, out: THREE.Vector3) => {
+      if (!k.focus || !focusWorld(k.focus, out)) return out.set(0, 0, 0);
+      const at = k.at ? (portrait ? k.at.portrait : k.at.desktop) : [0, 0];
+      const z = cameraZoom(k, portrait);
+      return out.set(out.x - (at[0] * vp.width) / 2 / z, out.y - (at[1] * vp.height) / 2 / z, 0);
+    };
+    spot(cam.from, tmp.a);
+    spot(cam.to, tmp.b);
+    tmp.t.lerpVectors(tmp.a, tmp.b, cam.mix);
+    const step = (from: number, to: number) => (reduced ? to : THREE.MathUtils.damp(from, to, CAMERA_LAMBDA, dt));
+    camera.position.x = step(camera.position.x, tmp.t.x);
+    camera.position.y = step(camera.position.y, tmp.t.y);
+    camera.position.z = step(camera.position.z, CAMERA.z);
+    const zoom = step(camera.zoom, cam.zoom);
+    if (Math.abs(zoom - camera.zoom) > 1e-5) {
+      camera.zoom = zoom;
+      camera.updateProjectionMatrix();
+    }
+    camera.lookAt(camera.position.x, camera.position.y, 0);
   });
   return null;
 }
@@ -75,11 +102,17 @@ export default function Stage({ eventSource, reduced, onReady }: Props) {
           <Lightformer form="rect" intensity={2} color="#C084FC" position={[4, 0, -2]} scale={[2, 5, 1]} />
           <Lightformer form="ring" intensity={1.2} color="#818CF8" position={[0, -3, 3]} scale={2} />
         </Environment>
-        <CameraRig />
+        <CameraRig reduced={reduced} portrait={portrait} />
         <HtmlLayerContext.Provider value={htmlLayer}>
           <Phone reduced={reduced} portrait={portrait} />
           {/* Second phone for T3 Split (chapter 01); hidden behind yours the rest of the time. */}
           <Phone reduced={reduced} portrait={portrait} track="phoneB" interactive={false} />
+          {/* Third phone for T6 Fan (chapter 03). */}
+          <Phone reduced={reduced} portrait={portrait} track="phoneC" interactive={false} />
+          {/* Client's computer (chapter 03 on); a cropped browser card on portrait. */}
+          <Laptop reduced={reduced} portrait={portrait} />
+          {/* The invite-link chip (T8 Lift-off). */}
+          <InviteChip reduced={reduced} portrait={portrait} />
         </HtmlLayerContext.Provider>
         <Ready onReady={onReady} />
       </Canvas>

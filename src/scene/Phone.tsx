@@ -11,7 +11,10 @@ import { copy } from '@/content/copy';
 import { DeviceTag, OWNER_COLOR } from '@/components/DeviceTag';
 import { PHONE_SCREEN_PX } from '@/screens/phone/size';
 import { PhoneScreenView } from '@/screens/phone/PhoneScreenView';
-import { TAPS, samplePose, tracks, type Owner, type PhoneScreen, type TrackName } from './poses';
+import { samplePose, tracks, type Owner, type PhoneScreen, type TrackName } from './poses';
+import { TAP_PX, drawTap } from './tap';
+import { registerFocusResolver, screenPointToWorld } from './focus';
+import { stageViewport } from './viewport';
 import { usePhoneInteraction } from './usePhoneInteraction';
 import { SceneHtml } from './htmlLayer';
 
@@ -26,41 +29,6 @@ const INTERACTIVE_UNTIL_VH = 100;
 
 type Person = Exclude<Owner, 'anyone'>;
 
-const TAP_PX = 56;
-
-/** Offset of `el` inside `root` in untransformed CSS px (layout offsets ignore the 3D transform). */
-function offsetIn(el: HTMLElement, root: HTMLElement) {
-  let x = 0;
-  let y = 0;
-  let n: HTMLElement | null = el;
-  while (n && n !== root) {
-    x += n.offsetLeft;
-    y += n.offsetTop;
-    n = n.offsetParent as HTMLElement | null;
-  }
-  return { x, y };
-}
-
-/**
- * Tap mark: a pure function of scroll. Fades in, presses (scale 1 → 0.8 → 1), fades out over the TAPS window,
- * centred on the screen element with data-tap-target. Reduced motion: opacity only.
- */
-function drawTap(mark: HTMLDivElement, front: HTMLDivElement, track: TrackName, vh: number, reduced: boolean) {
-  const tap = TAPS.find((t) => t.track === track && vh > t.start && vh < t.end);
-  const target = tap ? front.querySelector<HTMLElement>(`[data-tap-target="${tap.target}"]`) : null;
-  if (!tap || !target) {
-    if (mark.style.opacity !== '0') mark.style.opacity = '0';
-    return;
-  }
-  const p = (vh - tap.start) / (tap.end - tap.start);
-  const opacity = Math.min(1, p / 0.2, (1 - p) / 0.25);
-  const press = reduced ? 1 : 1 - 0.2 * Math.sin(Math.PI * Math.min(1, Math.max(0, (p - 0.25) / 0.4)));
-  const { x, y } = offsetIn(target, front);
-  const cx = x + target.offsetWidth / 2 - TAP_PX / 2;
-  const cy = y + target.offsetHeight / 2 - TAP_PX / 2;
-  mark.style.opacity = opacity.toFixed(3);
-  mark.style.transform = `translate(${cx}px, ${cy}px) scale(${press.toFixed(3)})`;
-}
 const other = (o: Person): Person => (o === 'you' ? 'client' : 'you');
 
 function roundedRect(w: number, h: number, r: number) {
@@ -112,6 +80,19 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
   const dimEl = useRef<HTMLDivElement>(null);
   const tapEl = useRef<HTMLDivElement>(null);
   const lastScreenScale = useRef(0);
+  const screenAnchor = useRef<THREE.Group>(null);
+
+  // T5 Zoom / T8 Lift-off can target an element on this phone's screen.
+  useEffect(
+    () =>
+      registerFocusResolver((el, out) => {
+        const root = frontEl.current;
+        if (!root || !screenAnchor.current || !outer.current?.visible || !root.contains(el)) return false;
+        screenPointToWorld(el, root, screenAnchor.current, { w: PHONE_SCREEN_PX.w, h: PHONE_SCREEN_PX.h }, PX_PER_UNIT, out);
+        return true;
+      }),
+    [],
+  );
   const glowMat = useRef<THREE.MeshBasicMaterial>(null);
   const glowBase = useRef(0.28);
 
@@ -150,7 +131,7 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
     if (!outer.current || !inner.current) return;
     const vh = scrollVh.get();
     const pose = samplePose(portrait ? tracks[track].portrait : tracks[track].desktop, vh, reduced);
-    const vp = state.viewport.getCurrentViewport(state.camera, [0, 0, 0]);
+    const vp = stageViewport(state);
 
     // Intro entrance (§16.1): opacity 0 → 1, rises 24 px, scale 0.96 → 1 (reduced: 200 ms fade only).
     // If the 3D chunk arrives after the intro, the entrance starts from its first frame instead.
@@ -274,6 +255,7 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
         <mesh geometry={screenGeo} position={[0, 0, BODY.d / 2 + 0.001]}>
           <meshBasicMaterial color="#05050A" />
         </mesh>
+        <group ref={screenAnchor} position={[0, 0, BODY.d / 2 + 0.003]} />
         <SceneHtml transform distanceFactor={400 / PX_PER_UNIT} position={[0, 0, BODY.d / 2 + 0.003]}>
           <div ref={frontEl} data-phone-front={track} className="relative" style={{ opacity: 0 }}>
             <PhoneScreenView key={layers.from} screen={layers.from} owner={frontOwner} />

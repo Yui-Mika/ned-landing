@@ -12,7 +12,9 @@ Next.js (App Router) · TypeScript · Tailwind v4 · Lenis · Motion (Framer Mot
 | Skeleton (smooth scroll, fixed 3D stage, top bar, links) | Built |
 | 00 Hero (draggable 3D phone, Teddy, T1 glide) | Built |
 | 01 The problem (generic chat app, clock from scroll, T3 split, N.E.D splash) | Built |
-| 02–14, orbit nav, present mode, EN/VI | Not yet |
+| 02 Sign in (onboarding boards, tap mark, T2 flip) | Built |
+| 03 The brief (laptop + WebContractNew, T5 zoom, wallet panel, T8 invite chip, T6 fan) | Built |
+| 04–14, orbit nav, present mode, EN/VI | Not yet |
 
 ## Run it
 
@@ -33,6 +35,9 @@ npm run typecheck
 | `src/scene/poses.ts` | **Poses table**: key = vh → device position / rotation / size / screen / owner. |
 | `src/scene/Stage.tsx` | The one fixed `<Canvas>` behind the page; camera rig. |
 | `src/scene/Phone.tsx` | Generic phone body + real HTML screen (drei `<Html transform>`). |
+| `src/scene/Laptop.tsx` | Generic laptop body (lid on a hinge, 0°–105°) with a web board on its screen; a browser card on portrait. |
+| `src/scene/focus.ts` | Finds a `data-focus` element on any device screen in 3D (T5 Zoom camera, T8 chip). |
+| `src/screens/web/` | Web boards (WebContractNew, WebWalletPanel), ported 1:1 from `docs/design-reference/web`. |
 | `src/scene/usePhoneInteraction.ts` | Drag (±35° / ±15°, spring back), click to flip owner, hover tilt. |
 | `src/screens/phone/` | Phone screen templates (light app theme). |
 | `src/motion/scroll.ts` | The single scroll value `scrollVh` (story vh; K = 0.75 on phones). |
