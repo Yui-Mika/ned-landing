@@ -502,6 +502,33 @@ const ch08C = (main: Pose[], to: Place) =>
     { vh: CH08.refunded[1], screen: 'refunded' },
   ]);
 
+/**
+ * Chapter 14 · Close + product links (2200–2360 vh, right after chapter 08). The client's phone from chapter 08 fades
+ * out first; then your phone (Home) and your computer (WebSignIn) fade in side by side, facing the camera, and rest
+ * there to the end of the page. They never overlap: the computer left of the phone, the copy column left of both.
+ */
+export const CH14 = {
+  phoneOut: [2200, 2208] as [number, number],
+  phoneIn: [2210, 2222] as [number, number],
+  laptopIn: [2212, 2226] as [number, number],
+  end: 2360,
+};
+/** Chapter 14 resting place of your phone: right of the computer, facing the camera. */
+const P14: Record<'desktop' | 'portrait', Place> = {
+  desktop: { device: 'phone', position: [0.76, -0.02, 0], rotation: [2, 720, 0], size: 0.48 },
+  portrait: { device: 'phone', position: [0.42, -0.6, 0], rotation: [2, 720, 0], size: 0.3 },
+};
+
+/** Chapter 14 stops for the main phone: the client's phone (chapter 08's phone A) fades out, your phone fades in on Home. */
+function ch14Phone(o: { from: Place; to: Place }): Pose[] {
+  return [
+    { vh: CH14.phoneOut[1], ...o.from, size: o.from.size * FADE_SCALE.phone, opacity: 0, screen: 'releasedClient', owner: 'client', ease: 'linear' },
+    { vh: CH14.phoneIn[0], ...o.to, size: o.to.size * FADE_SCALE.phone, opacity: 0, screen: 'home', owner: 'you', screenSwitch: 'cut' },
+    { vh: CH14.phoneIn[1], ...o.to, screen: 'home', owner: 'you', ease: 'easeOut' },
+    { vh: CH14.end, ...o.to, screen: 'home', owner: 'you' },
+  ];
+}
+
 const phoneDesktop: Pose[] = [
   // Chapter 00 · Hero (0–140 vh). Phone rises 40 px and turns −40° → −18°, then T1 Glide to the left.
   { vh: 0, device: 'phone', position: [0.4, -0.12, 0], rotation: [4, -40, 0], size: 0.74, screen: 'home', owner: 'you' },
@@ -554,6 +581,9 @@ const phoneDesktop: Pose[] = [
 
   // Chapter 08 · If someone goes quiet (1900–2200 vh): see CH08.
   ...ch08PhoneA({ from: SPLIT7.desktop.left, left: FAN8.desktop.left }),
+
+  // Chapter 14 · Close + product links (2200–2360 vh): see CH14.
+  ...ch14Phone({ from: FAN8.desktop.left, to: P14.desktop }),
 ];
 
 // Portrait (SPEC §8): phone at 92% width rising from the bottom, top ~60% visible.
@@ -591,6 +621,7 @@ const phonePortrait: Pose[] = [
   ...ch06Phone({ at: [0, -0.88, 0], rotation: [4, 360, 0], size: 0.86 }),
   ...ch07Phone({ at: [0, -0.88, 0], rotation: [4, 360, 0], size: 0.86, left: SPLIT7.portrait.left }),
   ...ch08PhoneA({ from: SPLIT7.portrait.left, left: FAN8.portrait.left }),
+  ...ch14Phone({ from: FAN8.portrait.left, to: P14.portrait }),
 ];
 
 /**
@@ -676,7 +707,7 @@ export const TAPS: { track: TrackName | 'laptop'; target: string; start: number;
 /* Laptop (chapter 03 on). A generic body; the screen shows a web board.                                        */
 /* ------------------------------------------------------------------------------------------------------------ */
 
-export type LaptopScreen = 'webContractNew' | 'webWorkspace' | 'webSubmit';
+export type LaptopScreen = 'webContractNew' | 'webWorkspace' | 'webSubmit' | 'webSignIn';
 
 /** Page scroll inside the laptop screen: an element (data-focus) placed at `at` (0 top … 1 bottom) of the screen. */
 export type PageScroll = { focus: string; at: number } | null;
@@ -774,7 +805,18 @@ function ch06Laptop(k: Omit<LaptopPose, 'vh' | 'page' | 'screen' | 'owner' | 'li
 }
 const laptopCh06: LaptopPose[] = ch06Laptop({ position: L.position, rotation: L.rotation, size: L.size });
 
-const laptopDesktop: LaptopPose[] = [...laptopCh03, ...laptopCh05, ...laptopCh06];
+/**
+ * Chapter 14: your computer on WebSignIn fades in left of your phone (after the client's phone has gone), facing the
+ * camera (body pitch 10° + lid 100° = an upright screen), and rests there.
+ */
+const L14 = { position: [0.12, -0.42, 0] as Vec3, rotation: [10, 0, 0] as Vec3, size: 0.42, lid: 100, screen: 'webSignIn' as const, owner: 'you' as const, page: PAGE_TOP };
+const laptopCh14: LaptopPose[] = [
+  { vh: CH14.laptopIn[0], ...L14, size: L14.size * FADE_SCALE.laptop, opacity: 0 },
+  { vh: CH14.laptopIn[1], ...L14, ease: 'easeOut' },
+  { vh: CH14.end, ...L14 },
+];
+
+const laptopDesktop: LaptopPose[] = [...laptopCh03, ...laptopCh05, ...laptopCh06, ...laptopCh14];
 
 /** Portrait (SPEC §8): the laptop becomes a cropped browser card (the board's narrower responsive layout). */
 const laptopPortraitCh03: LaptopPose[] = laptopCh03.map((k) => {
@@ -824,7 +866,15 @@ const laptopPortraitCh06: LaptopPose[] = [
   })),
 ];
 
-const laptopPortrait: LaptopPose[] = [...laptopPortraitCh03, ...laptopPortraitCh05, ...laptopPortraitCh06];
+/** Chapter 14 (portrait): the browser card, left of your phone, below the copy column. */
+const P14_CARD = { ...L14, position: [-0.39, -0.6, 0] as Vec3, rotation: [0, 0, 0] as Vec3, size: 0.42, lid: 105 };
+const laptopPortraitCh14: LaptopPose[] = [
+  { vh: CH14.laptopIn[0], ...P14_CARD, size: P14_CARD.size * FADE_SCALE.laptop, opacity: 0 },
+  { vh: CH14.laptopIn[1], ...P14_CARD, ease: 'easeOut' },
+  { vh: CH14.end, ...P14_CARD },
+];
+
+const laptopPortrait: LaptopPose[] = [...laptopPortraitCh03, ...laptopPortraitCh05, ...laptopPortraitCh06, ...laptopPortraitCh14];
 
 export const laptopTracks = { desktop: laptopDesktop, portrait: laptopPortrait };
 

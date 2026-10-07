@@ -18,7 +18,9 @@ Next.js (App Router) · TypeScript · Tailwind v4 · Lenis · Motion (Framer Mot
 | 05 Lock (T2 flip, Workspace, wallet panel, T5 zoom, slide to lock, lock stamp; one device at a time) | Built |
 | 06 Work and submit (T9 owner turn, WebSubmit filled by scroll, scan line, wallet panel, submitted) | Built |
 | 07 Review and release (T2 flip, link check, T5 zoom on slide to release, T3 split, amount chip $ → VND, VND block) | Built |
-| 08–14, orbit nav, present mode, EN/VI | Not yet |
+| 08 If someone goes quiet (T6 fan of three phones, review clock to 0, anyone releases / refunds) | Built |
+| 14 Close + product links (your phone on Home, your computer on WebSignIn, three product cards; follows 08 for now) | Built |
+| 09–13, orbit nav, present mode, EN/VI | Not yet |
 
 ## Run it
 
@@ -41,7 +43,7 @@ npm run typecheck
 | `src/scene/Phone.tsx` | Generic phone body + real HTML screen (drei `<Html transform>`). |
 | `src/scene/Laptop.tsx` | Generic laptop body (lid on a hinge, 0°–105°) with a web board on its screen; a browser card on portrait. |
 | `src/scene/focus.ts` | Finds a `data-focus` element on any device screen in 3D (T5 Zoom camera, T8 chip). |
-| `src/screens/web/` | Web boards (WebContractNew, WebWorkspace, WebWalletPanel sign/app modes), ported 1:1 from `docs/design-reference/web`. |
+| `src/screens/web/` | Web boards (WebSignIn, WebContractNew, WebWorkspace, WebSubmit, WebWalletPanel sign/app modes), ported 1:1 from `docs/design-reference/web`. |
 | `src/scene/dock.ts` | T4 Dock target: where the phone sits when it is the wallet panel (measured every frame). Unused since chapter 05 went one-device-at-a-time; kept for chapter 11. |
 | `src/scene/usePhoneInteraction.ts` | Drag (±35° / ±15°, spring back), click to flip owner, hover tilt. |
 | `src/screens/phone/` | Phone screen templates (light app theme). |

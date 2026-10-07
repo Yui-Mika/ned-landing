@@ -574,6 +574,28 @@ export const copy = {
   },
   /** Text inside the laptop screen: web boards (board strings, SPEC numbers). */
   web: {
+    /** web/WebSignIn · panelOpen false (the signed-out wallet panel is a separate board). Board strings 1:1. */
+    signIn: {
+      brand: { mark: 'N.E.D', name: 'Workspace' },
+      devnet: 'Devnet · test money',
+      signInButton: 'Sign in with N.E.D Wallet',
+      chip: 'For freelancers and the clients who hire them',
+      headline: 'Write the brief. Deliver the work. Get it released.',
+      lead: 'The Workspace is the computer side of your N.E.D Wallet. Clients write the brief and lock money per milestone. Freelancers submit their work before the deadline. Money moves only from a wallet, when its owner confirms.',
+      cta: 'Sign in with N.E.D Wallet',
+      ctaNote: 'Use the same Google account as on your phone.',
+      cards: [
+        { role: 'Client', title: 'Write the brief', text: 'Scope, milestones and what counts as done. Its fingerprint is saved on-chain, so neither side can change it later.' },
+        { role: 'Freelancer', title: 'Submit your work', text: 'Links and files from your computer, before the deadline. The chain clock records when you submitted.' },
+        { role: 'Client', title: 'Review and release', text: 'Check the delivery against the brief, then release. If you do nothing by the review deadline, it releases on its own.' },
+      ],
+      phone: {
+        title: 'Your phone stays the wallet',
+        text: 'Same Google sign-in, same wallet, same contracts. Do the long work here; check status and confirm on your phone when you are away from your desk.',
+      },
+      footnote:
+        'Devnet pilot · test money only. N.E.D holds no funds and charges no fee during the pilot. In the Vietnam view, earnings arrive in VND through a payout partner (simulated in the demo).',
+    },
     /** web/WebContractNew · who mia. Form → wallet panel (sign) → created. SPEC: 250 + 250 USDC (board sample: 10 + 10). */
     contractNew: {
       brand: { mark: 'N.E.D', name: 'Workspace' },
@@ -841,6 +863,11 @@ export const copy = {
   },
   /** The invite-link chip (T8): the same string as the link field it lifts off (web/WebContractNew, created). */
   inviteLink: 'ned.app/c/7XqP2mWc#k=Qm4tY8vR2LkN9sQe',
+  /** Chapter 14 copy column: SPEC §6 row 14, exact wording. The CTAs are the product cards (labels in links.ts). */
+  close: {
+    headline: 'See a milestone released.',
+    client: 'Hiring? Write a brief in the Workspace and lock a milestone.',
+  },
   /** Chapter 08 copy column: SPEC §6 row 08, exact wording (three lines, no headline in the SPEC; the first leads). */
   quiet: {
     l1: "No answer by the review deadline? It's released to you on its own.",
@@ -910,9 +937,5 @@ export const copy = {
     },
     placeholder: 'Message',
     send: 'Send',
-  },
-  later: {
-    title: 'More chapters coming',
-    body: 'Chapter 09 and the rest of the story are next.',
   },
 } as const;

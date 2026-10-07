@@ -36,12 +36,10 @@ const base: Base[] = [
   { id: '06', name: 'Work and submit', start: 1360, end: 1620 },
   { id: '07', name: 'Review and release', start: 1620, end: 1900 },
   { id: '08', name: 'If someone goes quiet', start: 1900, end: 2200 },
-  { id: '09', name: 'Two ways to receive', start: 2200, end: 2420 },
-  { id: '10', name: 'Records, then close', start: 2420, end: 2620 },
-  { id: '11', name: 'One wallet, two screens', start: 2620, end: 2800 },
-  { id: '12', name: "What N.E.D does and doesn't do", start: 2800, end: 2960 },
-  { id: '13', name: "What's real today", start: 2960, end: 3140 },
-  { id: '14', name: 'See a milestone released', start: 3140, end: 3300 },
+  // Chapters 09–13 are not built yet (SPEC: 09 2200–2420 · 10 2420–2620 · 11 2620–2800 · 12 2800–2960 ·
+  // 13 2960–3140). Chapter 14 follows the last built chapter with no gap; it moves back to 3140–3300 once they exist.
+  // The last chapter's copy never exits: the exit window lies past the end of the page.
+  { id: '14', name: 'See a milestone released', start: 2200, end: 2360, copyOut: [2400, 2400 + text.scrub.window] },
 ];
 
 export const chapters: Chapter[] = base.map(withCopyWindows);
@@ -53,7 +51,7 @@ export const chapterById = (id: string): Chapter => {
 };
 
 /** Chapters that are built so far. The page is only as long as these (plus a short spacer). */
-export const BUILT_UNTIL_VH = 2200;
+export const BUILT_UNTIL_VH = 2360;
 
 export function chapterAt(vh: number): Chapter {
   for (let i = chapters.length - 1; i >= 0; i--) if (vh >= chapters[i].start) return chapters[i];
