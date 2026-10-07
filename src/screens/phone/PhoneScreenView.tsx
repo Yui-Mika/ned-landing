@@ -14,6 +14,8 @@ import { ContractDetailScreen } from './ContractDetailScreen';
 import { ContractAcceptScreen } from './ContractAcceptScreen';
 import { ContractLockScreen } from './ContractLockScreen';
 import { MilestoneSubmittedScreen } from './MilestoneSubmittedScreen';
+import { MilestoneReviewScreen } from './MilestoneReviewScreen';
+import { MilestoneReleasedScreen } from './MilestoneReleasedScreen';
 import { SUBMITTED_FP } from '@/screens/web/WebSubmitScreen';
 
 function Board({ screen, owner }: { screen: PhoneScreen; owner: Exclude<Owner, 'anyone'> }) {
@@ -59,6 +61,12 @@ function Board({ screen, owner }: { screen: PhoneScreen; owner: Exclude<Owner, '
       return <ContractDetailScreen variant="vinhLocked" />;
     case 'submitted':
       return <MilestoneSubmittedScreen fingerprint={SUBMITTED_FP} />;
+    case 'review':
+      return <MilestoneReviewScreen />;
+    case 'releasedClient':
+      return <MilestoneReleasedScreen variant="client" />;
+    case 'releasedVN':
+      return <MilestoneReleasedScreen variant="freelancerVN" />;
   }
 }
 

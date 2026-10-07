@@ -389,6 +389,72 @@ export const copy = {
       explorer: 'View on Explorer',
       home: 'Back to Home',
     },
+    /**
+     * phone/MilestoneReview (review 3 days). The countdown is the board's at t = 0 (its 1 s timer is left out; SPEC §5.1).
+     * Link: the board's "matches" sample, and its "differs" sample for the one flash. SPEC amount (board sample: 10.00 USDC).
+     */
+    milestoneReview: {
+      back: 'Back',
+      title: 'Review milestone 1',
+      job: 'Landing page design · Milestone 1',
+      by: 'by @vinh · submitted 3 Oct, 00:31',
+      amt: '250.00 USDC',
+      amtSub: 'to VND via payout partner',
+      cdBefore: 'Auto-release in ',
+      cd: '2 days 17 h',
+      cdAfter: ' unless you dispute',
+      checkLabel: 'Check a link',
+      checkHelp: 'Paste the link @vinh sent you. We compare its fingerprint with the one saved on-chain.',
+      link: 'https://example.com/vinh/landing-v1',
+      linkChanged: 'https://example.com/vinh/landing-v2',
+      placeholder: 'https://',
+      match: 'Matches what was submitted ✓',
+      noMatch: "Doesn't match what was submitted",
+      onchain: 'On-chain fingerprint ',
+      fees: { label: 'Fees', ned: 'N.E.D fee', nedV: 'None during the pilot', network: 'Network fee', networkV: '~0.000005 SOL', networkSub: 'devnet test SOL', partner: 'Payout partner fee', partnerV: 'Set by the partner' },
+      simulated: 'SIMULATED',
+      slide: 'Slide to release',
+      dispute: 'Dispute ',
+      disputeTag: '(P1 · if shipped)',
+    },
+    /**
+     * phone/MilestoneReleased (contract A): `client` (who client · view intl; its prototype-only "DEMO · switch to
+     * @vinh's phone" removed) and `freelancerVN` (= phone/MilestoneReleasedVN: who freelancer · view vn).
+     * SPEC amounts and wording (board sample: 10.00 USDC, ≈ 260,000 VND "(estimate)").
+     */
+    milestoneReleased: {
+      devnet: 'Devnet · test money',
+      teddyAlt: '',
+      chip: 'Released',
+      explorer: 'View on Explorer',
+      fees: 'N.E.D fee: none during the pilot · Network fee ~0.000005 SOL (devnet test SOL)',
+      done: 'Done',
+      receiptLabel: 'Receipt',
+      simLine: 'VND payout simulated in this demo ',
+      simulated: 'SIMULATED',
+      client: {
+        headline: 'Released to Vinh',
+        sub: 'Landing page design · Milestone 1 · 250.00 USDC',
+        receipt: [
+          { k: 'Contract', v: 'Landing page design · Milestone 1' },
+          { k: 'Amount', v: '250.00 USDC', focus: 'rel-amount-client' },
+          { k: 'To', v: 'VND via payout partner (simulated)' },
+          { k: 'Released by', v: 'You (@mia)' },
+        ],
+      },
+      freelancerVN: {
+        headline: 'Released to payout partner',
+        subAmount: '≈ 6,500,000 VND (',
+        subEstimate: 'example, estimated',
+        subRest: ') · $250.00 · rate of 2 Oct 2026. The partner sends VND to your bank; this demo stops here.',
+        receipt: [
+          { k: 'Contract', v: 'Landing page design · Milestone 1' },
+          { k: 'Amount', v: '≈ 6,500,000 VND (example, estimated)', focus: 'rel-amount-you' },
+          { k: 'To', v: 'Payout partner (simulated)' },
+          { k: 'From', v: '@mia' },
+        ],
+      },
+    },
     /** phone/ContractAccept · view vn (VND only; the board hides the USDC option in this view). SPEC amounts. */
     contractAccept: {
       back: 'Back',
@@ -694,6 +760,16 @@ export const copy = {
   },
   /** The invite-link chip (T8): the same string as the link field it lifts off (web/WebContractNew, created). */
   inviteLink: 'ned.app/c/7XqP2mWc#k=Qm4tY8vR2LkN9sQe',
+  /** Chapter 07 copy column and landing-layer block: SPEC §6 row 07, exact wording. */
+  release: {
+    headline: 'Your client checks the work, then releases it.',
+    l1: 'Each link is checked against the fingerprint saved when you submitted.',
+    l2: 'Your client approves, and that part is released.',
+    block: { amount: '≈ 6,500,000 VND', meta: 'example, estimated · milestone 1, 250 USDC' },
+    small: 'Bank transfer simulated in this demo.',
+    /** The amount chip (SPEC §4: the only other chip that travels): "$ 250 USDC" morphs to "≈ 6,500,000 VND" by scroll. */
+    chip: { usdc: '$ 250 USDC', vndPrefix: '≈ ', vndUnit: ' VND', vnd: 6500000 },
+  },
   /** Chapter 06 copy column: SPEC §6 row 06, exact wording. */
   submit: {
     headline: 'Submit before the deadline.',
@@ -749,6 +825,6 @@ export const copy = {
   },
   later: {
     title: 'More chapters coming',
-    body: 'Chapter 07 and the rest of the story are next.',
+    body: 'Chapter 08 and the rest of the story are next.',
   },
 } as const;

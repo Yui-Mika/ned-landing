@@ -17,7 +17,8 @@ Next.js (App Router) · TypeScript · Tailwind v4 · Lenis · Motion (Framer Mot
 | 04 Accept, and choose once (invite chip drops in, T5 zoom on the destination, slide to accept) | Built |
 | 05 Lock (T2 flip, Workspace, wallet panel, T5 zoom, slide to lock, lock stamp; one device at a time) | Built |
 | 06 Work and submit (T9 owner turn, WebSubmit filled by scroll, scan line, wallet panel, submitted) | Built |
-| 07–14, orbit nav, present mode, EN/VI | Not yet |
+| 07 Review and release (T2 flip, link check, T5 zoom on slide to release, T3 split, amount chip $ → VND, VND block) | Built |
+| 08–14, orbit nav, present mode, EN/VI | Not yet |
 
 ## Run it
 

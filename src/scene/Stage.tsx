@@ -12,6 +12,7 @@ import { Phone } from './Phone';
 import { Laptop } from './Laptop';
 import { InviteChip } from './InviteChip';
 import { LockStamp } from './LockStamp';
+import { AmountChip } from './AmountChip';
 import { HtmlLayerContext } from './htmlLayer';
 import { cameraZoom, sampleCamera, type CameraPose } from './poses';
 import { focusWorld } from './focus';
@@ -140,6 +141,8 @@ export default function Stage({ eventSource, reduced, onReady }: Props) {
           <InviteChip reduced={reduced} portrait={portrait} />
           {/* The lock glyph stamp (chapter 05). */}
           <LockStamp reduced={reduced} />
+          {/* The amount chip (chapter 07). */}
+          <AmountChip reduced={reduced} />
         </HtmlLayerContext.Provider>
         <Ready onReady={onReady} />
       </Canvas>

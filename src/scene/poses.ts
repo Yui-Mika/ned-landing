@@ -46,7 +46,10 @@ export type PhoneScreen =
   | 'lockedClient'
   | 'lockedVN'
   | 'cdVinhLocked'
-  | 'submitted';
+  | 'submitted'
+  | 'review'
+  | 'releasedClient'
+  | 'releasedVN';
 /** Device transform vocabulary, exactly as named in SPEC §5.3. */
 export type TransformName =
   | 'T1 Glide'
@@ -358,6 +361,76 @@ function ch06Phone(o: { at: Vec3; rotation: Vec3; size: number }): Pose[] {
   ];
 }
 
+/**
+ * Chapter 07 · Review and release (1620–1900 vh), the key moment: T2 Flip your phone → the client's, on MilestoneReview
+ * (the link matches; a changed link flashes "Doesn't match" once) · T5 Zoom on "Slide to release", the thumb follows
+ * scroll · MilestoneReleased 4 vh after 100% · T3 Split: your phone comes out beside it on MilestoneReleasedVN · the
+ * amount chip crosses the seam, "$ 250 USDC" → "≈ 6,500,000 VND" · the VND block holds (~60 vh).
+ */
+export const CH07 = {
+  flip: [1622, 1646] as [number, number],
+  /** The changed link: the board's "differs" sample, shown once. */
+  flash: [1652, 1660] as [number, number],
+  zoom: [1664, 1676, 1712, 1724] as [number, number, number, number],
+  slide: [1678, 1706] as [number, number],
+  released: [1710, 1718] as [number, number],
+  split: [1726, 1756] as [number, number],
+  chip: { show: [1756, 1760], travel: [1760, 1784], morph: [1764, 1780], settle: [1784, 1792] } as Record<'show' | 'travel' | 'morph' | 'settle', [number, number]>,
+  /** The VND block under the split: in, hold (the climax, ~70 vh), out. */
+  block: [1786, 1794, 1866, 1876] as [number, number, number, number],
+};
+export const CH07_SLIDE = CH07.slide;
+
+/** MilestoneReview link field: the board's matching sample, except during the one flash of its changed sample. */
+export const ch07LinkChanged = (vh: number) => vh >= CH07.flash[0] && vh < CH07.flash[1];
+
+const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
+const win = (vh: number, [a, b]: [number, number]) => clamp01((vh - a) / (b - a));
+
+/**
+ * The amount chip, a pure function of scroll: `travel` 0 = over the client's amount, 1 = over yours (eased, arcs over
+ * the seam), `morph` 0 = "$ 250 USDC" … 1 = "≈ 6,500,000 VND", opacity and scale (it settles into your phone).
+ * `still` (reduced motion): no travel or morph in between, a cut at each window's midpoint.
+ */
+export function ch07ChipAt(vh: number, still = false) {
+  const c = CH07.chip;
+  if (vh <= c.show[0] || vh >= c.settle[1]) return null;
+  const step = (x: number) => (still ? (x < 0.5 ? 0 : 1) : x);
+  const opacity = Math.min(win(vh, c.show), 1 - win(vh, c.settle));
+  return {
+    travel: still ? step(win(vh, c.travel)) : easeFn.ease(win(vh, c.travel)),
+    morph: step(win(vh, c.morph)),
+    opacity: still ? (opacity > 0.5 ? 1 : 0) : opacity,
+    scale: 1 - 0.15 * win(vh, c.settle),
+  };
+}
+
+/** T3 Split end poses for chapter 07: side by side right of the copy column, room for the VND block below. */
+const SPLIT7: Record<'desktop' | 'portrait', { left: Place; right: Place }> = {
+  desktop: {
+    left: { device: 'phone', position: [0.05, 0.1, 0], rotation: [2, 722, 0], size: 0.6 },
+    right: { device: 'phone', position: [0.62, 0.1, 0], rotation: [2, 702, 0], size: 0.6 },
+  },
+  portrait: {
+    left: { device: 'phone', position: [-0.48, -0.66, 0], rotation: [4, 726, 0], size: 0.42 },
+    right: { device: 'phone', position: [0.48, -0.66, 0], rotation: [4, 714, 0], size: 0.42 },
+  },
+};
+
+/** Chapter 07 stops for the main phone (your phone → the client's): see CH07. */
+function ch07Phone(o: { at: Vec3; rotation: Vec3; size: number; left: Place }): Pose[] {
+  const [pitch, yaw] = o.rotation;
+  const c = (vh: number, screen: PhoneScreen, extra: Partial<Pose> = {}): Pose => ({ vh, device: 'phone', position: o.at, rotation: [pitch, yaw + 360, 0], size: o.size, screen, owner: 'client', ...extra });
+  return [
+    ...t2Flip({ start: CH07.flip[0], end: CH07.flip[1], from: o.at, to: o.at, rotation: o.rotation, sizeFrom: o.size, sizeTo: o.size, fromScreen: 'submitted', fromOwner: 'you', toScreen: 'review', toOwner: 'client' }),
+    c(CH07.released[0], 'review'),
+    c(CH07.released[1], 'releasedClient'),
+    c(CH07.split[0], 'releasedClient'),
+    { vh: CH07.split[1], ...o.left, screen: 'releasedClient', owner: 'client', ease: 'easeOut', transform: 'T3 Split' },
+    { vh: 1900, ...o.left, screen: 'releasedClient', owner: 'client' },
+  ];
+}
+
 const phoneDesktop: Pose[] = [
   // Chapter 00 · Hero (0–140 vh). Phone rises 40 px and turns −40° → −18°, then T1 Glide to the left.
   { vh: 0, device: 'phone', position: [0.4, -0.12, 0], rotation: [4, -40, 0], size: 0.74, screen: 'home', owner: 'you' },
@@ -404,6 +477,9 @@ const phoneDesktop: Pose[] = [
 
   // Chapter 06 · Work and submit (1360–1620 vh): see CH06. Same place; hidden while the computer is on stage.
   ...ch06Phone({ at: [0.3, -0.04, 0], rotation: [2, 352, 0], size: 0.74 }),
+
+  // Chapter 07 · Review and release (1620–1900 vh): see CH07.
+  ...ch07Phone({ at: [0.3, -0.04, 0], rotation: [2, 352, 0], size: 0.74, left: SPLIT7.desktop.left }),
 ];
 
 // Portrait (SPEC §8): phone at 92% width rising from the bottom, top ~60% visible.
@@ -439,6 +515,7 @@ const phonePortrait: Pose[] = [
   // Chapters 05 and 06 (portrait): phone rising from the bottom; hidden while the browser card is on stage.
   ...ch05Phone({ at: [0, -0.88, 0], rotation: [4, 0, 0], size: 0.86 }),
   ...ch06Phone({ at: [0, -0.88, 0], rotation: [4, 360, 0], size: 0.86 }),
+  ...ch07Phone({ at: [0, -0.88, 0], rotation: [4, 360, 0], size: 0.86, left: SPLIT7.portrait.left }),
 ];
 
 /**
@@ -452,6 +529,10 @@ const phoneBDesktop: Pose[] = [
   { vh: 332, ...SPLIT.desktop.right, dim: DIM, screen: 'chatClient', owner: 'client' },
   { vh: 346, ...behind(phoneDesktop, 346), dim: DIM, screen: 'chatClient', owner: 'client', transform: 'T3 Split' },
   ...t6Fan(phoneDesktop, FAN.desktop.left, 'cn1'),
+  // Chapter 07 T3 Split: your phone comes out from behind the client's, on MilestoneReleasedVN.
+  { vh: CH07.split[0], ...behind(phoneDesktop, CH07.split[0]), screen: 'releasedVN', owner: 'you' },
+  { vh: CH07.split[1], ...SPLIT7.desktop.right, screen: 'releasedVN', owner: 'you', ease: 'easeOut', transform: 'T3 Split' },
+  { vh: 1900, ...SPLIT7.desktop.right, screen: 'releasedVN', owner: 'you' },
 ];
 
 const phoneBPortrait: Pose[] = [
@@ -461,6 +542,9 @@ const phoneBPortrait: Pose[] = [
   { vh: 332, ...SPLIT.portrait.right, dim: DIM, screen: 'chatClient', owner: 'client' },
   { vh: 346, ...behind(phonePortrait, 346), dim: DIM, screen: 'chatClient', owner: 'client', transform: 'T3 Split' },
   ...t6Fan(phonePortrait, FAN.portrait.left, 'cn1'),
+  { vh: CH07.split[0], ...behind(phonePortrait, CH07.split[0]), screen: 'releasedVN', owner: 'you' },
+  { vh: CH07.split[1], ...SPLIT7.portrait.right, screen: 'releasedVN', owner: 'you', ease: 'easeOut', transform: 'T3 Split' },
+  { vh: 1900, ...SPLIT7.portrait.right, screen: 'releasedVN', owner: 'you' },
 ];
 
 /** Third phone: only for the T6 Fan (chapter 03). */
@@ -752,6 +836,11 @@ export const cameraTrack: CameraPose[] = [
   { vh: CH06.doneAt + 12, zoom: 1, fit: 1.75, focus: 'sb-done', copyId: 'ch06-title', transform: 'T5 Zoom' },
   { vh: CH06.laptopOut[0] - 2, zoom: 1, fit: 1.75, focus: 'sb-done', copyId: 'ch06-title' },
   { vh: CH06.laptopOut[1], zoom: 1, transform: 'T5 Zoom' },
+  // Chapter 07: push onto "Slide to release" (as far as it fits beside the copy, max 1.6×) while the thumb moves.
+  { vh: CH07.zoom[0], zoom: 1 },
+  { vh: CH07.zoom[1], zoom: 1, fit: 1.6, focus: 'release-slider', copyId: 'ch07-title', transform: 'T5 Zoom' },
+  { vh: CH07.zoom[2], zoom: 1, fit: 1.6, focus: 'release-slider', copyId: 'ch07-title' },
+  { vh: CH07.zoom[3], zoom: 1, transform: 'T5 Zoom' },
 ];
 
 export const cameraZoom = (k: CameraPose, portrait: boolean) => (portrait ? (k.zoomPortrait ?? k.zoom) : k.zoom);
