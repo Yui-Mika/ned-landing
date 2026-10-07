@@ -4,7 +4,7 @@ import { motion, useTransform } from 'motion/react';
 import { copy } from '@/content/copy';
 import { scrollVh } from '@/motion/scroll';
 import { CH01_CLOCK, ch01Days } from '@/scene/poses';
-import { PHONE_SCREEN_PX } from './HomeScreen';
+import { PHONE_SCREEN_PX } from './size';
 
 /**
  * Chapter 01: a generic messaging app, before N.E.D. Neutral greys and white, plain shapes, no brand look.

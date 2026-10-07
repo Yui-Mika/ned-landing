@@ -9,7 +9,7 @@ import { CAMERA_LAMBDA, easeFn, intro } from '@/motion/tokens';
 import { entranceProgress } from '@/motion/intro';
 import { copy } from '@/content/copy';
 import { DeviceTag, OWNER_COLOR } from '@/components/DeviceTag';
-import { PHONE_SCREEN_PX } from '@/screens/phone/HomeScreen';
+import { PHONE_SCREEN_PX } from '@/screens/phone/size';
 import { PhoneScreenView } from '@/screens/phone/PhoneScreenView';
 import { samplePose, tracks, type Owner, type PhoneScreen, type TrackName } from './poses';
 import { usePhoneInteraction } from './usePhoneInteraction';

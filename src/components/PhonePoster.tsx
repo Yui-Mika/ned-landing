@@ -3,7 +3,8 @@
 import { useEffect } from 'react';
 import { motion, useAnimationControls } from 'motion/react';
 import { useReducedMotionSafe } from '@/motion/flags';
-import { HomeScreen, PHONE_SCREEN_PX } from '@/screens/phone/HomeScreen';
+import { PHONE_SCREEN_PX } from '@/screens/phone/size';
+import { PhoneScreenView } from '@/screens/phone/PhoneScreenView';
 import { DeviceTag } from './DeviceTag';
 import { useIntro } from '@/motion/intro';
 import { EASE_OUT, intro } from '@/motion/tokens';
@@ -59,7 +60,7 @@ export function PhonePoster({ stageReady }: Props) {
         >
           <rect width={FRAME.w} height={FRAME.h} rx={60} fill="#1A1A22" />
           <foreignObject x={BEZEL} y={BEZEL} width={PHONE_SCREEN_PX.w} height={PHONE_SCREEN_PX.h}>
-            <HomeScreen owner="you" />
+            <PhoneScreenView screen="home" owner="you" />
           </foreignObject>
         </svg>
         <div className="hidden md:block portrait:max-lg:hidden">

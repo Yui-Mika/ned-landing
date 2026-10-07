@@ -7,7 +7,7 @@ import { DeviceTag } from '@/components/DeviceTag';
 import { ChapterCopy } from '@/components/text/ChapterCopy';
 import { RevealBlock } from '@/components/text/RevealBlock';
 import { SplitText } from '@/components/text/SplitText';
-import { PHONE_SCREEN_PX } from '@/screens/phone/HomeScreen';
+import { PHONE_SCREEN_PX } from '@/screens/phone/size';
 import { ChatClientScreen, ChatYouScreen } from '@/screens/phone/ChatScreen';
 
 const ch = chapterById('01');
