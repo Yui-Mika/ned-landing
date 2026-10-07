@@ -14,6 +14,7 @@ import { registerFocusResolver, screenPointToWorld, offsetIn } from './focus';
 import { TAP_PX, drawTap } from './tap';
 import { SceneHtml } from './htmlLayer';
 import { stageViewport } from './viewport';
+import { inset, safeArea } from './safeArea';
 
 /** Generic laptop body in world units (no real brand shape): base (keyboard deck) + lid on a hinge. */
 export const LAPTOP = {
@@ -31,6 +32,12 @@ export const CARD_PX_PER_UNIT = CARD_PX_W / CARD.worldW;
 const DEG = Math.PI / 180;
 
 const brief = copy.web.contractNew.milestones.list[0].crit;
+
+/** The chapter whose copy column bounds the laptop's safe area (chapter 03). */
+const COPY_ID = 'ch03-title';
+
+/** Live laptop scale after the safe-area fit (the invite chip matches it so it lifts off at the field's size). */
+export const laptopLive = { scale: 0 };
 
 /** Brief state from scroll; React state changes only when it actually changes (per typed character at most). */
 function useBriefState(): BriefState {
@@ -91,6 +98,8 @@ export function Laptop({ reduced, portrait }: Props) {
   const scrollY = useRef(0);
   const mats = useRef<THREE.Material[] | null>(null);
   const facing = useMemo(() => ({ q: new THREE.Quaternion(), n: new THREE.Vector3(), p: new THREE.Vector3() }), []);
+  // Un-zoomed, un-panned reference camera: the safe-area fit is done for the resting frame; the T5 Zoom works on top.
+  const fit = useMemo(() => ({ cam: new THREE.PerspectiveCamera(), v: new THREE.Vector3(), c: [0, 1, 2, 3].map(() => new THREE.Vector3()) }), []);
 
   const view = portrait ? PAGE.portrait : PAGE.desktop;
   const pxPerUnit = portrait ? CARD_PX_PER_UNIT : PX_PER_UNIT;
@@ -121,6 +130,7 @@ export function Laptop({ reduced, portrait }: Props) {
     outer.current.scale.setScalar(scale);
     body.current.rotation.set(pose.rotation[0] * DEG, pose.rotation[1] * DEG, pose.rotation[2] * DEG);
     if (lidPivot.current) lidPivot.current.rotation.x = (90 - pose.lid) * DEG;
+    fitToSafeArea(state.camera as THREE.PerspectiveCamera, state.size);
 
     // The HTML screen is visible from behind too: hide it while it faces away (lid closing / closed).
     if (anchor.current && fadeEls.current[0]) {
@@ -162,6 +172,57 @@ export function Laptop({ reduced, portrait }: Props) {
       if (tapEl.current) drawTap(tapEl.current, root, 'laptop', vh, reduced, scrollY.current);
     }
   });
+
+  /**
+   * Safe-area rule: shrink (never grow) and shift the laptop so its screen's projected box stays inside the safe
+   * area, measured with an un-zoomed reference camera. Works for any window shape (16:10, 16:9, portrait).
+   */
+  function fitToSafeArea(camera: THREE.PerspectiveCamera, size: { width: number; height: number }) {
+    if (!outer.current || !anchor.current) return;
+    const cam = fit.cam;
+    cam.fov = camera.fov;
+    cam.aspect = camera.aspect;
+    cam.near = camera.near;
+    cam.far = camera.far;
+    cam.zoom = 1;
+    cam.position.set(0, 0, camera.position.z);
+    cam.lookAt(0, 0, 0);
+    cam.updateProjectionMatrix();
+    cam.updateMatrixWorld();
+    const w = view.w / pxPerUnit / 2;
+    const h = view.h / pxPerUnit / 2;
+    const box = () => {
+      outer.current!.updateMatrixWorld(true);
+      let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
+      [[-w, -h], [w, -h], [w, h], [-w, h]].forEach(([x, y], i) => {
+        const p = fit.c[i].set(x, y, 0);
+        anchor.current!.localToWorld(p);
+        p.project(cam);
+        const px = ((p.x + 1) / 2) * size.width;
+        const py = ((1 - p.y) / 2) * size.height;
+        l = Math.min(l, px); r = Math.max(r, px); t = Math.min(t, py); b = Math.max(b, py);
+      });
+      return { l, t, r, b };
+    };
+    const area = inset(safeArea(COPY_ID, portrait), 4);
+    let bb = box();
+    const k = Math.min(1, (area.r - area.l) / (bb.r - bb.l), (area.b - area.t) / (bb.b - bb.t));
+    if (k < 1) {
+      outer.current.scale.multiplyScalar(k);
+      bb = box();
+    }
+    const dx = bb.l < area.l ? area.l - bb.l : bb.r > area.r ? area.r - bb.r : 0;
+    const dy = bb.t < area.t ? area.t - bb.t : bb.b > area.b ? area.b - bb.b : 0;
+    if (dx || dy) {
+      // px → world at the screen's depth.
+      anchor.current.getWorldPosition(fit.v);
+      const dist = cam.position.z - fit.v.z;
+      const worldPerPx = (2 * Math.tan((cam.fov * DEG) / 2) * dist) / size.height;
+      outer.current.position.x += dx * worldPerPx;
+      outer.current.position.y -= dy * worldPerPx;
+    }
+    laptopLive.scale = outer.current.scale.x;
+  }
 
   const screenHtml = (
     <ScreenContent portrait={portrait} rootRef={rootEl} tapRef={tapEl} />

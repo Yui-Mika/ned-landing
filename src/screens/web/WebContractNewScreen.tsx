@@ -568,6 +568,7 @@ export function WebContractNewScreen({ state, width, height, children }: Props) 
     <div
       inert
       data-screen="webContractNew"
+      data-focus="laptop-screen"
       style={{
         position: 'relative',
         width,

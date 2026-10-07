@@ -14,6 +14,7 @@ import { InviteChip } from './InviteChip';
 import { HtmlLayerContext } from './htmlLayer';
 import { cameraZoom, sampleCamera, type CameraPose } from './poses';
 import { focusWorld } from './focus';
+import { inset, safeArea } from './safeArea';
 
 const CAMERA = { fov: 30, z: 6.2 };
 
@@ -21,28 +22,51 @@ const CAMERA = { fov: 30, z: 6.2 };
  * Damped camera (λ = 6) driven by the camera track in poses.ts. T5 Zoom: the camera pans straight (no turn) so
  * the focus element sits at the centre, and camera.zoom pushes in. Reduced motion: hard cuts, no damping.
  */
+/**
+ * Damped camera (λ = 6) driven by the camera track in poses.ts. T5 Zoom: the camera pans straight (no turn) so
+ * the focus element sits where the keyframe puts it, and camera.zoom pushes in. A `fit` keyframe zooms as far as
+ * the focus element still fits the safe area (max `fit`), centred in it. Reduced motion: hard cuts, no damping.
+ */
 function CameraRig({ reduced, portrait }: { reduced: boolean; portrait: boolean }) {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
   const viewport = useThree((s) => s.viewport);
   const tmp = useRef({ a: new THREE.Vector3(), b: new THREE.Vector3(), t: new THREE.Vector3() }).current;
   useFrame((_, dt) => {
     const cam = sampleCamera(scrollVh.get(), reduced, portrait);
-    const vp = viewport.getCurrentViewport(camera, [camera.position.x, camera.position.y, 0]);
-    // Camera spot for one keyframe: the focus placed at `at` on screen at that keyframe's zoom (or the origin).
-    const spot = (k: CameraPose, out: THREE.Vector3) => {
-      if (!k.focus || !focusWorld(k.focus, out)) return out.set(0, 0, 0);
-      const at = k.at ? (portrait ? k.at.portrait : k.at.desktop) : [0, 0];
-      const z = cameraZoom(k, portrait);
-      return out.set(out.x - (at[0] * vp.width) / 2 / z, out.y - (at[1] * vp.height) / 2 / z, 0);
+    // Zoom and on-screen placement for one keyframe.
+    const resolve = (k: CameraPose): { zoom: number; at: [number, number] } => {
+      if (!k.fit || !k.focus) return { zoom: cameraZoom(k, portrait), at: k.at ? (portrait ? k.at.portrait : k.at.desktop) : [0, 0] };
+      const el = document.querySelector<HTMLElement>(`[data-focus="${k.focus}"]`);
+      if (!el) return { zoom: 1, at: [0, 0] };
+      // A few px inside the safe area, so the damped camera never overshoots it.
+      const area = inset(safeArea(k.copyId, portrait), 6);
+      const r = el.getBoundingClientRect();
+      // The rect was drawn at the current camera.zoom; its size at zoom 1 is rect / zoom.
+      const w = r.width / camera.zoom;
+      const h = r.height / camera.zoom;
+      const zoom = Math.max(1, Math.min(k.fit, (area.r - area.l) / w, (area.b - area.t) / h));
+      const cx = (area.l + area.r) / 2;
+      const cy = (area.t + area.b) / 2;
+      return { zoom, at: [(cx - area.vw / 2) / (area.vw / 2), -(cy - area.vh / 2) / (area.vh / 2)] };
     };
-    spot(cam.from, tmp.a);
-    spot(cam.to, tmp.b);
+    const ka = resolve(cam.from);
+    const kb = resolve(cam.to);
+    // Camera spot for one keyframe: the focus placed at `at` on screen at that keyframe's zoom (or the origin).
+    // Offsets are measured at the focus element's own depth (the laptop screen sits behind z = 0).
+    const spot = (k: CameraPose, z: number, at: [number, number], out: THREE.Vector3) => {
+      if (!k.focus || !focusWorld(k.focus, out)) return out.set(0, 0, 0);
+      const d = viewport.getCurrentViewport(camera, [camera.position.x, camera.position.y, out.z]);
+      return out.set(out.x - (at[0] * d.width) / 2 / z, out.y - (at[1] * d.height) / 2 / z, 0);
+    };
+    spot(cam.from, ka.zoom, ka.at, tmp.a);
+    spot(cam.to, kb.zoom, kb.at, tmp.b);
     tmp.t.lerpVectors(tmp.a, tmp.b, cam.mix);
+    const target = ka.zoom + (kb.zoom - ka.zoom) * cam.mix;
     const step = (from: number, to: number) => (reduced ? to : THREE.MathUtils.damp(from, to, CAMERA_LAMBDA, dt));
     camera.position.x = step(camera.position.x, tmp.t.x);
     camera.position.y = step(camera.position.y, tmp.t.y);
     camera.position.z = step(camera.position.z, CAMERA.z);
-    const zoom = step(camera.zoom, cam.zoom);
+    const zoom = step(camera.zoom, target);
     if (Math.abs(zoom - camera.zoom) > 1e-5) {
       camera.zoom = zoom;
       camera.updateProjectionMatrix();

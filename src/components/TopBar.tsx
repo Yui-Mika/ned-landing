@@ -23,7 +23,7 @@ export function TopBar() {
   const reveal = useLoadReveal({ delay: text.reveal.topBar.delay, duration: text.reveal.topBar.duration });
 
   return (
-    <motion.header data-reveal="" animate={reveal} className="fixed inset-x-0 top-0 z-40 border-b border-white/5 bg-bg/60 backdrop-blur-md">
+    <motion.header data-top-bar="" data-reveal="" animate={reveal} className="fixed inset-x-0 top-0 z-40 border-b border-white/5 bg-bg/60 backdrop-blur-md">
       <div className="mx-auto flex h-14 items-center gap-4 px-4 md:px-8">
         {/* TODO(asset): real N.E.D wordmark */}
         <a href="#main" className="font-display text-[20px] font-bold tracking-tight text-ink">

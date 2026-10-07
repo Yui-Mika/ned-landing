@@ -8,7 +8,7 @@ import { copy } from '@/content/copy';
 import { FONT } from '@/screens/phone/parts';
 import { chipTracks, laptopTracks, sampleLaptop, CH03_CREATE, type ChipPose } from './poses';
 import { focusWorld } from './focus';
-import { CARD, CARD_PX_PER_UNIT, LAPTOP, PX_PER_UNIT as LAPTOP_PX_PER_UNIT } from './Laptop';
+import { CARD, CARD_PX_PER_UNIT, LAPTOP, PX_PER_UNIT as LAPTOP_PX_PER_UNIT, laptopLive } from './Laptop';
 import { SceneHtml } from './htmlLayer';
 import { easeFn } from '@/motion/tokens';
 import { stageViewport } from './viewport';
@@ -62,7 +62,9 @@ export function InviteChip({ reduced, portrait }: { reduced: boolean; portrait: 
 
     // Base scale: the laptop screen's at the moment of creation, so the chip leaves at the field's exact size.
     const lp = sampleLaptop(portrait ? laptopTracks.portrait : laptopTracks.desktop, CH03_CREATE.createdAt);
-    const laptopScale = portrait ? (lp.size * vp.width) / CARD.worldW : (lp.size * vp.width) / LAPTOP.base.w;
+    const posed = portrait ? (lp.size * vp.width) / CARD.worldW : (lp.size * vp.width) / LAPTOP.base.w;
+    // The laptop may have been shrunk to fit the safe area: use its live scale when known.
+    const laptopScale = laptopLive.scale || posed;
     const cardFix = portrait ? LAPTOP_PX_PER_UNIT / CARD_PX_PER_UNIT : 1;
     group.current.scale.setScalar(laptopScale * cardFix * (a.scale + (b.scale - a.scale) * t));
   });
@@ -86,6 +88,8 @@ export function InviteChip({ reduced, portrait }: { reduced: boolean; portrait: 
             fontFamily: FONT.mono,
             fontSize: 14,
             whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
             boxShadow: '0 18px 40px rgba(0,0,0,0.35)',
           }}
         >

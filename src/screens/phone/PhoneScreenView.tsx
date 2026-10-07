@@ -10,6 +10,8 @@ import { OnbSetupScreen } from './OnbSetupScreen';
 import { OnbResidenceScreen } from './OnbResidenceScreen';
 import { ChatClientScreen, ChatYouScreen } from './ChatScreen';
 import { ContractNew1Screen, ContractNew2Screen, ContractNew3Screen } from './ContractNewScreens';
+import { ContractDetailScreen } from './ContractDetailScreen';
+import { ContractAcceptScreen } from './ContractAcceptScreen';
 
 function Board({ screen, owner }: { screen: PhoneScreen; owner: Exclude<Owner, 'anyone'> }) {
   switch (screen) {
@@ -36,6 +38,12 @@ function Board({ screen, owner }: { screen: PhoneScreen; owner: Exclude<Owner, '
       return <ContractNew2Screen />;
     case 'cn3':
       return <ContractNew3Screen />;
+    case 'cdNew':
+      return <ContractDetailScreen state="created" />;
+    case 'accept':
+      return <ContractAcceptScreen />;
+    case 'cdAccepted':
+      return <ContractDetailScreen state="accepted" />;
   }
 }
 

@@ -251,6 +251,72 @@ export const copy = {
       slide: 'Slide to create',
       slideNote: 'Nothing is locked yet. You lock after @vinh accepts.',
     },
+    /**
+     * phone/ContractDetail as used by ContractDetailVinhNew (role freelancer · view vn · state created) and
+     * ContractDetailVinhAccepted (state accepted; its prototype-only "DEMO · switch to @mia's phone" line removed).
+     * SPEC numbers: 500 USDC ≈ 13,010,000 VND, milestones 250 USDC ≈ 6,500,000 VND (board sample: 20 / 10).
+     */
+    contractDetail: {
+      back: 'Back',
+      title: 'Landing page design',
+      devnet: { label: 'DEVNET', aria: 'Devnet, test money', title: 'Devnet · test money' },
+      status: {
+        created: 'New contract · review and accept',
+        accepted: 'Accepted · waiting for @mia to lock',
+      },
+      next: 'Next · ',
+      wait: { accepted: "Waiting for @mia to lock. Don't start work until this says Locked." },
+      other: '@mia',
+      otherRole: 'CLIENT',
+      otherFacts: 'Mia · on N.E.D since 20 Sep 2026',
+      heroLabel: 'Contract total',
+      heroAmt: '≈ 13,010,000 VND',
+      // Board: "(estimate) · $20.00 · rate of 2 Oct 2026". SPEC wording (≥ 11 px) and SPEC amount.
+      heroSubEstimate: 'example, estimated',
+      heroSubRest: ' · $500.00 · rate of 2 Oct 2026',
+      destLabel: 'Earnings go to:',
+      dest: { created: 'chosen by @vinh when accepting', accepted: 'VND via payout partner' },
+      simulated: 'SIMULATED',
+      notFunded: { created: 'Not locked yet · the freelancer has to accept', accepted: 'Not locked yet · the client locks next' },
+      milestonesTitle: 'Milestones',
+      milestone: 'Milestone',
+      milestones: [
+        { n: 1, amt: '≈ 6,500,000 VND', amtSub: '$250.00 · estimate', submitBy: '12 Oct, 18:00', reviewBy: '15 Oct, 18:00' },
+        { n: 2, amt: '≈ 6,500,000 VND', amtSub: '$250.00 · estimate', submitBy: '19 Oct, 18:00', reviewBy: '22 Oct, 18:00' },
+      ],
+      notLocked: 'Not locked yet',
+      submitBy: 'Submit by',
+      reviewBy: 'Review by',
+      rules: 'How this contract works',
+      disclosures: 'Disclosures',
+      contractId: 'Contract ID',
+      cid: 'A7x9Lp…Qm7e',
+      copy: 'Copy',
+      action: 'Accept and choose where earnings go',
+    },
+    /** phone/ContractAccept · view vn (VND only; the board hides the USDC option in this view). SPEC amounts. */
+    contractAccept: {
+      back: 'Back',
+      title: 'Accept contract',
+      job: 'Landing page design',
+      from: 'from @mia',
+      total: '≈ 13,010,000 VND',
+      // Board: "$20.00 · estimate · rate of 2 Oct 2026". SPEC wording (≥ 11 px) and SPEC amount.
+      totalSubEstimate: 'example, estimated',
+      totalSubRest: ' · $500.00 · rate of 2 Oct 2026',
+      milestones: ['Milestone 1 · submit by 12 Oct, 18:00 · review 3 days', 'Milestone 2 · submit by 19 Oct, 18:00 · review 3 days'],
+      question: 'Where should your earnings go?',
+      groupLabel: 'Where earnings go',
+      vnd: {
+        title: 'VND to my Vietnamese bank account',
+        body: 'A licensed payout partner converts outside Vietnam and sends VND to your bank. Bank details are collected by the partner, not by N.E.D. Simulated in this demo.',
+      },
+      simulated: 'SIMULATED',
+      vnOnly: 'You live in Vietnam, so earnings arrive in VND only. Receiving USDC in a wallet is for people who live outside Vietnam (change this in Settings).',
+      warn: { strong: "This can't be changed later.", rest: ' You never type an address: earnings go only to the destination you pick here.' },
+      fees: { label: 'Fees', ned: 'N.E.D fee', nedV: 'None during the pilot', network: 'Network fee', networkV: '~0.000005 SOL', networkSub: 'devnet test SOL', partner: 'Payout partner fee', partnerV: 'Set by the partner' },
+      slide: 'Slide to accept',
+    },
     /** phone/OnbSplash · variant mascot (the board's Teddy variant; the mark variant has no mark asset yet). */
     onbSplash: {
       aria: 'N.E.D. Tap to continue',
@@ -371,8 +437,15 @@ export const copy = {
       footer: 'Signed with the wallet linked to your Google account. N.E.D never holds your money.',
     },
   },
-  /** The invite-link chip (T8): the link string from phone/ContractCreated. */
-  inviteLink: 'ned.app/contracts/A7x9Lp',
+  /** The invite-link chip (T8): the same string as the link field it lifts off (web/WebContractNew, created). */
+  inviteLink: 'ned.app/c/7XqP2mWc#k=Qm4tY8vR2LkN9sQe',
+  /** Chapter 04 copy column: SPEC §6 row 04, exact wording. */
+  accept: {
+    headline: 'You read the brief, then choose once where the money goes.',
+    l1: 'You choose once, when you accept the contract. You never type an address.',
+    l2: 'In Vietnam: VND to your bank through a licensed partner.',
+    chip: 'Partner in talks · simulated in the demo',
+  },
   /** Chapter 03 copy column: SPEC §6 row 03, exact wording. */
   brief: {
     headline: 'Your client writes one brief.',
@@ -408,6 +481,6 @@ export const copy = {
   },
   later: {
     title: 'More chapters coming',
-    body: 'Chapter 04 and the rest of the story are next.',
+    body: 'Chapter 05 and the rest of the story are next.',
   },
 } as const;

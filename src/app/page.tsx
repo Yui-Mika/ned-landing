@@ -18,6 +18,7 @@ import { Ch00Hero } from '@/chapters/Ch00Hero';
 import { Ch01Problem } from '@/chapters/Ch01Problem';
 import { Ch02SignIn } from '@/chapters/Ch02SignIn';
 import { Ch03Brief } from '@/chapters/Ch03Brief';
+import { Ch04Accept } from '@/chapters/Ch04Accept';
 
 // three.js and the scene load after first paint; the CSS poster holds the spot meanwhile.
 const Stage = dynamic(() => import('@/scene/Stage'), { ssr: false });
@@ -59,11 +60,12 @@ export default function Page() {
           <Ch01Problem stills={webgl === false} />
           <Ch02SignIn stills={webgl === false} />
           <Ch03Brief stills={webgl === false} />
+          <Ch04Accept stills={webgl === false} />
 
-          {/* Placeholder until chapter 04 exists: room to see chapter 03's last pose. */}
+          {/* Placeholder until chapter 05 exists: room to see chapter 04's last pose. */}
           <section aria-label={copy.later.title} className="mt-[100svh] flex h-svh items-center justify-start px-4 md:px-14">
             <div className="max-w-sm">
-              <p className="font-mono text-[12px] tracking-wider text-accent uppercase">04 →</p>
+              <p className="font-mono text-[12px] tracking-wider text-accent uppercase">05 →</p>
               <h2 className="mt-2 font-display text-[28px] font-bold text-ink">{copy.later.title}</h2>
               <p className="mt-2 text-muted">{copy.later.body}</p>
             </div>

@@ -35,7 +35,10 @@ export type PhoneScreen =
   | 'onbResidence'
   | 'cn1'
   | 'cn2'
-  | 'cn3';
+  | 'cn3'
+  | 'cdNew'
+  | 'accept'
+  | 'cdAccepted';
 /** Device transform vocabulary, exactly as named in SPEC §5.3. */
 export type TransformName =
   | 'T1 Glide'
@@ -174,6 +177,30 @@ function t6Fan(centre: Pose[], to: Place, screen: PhoneScreen): Pose[] {
   ];
 }
 
+/** Chapter 04 slide to accept: the thumb follows scroll over this window; the result shows 4 vh after 100%. */
+export const CH04_SLIDE: [number, number] = [1050, 1080];
+
+/**
+ * Chapter 04 stops for your phone (860–1120 vh): out as the client's phone, in as yours on ContractDetail (new),
+ * a tap on "Accept and choose where earnings go" (TAPS), ContractAccept (T5 Zoom on the camera track), the slider
+ * (CH04_SLIDE), and ContractDetail (accepted) 4 vh after the slide completes.
+ */
+function ch04Phone(at: Vec3, rotation: Vec3, size: number, exit: Vec3, entry: Vec3): Pose[] {
+  const you = (vh: number, screen: PhoneScreen, extra: Partial<Pose> = {}): Pose => ({ vh, device: 'phone', position: at, rotation, size, screen, owner: 'you', ...extra });
+  return [
+    { vh: 874, device: 'phone', position: exit, rotation: [rotation[0], 340, 0], size, opacity: 0, screen: 'cn2', owner: 'client', transform: 'T1 Glide' },
+    // Swapped while out of view: now your phone, on the new contract.
+    { vh: 878, device: 'phone', position: entry, rotation, size, opacity: 0, dim: 0.6, screen: 'cdNew', owner: 'you', screenSwitch: 'cut' },
+    you(900, 'cdNew', { dim: 0.6, ease: 'easeOut', transform: 'T1 Glide' }),
+    you(914, 'cdNew'), // the chip has landed: the dim lifts
+    you(958, 'cdNew'), // tap on "Accept and choose where earnings go" 946–958
+    you(970, 'accept'),
+    you(CH04_SLIDE[1] + 4, 'accept'),
+    you(CH04_SLIDE[1] + 16, 'cdAccepted'),
+    you(1120, 'cdAccepted'),
+  ];
+}
+
 const phoneDesktop: Pose[] = [
   // Chapter 00 · Hero (0–140 vh). Phone rises 40 px and turns −40° → −18°, then T1 Glide to the left.
   { vh: 0, device: 'phone', position: [0.4, -0.12, 0], rotation: [4, -40, 0], size: 0.74, screen: 'home', owner: 'you' },
@@ -210,6 +237,10 @@ const phoneDesktop: Pose[] = [
   { vh: 800, device: 'phone', position: [1.35, -0.04, 0], rotation: [2, 334, 0], size: 0.66, opacity: 0, screen: 'cn2', owner: 'client', screenSwitch: 'cut' },
   { vh: 828, ...FAN.desktop.centre, screen: 'cn2', owner: 'client', ease: 'easeOut', transform: 'T1 Glide' },
   { vh: 860, ...FAN.desktop.centre, screen: 'cn2', owner: 'client' },
+
+  // Chapter 04 · Accept, and choose once (860–1120 vh). The client's phone leaves (T1 Glide); your phone (Vietnam)
+  // rises dimmed on the new contract while the invite-link chip drops into it, then the dim lifts.
+  ...ch04Phone([0.3, -0.04, 0], [2, -8, 0], 0.74, [1.35, -0.12, 0], [0.3, -1.8, 0]),
 ];
 
 // Portrait (SPEC §8): phone at 92% width rising from the bottom, top ~60% visible.
@@ -238,6 +269,9 @@ const phonePortrait: Pose[] = [
   { vh: 800, device: 'phone', position: [1.6, -0.7, 0], rotation: [4, 340, 0], size: 0.5, opacity: 0, screen: 'cn2', owner: 'client', screenSwitch: 'cut' },
   { vh: 828, ...FAN.portrait.centre, screen: 'cn2', owner: 'client', ease: 'easeOut', transform: 'T1 Glide' },
   { vh: 860, ...FAN.portrait.centre, screen: 'cn2', owner: 'client' },
+
+  // Chapter 04 (portrait): your phone rising from the bottom, top ~60% visible.
+  ...ch04Phone([0, -0.88, 0], [4, 0, 0], 0.86, [1.6, -0.76, 0], [0, -2, 0]),
 ];
 
 /**
@@ -301,6 +335,7 @@ export const TAPS: { track: TrackName | 'laptop'; target: string; start: number;
   { track: 'phone', target: 'google', start: 390, end: 404 },
   { track: 'laptop', target: 'create', start: 762, end: 772 },
   { track: 'laptop', target: 'panel-create', start: 778, end: 788 },
+  { track: 'phone', target: 'accept', start: 946, end: 958 },
 ];
 
 /* ------------------------------------------------------------------------------------------------------------ */
@@ -333,22 +368,31 @@ const PAGE_DONE_WHEN: PageScroll = { focus: 'm1-done', at: 0.5 };
 /** At 1×: the "Done when" list low on the screen, so the summary's fingerprint stays in view above. */
 const PAGE_DONE_WHEN_LOW: PageScroll = { focus: 'm1-done', at: 0.88 };
 
+const L = { position: [0.32, -0.44, 0] as Vec3, rotation: [10, -6, 0] as Vec3, size: 0.66, screen: 'webContractNew' as const, owner: 'client' as const };
+/** During the T5 Zoom: almost no tilt and a near-upright lid, so the keyboard base is nearly edge-on. */
+const L_ZOOM = { rotation: [2, -2, 0] as Vec3, lid: 97 };
+
+/**
+ * Safe-area rule (chapter 03): the laptop screen stays fully inside the frame at every vh, so it fades in and out
+ * in place instead of sliding in from off-screen.
+ */
 const laptopDesktop: LaptopPose[] = [
-  { vh: 560, position: [1.7, -0.5, 0], rotation: [10, -24, 0], size: 0.66, lid: 0, opacity: 0, page: PAGE_TOP, screen: 'webContractNew', owner: 'client' },
-  // Slides in (T1 Glide), then the lid opens 0° → 105°.
-  { vh: 588, position: [0.32, -0.44, 0], rotation: [10, -6, 0], size: 0.66, lid: 12, page: PAGE_TOP, screen: 'webContractNew', owner: 'client', ease: 'easeOut', transform: 'T1 Glide' },
-  { vh: 608, position: [0.32, -0.44, 0], rotation: [10, -6, 0], size: 0.66, lid: 105, page: PAGE_TOP, screen: 'webContractNew', owner: 'client' },
-  { vh: 632, position: [0.32, -0.44, 0], rotation: [10, -6, 0], size: 0.66, lid: 105, page: PAGE_TOP, screen: 'webContractNew', owner: 'client' },
-  // The page scrolls to milestone 1 ("Done when"); T5 Zoom happens on the camera track.
-  { vh: 650, position: [0.32, -0.44, 0], rotation: [10, -6, 0], size: 0.66, lid: 105, page: PAGE_DONE_WHEN, screen: 'webContractNew', owner: 'client' },
-  { vh: 704, position: [0.32, -0.44, 0], rotation: [10, -6, 0], size: 0.66, lid: 105, page: PAGE_DONE_WHEN, screen: 'webContractNew', owner: 'client' },
-  { vh: 716, position: [0.32, -0.44, 0], rotation: [10, -6, 0], size: 0.66, lid: 105, page: PAGE_DONE_WHEN_LOW, screen: 'webContractNew', owner: 'client' },
-  { vh: 748, position: [0.32, -0.44, 0], rotation: [10, -6, 0], size: 0.66, lid: 105, page: PAGE_DONE_WHEN_LOW, screen: 'webContractNew', owner: 'client' },
+  { vh: 560, ...L, lid: 0, opacity: 0, page: PAGE_TOP },
+  // Fades in, then the lid opens 0° → 105°.
+  { vh: 584, ...L, lid: 12, page: PAGE_TOP, ease: 'easeOut' },
+  { vh: 606, ...L, lid: 105, page: PAGE_TOP },
+  { vh: 632, ...L, lid: 105, page: PAGE_TOP },
+  // The page scrolls inside the screen so the "Done when" list sits mid-screen; T5 Zoom on the camera track.
+  { vh: 650, ...L, lid: 105, page: PAGE_DONE_WHEN },
+  { vh: 664, ...L, ...L_ZOOM, page: PAGE_DONE_WHEN },
+  { vh: 704, ...L, ...L_ZOOM, page: PAGE_DONE_WHEN },
+  { vh: 716, ...L, lid: 105, page: PAGE_DONE_WHEN_LOW },
+  { vh: 748, ...L, lid: 105, page: PAGE_DONE_WHEN_LOW },
   // Back to the top: Create → wallet panel → created.
-  { vh: 760, position: [0.32, -0.44, 0], rotation: [10, -6, 0], size: 0.66, lid: 105, page: PAGE_TOP, screen: 'webContractNew', owner: 'client' },
-  { vh: 806, position: [0.32, -0.44, 0], rotation: [10, -6, 0], size: 0.66, lid: 105, page: PAGE_TOP, screen: 'webContractNew', owner: 'client' },
-  // Out, making room for the fan.
-  { vh: 826, position: [1.7, -0.6, 0], rotation: [10, -24, 0], size: 0.66, lid: 105, opacity: 0, page: PAGE_TOP, screen: 'webContractNew', owner: 'client', transform: 'T1 Glide' },
+  { vh: 760, ...L, lid: 105, page: PAGE_TOP },
+  { vh: 806, ...L, lid: 105, page: PAGE_TOP },
+  // Fades out in place, making room for the fan.
+  { vh: 826, ...L, lid: 105, opacity: 0, page: PAGE_TOP },
 ];
 
 /** Portrait (SPEC §8): the laptop becomes a cropped browser card (the board's narrower responsive layout). */
@@ -358,9 +402,10 @@ const laptopPortrait: LaptopPose[] = laptopDesktop.map((k) => {
   const panel = k.vh === 760 || k.vh === 806;
   return {
     ...k,
-    position: !shown ? [0, -1.9, 0] : panel ? [0, -0.27, 0] : [0, -0.39, 0],
+    // Card width 86% of the viewport keeps 24 px clear on both sides (safe area).
+    position: !shown ? [0, -0.39, 0] : panel ? [0, -0.27, 0] : [0, -0.39, 0],
     rotation: [0, 0, 0],
-    size: panel ? 0.72 : 0.92,
+    size: panel ? 0.72 : 0.86,
     // Zoomed, the list sits near the card's top so the card stays below the copy.
     page: k.page === PAGE_DONE_WHEN ? { focus: 'm1-done', at: 0.2 } : k.page === PAGE_DONE_WHEN_LOW ? { focus: 'm1-done', at: 0.62 } : k.page,
   };
@@ -409,21 +454,34 @@ export type CameraPose = {
   zoom: number;
   /** Portrait zoom when it differs (the zoomed detail must still fit the narrow screen). */
   zoomPortrait?: number;
+  /**
+   * Fit zoom (chapter 03): zoom = min(fit, the largest factor at which the focus element still fits the safe area),
+   * centred on the element's centre, placed at the centre of the safe area. Overrides `zoom` / `at`.
+   */
+  fit?: number;
+  /** id of the chapter headline: its copy column bounds the safe area (left on desktop, top on portrait). */
+  copyId?: string;
   focus?: string;
   at?: { desktop: [number, number]; portrait: [number, number] };
   ease?: EaseName;
   transform?: TransformName;
 };
 
-const BESIDE_COPY = { desktop: [0.45, 0] as [number, number], portrait: [0, -0.27] as [number, number] };
+/** Same, with the focus lower on portrait (chapter 04's copy column is taller). */
+const BESIDE_COPY_LOW = { desktop: [0.45, 0] as [number, number], portrait: [0, -0.5] as [number, number] };
 
 /** T5 Zoom (SPEC §5.3, 40–70 vh): push 1.6× onto the "Done when" list while the first items are typed, then pull out. */
 export const cameraTrack: CameraPose[] = [
   { vh: 0, zoom: 1 },
   { vh: 650, zoom: 1 },
-  { vh: 664, zoom: 1.6, zoomPortrait: 1.3, focus: 'm1-done', at: BESIDE_COPY, transform: 'T5 Zoom' },
-  { vh: 704, zoom: 1.6, zoomPortrait: 1.3, focus: 'm1-done', at: BESIDE_COPY },
+  { vh: 664, zoom: 1, fit: 1.6, focus: 'laptop-screen', copyId: 'ch03-title', transform: 'T5 Zoom' },
+  { vh: 704, zoom: 1, fit: 1.6, focus: 'laptop-screen', copyId: 'ch03-title' },
   { vh: 716, zoom: 1, transform: 'T5 Zoom' },
+  // Chapter 04: push onto the destination cards in ContractAccept, then pull out before the slider.
+  { vh: 976, zoom: 1 },
+  { vh: 990, zoom: 1.6, zoomPortrait: 1.25, focus: 'dest-cards', at: BESIDE_COPY_LOW, transform: 'T5 Zoom' },
+  { vh: 1030, zoom: 1.6, zoomPortrait: 1.25, focus: 'dest-cards', at: BESIDE_COPY_LOW },
+  { vh: 1044, zoom: 1, transform: 'T5 Zoom' },
 ];
 
 export const cameraZoom = (k: CameraPose, portrait: boolean) => (portrait ? (k.zoomPortrait ?? k.zoom) : k.zoom);
@@ -454,6 +512,10 @@ const chipDesktop: ChipPose[] = [
   { vh: 794, at: { focus: 'invite-link' }, scale: 1, opacity: 1 },
   { vh: 814, at: [0.3, 0.7, 0.8], scale: 1.25, opacity: 1, ease: 'easeOut', transform: 'T8 Lift-off' },
   { vh: 860, at: [0.3, 0.7, 0.8], scale: 1.25, opacity: 1 },
+  // Chapter 04: waits for your phone, then drops into it (onto the contract title) and is gone.
+  { vh: 894, at: [0.3, 0.7, 0.8], scale: 1.25, opacity: 1 },
+  { vh: 908, at: { focus: 'cd-title' }, scale: 0.7, opacity: 1, ease: 'ease' },
+  { vh: 914, at: { focus: 'cd-title' }, scale: 0.6, opacity: 0 },
 ];
 const chipPortrait: ChipPose[] = chipDesktop.map((k) => (Array.isArray(k.at) ? { ...k, at: [0, -0.04, 0.8] as Vec3, scale: 0.9 } : k));
 
