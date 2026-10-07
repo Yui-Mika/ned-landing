@@ -56,7 +56,7 @@ function ProductCard({ link: l }: { link: ProductLink }) {
 }
 
 /**
- * Chapter 14 · Close + product links (SPEC §6 row 14), the last chapter; it follows chapter 08 until 09–13 exist.
+ * Chapter 14 · Close + product links (SPEC §6 row 14), the last chapter; it follows chapter 13.
  * Your phone (Home) and your computer (WebSignIn) rest side by side in the 3D stage (poses.ts, CH14); this is the copy
  * column, on the left: headline, the client line, then the three product cards (CTA 1, CTA 2, card 3). The copy never
  * exits, and the section holds its pinned screen, so the page footer comes after it.

@@ -19,8 +19,9 @@ Next.js (App Router) · TypeScript · Tailwind v4 · Lenis · Motion (Framer Mot
 | 06 Work and submit (T9 owner turn, WebSubmit filled by scroll, scan line, wallet panel, submitted) | Built |
 | 07 Review and release (T2 flip, link check, T5 zoom on slide to release, T3 split, amount chip $ → VND, VND block) | Built |
 | 08 If someone goes quiet (T6 fan of three phones, review clock to 0, anyone releases / refunds) | Built |
-| 14 Close + product links (your phone on Home, your computer on WebSignIn, three product cards; follows 08 for now) | Built |
-| 09–13, orbit nav, present mode, EN/VI | Not yet |
+| 14 Close + product links (your phone on Home, your computer on WebSignIn, three product cards) | Built |
+| 13 What's real today (Disclosures scrolls with the page, rows light with the NOT YET lines, timeline; follows 08 for now) | Built |
+| 09–12, orbit nav, present mode, EN/VI | Not yet |
 
 ## Run it
 

@@ -18,18 +18,20 @@ type Ctx = {
   loadReveal: boolean;
   reduced: boolean;
   mobile: boolean;
+  /** Opacity only: no rise, no blur (SPEC §14.4: disclosure text fades in only, chapter 13). */
+  fadeOnly: boolean;
 };
 
 const ChapterCopyContext = createContext<Ctx | null>(null);
 export const useChapterCopy = () => useContext(ChapterCopyContext);
 
-type Props = { chapterId: string; lines: number; children: ReactNode; className?: string };
+type Props = { chapterId: string; lines: number; children: ReactNode; className?: string; fadeOnly?: boolean };
 
 /**
  * Scroll-linked copy for one chapter (SPEC §14.2). Reads `copyIn` / `copyOut` from chapters.ts.
  * Children (SplitText, RevealBlock) call `useScrub(line)` with their line index.
  */
-export function ChapterCopy({ chapterId, lines, children, className }: Props) {
+export function ChapterCopy({ chapterId, lines, children, className, fadeOnly = false }: Props) {
   const chapter = chapterById(chapterId);
   const reduced = useReducedMotionSafe();
   const mobile = useIsMobile();
@@ -42,8 +44,9 @@ export function ChapterCopy({ chapterId, lines, children, className }: Props) {
       loadReveal: chapter.copyIn === null,
       reduced,
       mobile,
+      fadeOnly,
     }),
-    [chapterId, chapter.copyIn, chapter.copyOut, lines, reduced, mobile],
+    [chapterId, chapter.copyIn, chapter.copyOut, lines, reduced, mobile, fadeOnly],
   );
   return (
     <ChapterCopyContext.Provider value={value}>
@@ -85,8 +88,8 @@ export function useScrub(line: number, { blur = false }: { blur?: boolean } = {}
   const lines = ctx?.lines ?? 1;
   const [oa, ob] = lineWindow(ctx?.copyOut ?? [1e9, 1e9 + 1], line, lines, !plain);
   const enter = ctx?.copyIn ? lineWindow(ctx.copyIn, line, lines, !plain) : null;
-  const rise = plain ? 0 : ctx!.mobile ? text.scrub.riseMobile : text.scrub.rise;
-  const blurPx = blur && !plain && !ctx!.mobile ? text.scrub.blur : 0;
+  const rise = plain || ctx!.fadeOnly ? 0 : ctx!.mobile ? text.scrub.riseMobile : text.scrub.rise;
+  const blurPx = blur && !plain && !ctx!.mobile && !ctx!.fadeOnly ? text.scrub.blur : 0;
 
   const input = enter ? [enter[0], enter[1], oa, ob] : [oa, ob];
   const opacity = useTransform(scrollVh, input, enter ? [0, 1, 1, 0] : [1, 0]);

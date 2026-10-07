@@ -476,6 +476,27 @@ export const copy = {
       },
     },
     /**
+     * phone/Disclosures. Board strings 1:1, except the row "Disputes have no neutral arbiter" (it says a client can
+     * dispute; disputes are not available, SPEC §7 and §12.5). `id` names the rows chapter 13 lights.
+     */
+    disclosures: {
+      back: 'Back',
+      title: 'Disclosures',
+      intro: 'Please read these before you lock or receive anything. Version 1.0.0 · pilot on Solana devnet.',
+      rows: [
+        { id: 'devnet', title: 'Devnet only', text: 'This demo runs on Solana devnet with test money. Nothing here has real value.' },
+        { id: 'kyc', title: 'No KYC yet', text: 'N.E.D does not check anyone’s identity in this version.' },
+        { id: 'phone', title: 'Phone numbers are not verified', text: 'We don’t send a code. A number on a profile may not belong to that person.' },
+        { id: 'audit', title: 'The program is not audited', text: 'The Solana program that locks and releases USDC has not had a security audit.' },
+        { id: 'partner', title: 'The payout partner is simulated', text: 'No licensed partner is connected in this demo. No VND is sent to any bank.' },
+        { id: 'fees', title: 'Network fees use test SOL', text: 'Each action costs about 0.000005 test SOL on devnet. N.E.D charges no fee during the pilot.' },
+        { id: 'vn', title: 'After release in the Vietnam path', text: 'Once a milestone is released to the payout partner, you rely on that partner to send you the VND.' },
+        { id: 'circle', title: 'Circle can freeze USDC addresses', text: 'USDC is issued by Circle, which can freeze an address. N.E.D cannot undo that.' },
+        { id: 'public', title: 'Public on-chain', text: 'Contract titles and delivery-link fingerprints are public. N.E.D never stores your delivery link or bank details.' },
+        { id: 'advice', title: 'Not advice', text: 'This is not legal, tax or financial advice.' },
+      ],
+    },
+    /**
      * phone/ContractAnyoneAction: `release` (kind release, contract B "Logo refresh") and `refund`
      * (= phone/ContractAnyoneActionRefund, contract A). SPEC amount (board sample: 10.00 USDC).
      */
@@ -863,6 +884,42 @@ export const copy = {
   },
   /** The invite-link chip (T8): the same string as the link field it lifts off (web/WebContractNew, created). */
   inviteLink: 'ned.app/c/7XqP2mWc#k=Qm4tY8vR2LkN9sQe',
+  /**
+   * Chapter 13 copy column: SPEC §6 row 13 headline + the "Honest status" list of SPEC §1, verbatim. NOT YET is split
+   * at its commas (one item per line, so each lights its Disclosures row); NEXT is the timeline Now · Next · Then · Later.
+   * `row` = the Disclosures row an item lights (null: the board has no such row).
+   */
+  real: {
+    headline: 'What works today, and what comes next.',
+    now: {
+      label: 'NOW:',
+      before: 'demo on a ',
+      strong: 'test network',
+      after: ' (Solana devnet, test money). Program ',
+      program: 'ned_program',
+      end: ' deployed on devnet.',
+    },
+    simulated: { before: 'Payout partner and bank transfer are ', strong: 'simulated', after: ' in the demo. Partner not confirmed.' },
+    notYet: {
+      label: 'NOT YET:',
+      items: [
+        { text: 'no identity checks (KYC),', row: 'kyc' },
+        { text: 'no security audit,', row: 'audit' },
+        { text: 'no way to settle disputes over quality (planned after launch),', row: null },
+        { text: 'no lawyer review yet,', row: null },
+        { text: 'USDC is issued by Circle which can freeze an address.', row: 'circle' },
+      ],
+    },
+    next: {
+      label: 'NEXT:',
+      steps: [
+        { k: 'Now', v: 'demo on a test network' },
+        { k: 'Next', v: 'partner + legal' },
+        { k: 'Then', v: 'closed pilot (up to 1,000 USDC per contract)' },
+        { k: 'Later', v: 'more' },
+      ],
+    },
+  },
   /** Chapter 14 copy column: SPEC §6 row 14, exact wording. The CTAs are the product cards (labels in links.ts). */
   close: {
     headline: 'See a milestone released.',

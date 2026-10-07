@@ -54,7 +54,8 @@ export type PhoneScreen =
   | 'anyoneRelease'
   | 'anyoneRefund'
   | 'releasedB'
-  | 'refunded';
+  | 'refunded'
+  | 'disclosures';
 /** Device transform vocabulary, exactly as named in SPEC §5.3. */
 export type TransformName =
   | 'T1 Glide'
@@ -503,15 +504,52 @@ const ch08C = (main: Pose[], to: Place) =>
   ]);
 
 /**
- * Chapter 14 · Close + product links (2200–2360 vh, right after chapter 08). The client's phone from chapter 08 fades
- * out first; then your phone (Home) and your computer (WebSignIn) fade in side by side, facing the camera, and rest
+ * Chapter 13 · What's real today (2200–2380 vh, right after chapter 08). The client's phone from chapter 08 fades out
+ * first; then your phone fades in on Disclosures. Its list scrolls with the page (`scroll`), and each row named by a
+ * NOT YET item lights as that item appears in the copy column (`notYet[i]`); the timeline appears last.
+ */
+export const CH13 = {
+  phoneOut: [2200, 2208] as [number, number],
+  phoneIn: [2210, 2222] as [number, number],
+  /** One window per NOT YET item (copy.real.notYet.items, same order): the item fades in, its row lights. */
+  notYet: [
+    [2228, 2236],
+    [2246, 2254],
+    [2264, 2272],
+    [2282, 2290],
+    [2300, 2308],
+  ] as [number, number][],
+  /** The Disclosures list scrolls from its top (0) to its end (1) over this window. */
+  scroll: [2232, 2306] as [number, number],
+  timeline: [2318, 2326] as [number, number],
+  end: 2380,
+};
+/** Chapter 13 resting place of your phone: right of the copy column. */
+const P13: Record<'desktop' | 'portrait', Place> = {
+  desktop: { device: 'phone', position: [0.35, -0.04, 0], rotation: [2, 716, 0], size: 0.7 },
+  portrait: { device: 'phone', position: [0, -0.66, 0], rotation: [2, 718, 0], size: 0.27 },
+};
+
+/** Chapter 13 stops for the main phone: the client's phone (chapter 08's phone A) fades out, your phone fades in on Disclosures. */
+function ch13Phone(o: { from: Place; to: Place }): Pose[] {
+  return [
+    { vh: CH13.phoneOut[1], ...o.from, size: o.from.size * FADE_SCALE.phone, opacity: 0, screen: 'releasedClient', owner: 'client', ease: 'linear' },
+    { vh: CH13.phoneIn[0], ...o.to, size: o.to.size * FADE_SCALE.phone, opacity: 0, screen: 'disclosures', owner: 'you', screenSwitch: 'cut' },
+    { vh: CH13.phoneIn[1], ...o.to, screen: 'disclosures', owner: 'you', ease: 'easeOut' },
+    { vh: CH13.end, ...o.to, screen: 'disclosures', owner: 'you' },
+  ];
+}
+
+/**
+ * Chapter 14 · Close + product links (2380–2540 vh, right after chapter 13). Your phone from chapter 13 fades out
+ * first; then your phone (Home) and your computer (WebSignIn) fade in side by side, facing the camera, and rest
  * there to the end of the page. They never overlap: the computer left of the phone, the copy column left of both.
  */
 export const CH14 = {
-  phoneOut: [2200, 2208] as [number, number],
-  phoneIn: [2210, 2222] as [number, number],
-  laptopIn: [2212, 2226] as [number, number],
-  end: 2360,
+  phoneOut: [2380, 2388] as [number, number],
+  phoneIn: [2390, 2402] as [number, number],
+  laptopIn: [2392, 2406] as [number, number],
+  end: 2540,
 };
 /** Chapter 14 resting place of your phone: right of the computer, facing the camera. */
 const P14: Record<'desktop' | 'portrait', Place> = {
@@ -519,10 +557,10 @@ const P14: Record<'desktop' | 'portrait', Place> = {
   portrait: { device: 'phone', position: [0.42, -0.6, 0], rotation: [2, 720, 0], size: 0.3 },
 };
 
-/** Chapter 14 stops for the main phone: the client's phone (chapter 08's phone A) fades out, your phone fades in on Home. */
+/** Chapter 14 stops for the main phone: your phone on Disclosures (chapter 13) fades out, then fades in on Home. */
 function ch14Phone(o: { from: Place; to: Place }): Pose[] {
   return [
-    { vh: CH14.phoneOut[1], ...o.from, size: o.from.size * FADE_SCALE.phone, opacity: 0, screen: 'releasedClient', owner: 'client', ease: 'linear' },
+    { vh: CH14.phoneOut[1], ...o.from, size: o.from.size * FADE_SCALE.phone, opacity: 0, screen: 'disclosures', owner: 'you', ease: 'linear' },
     { vh: CH14.phoneIn[0], ...o.to, size: o.to.size * FADE_SCALE.phone, opacity: 0, screen: 'home', owner: 'you', screenSwitch: 'cut' },
     { vh: CH14.phoneIn[1], ...o.to, screen: 'home', owner: 'you', ease: 'easeOut' },
     { vh: CH14.end, ...o.to, screen: 'home', owner: 'you' },
@@ -582,8 +620,11 @@ const phoneDesktop: Pose[] = [
   // Chapter 08 · If someone goes quiet (1900–2200 vh): see CH08.
   ...ch08PhoneA({ from: SPLIT7.desktop.left, left: FAN8.desktop.left }),
 
-  // Chapter 14 · Close + product links (2200–2360 vh): see CH14.
-  ...ch14Phone({ from: FAN8.desktop.left, to: P14.desktop }),
+  // Chapter 13 · What's real today (2200–2380 vh): see CH13.
+  ...ch13Phone({ from: FAN8.desktop.left, to: P13.desktop }),
+
+  // Chapter 14 · Close + product links (2380–2540 vh): see CH14.
+  ...ch14Phone({ from: P13.desktop, to: P14.desktop }),
 ];
 
 // Portrait (SPEC §8): phone at 92% width rising from the bottom, top ~60% visible.
@@ -621,7 +662,8 @@ const phonePortrait: Pose[] = [
   ...ch06Phone({ at: [0, -0.88, 0], rotation: [4, 360, 0], size: 0.86 }),
   ...ch07Phone({ at: [0, -0.88, 0], rotation: [4, 360, 0], size: 0.86, left: SPLIT7.portrait.left }),
   ...ch08PhoneA({ from: SPLIT7.portrait.left, left: FAN8.portrait.left }),
-  ...ch14Phone({ from: FAN8.portrait.left, to: P14.portrait }),
+  ...ch13Phone({ from: FAN8.portrait.left, to: P13.portrait }),
+  ...ch14Phone({ from: P13.portrait, to: P14.portrait }),
 ];
 
 /**
@@ -806,7 +848,7 @@ function ch06Laptop(k: Omit<LaptopPose, 'vh' | 'page' | 'screen' | 'owner' | 'li
 const laptopCh06: LaptopPose[] = ch06Laptop({ position: L.position, rotation: L.rotation, size: L.size });
 
 /**
- * Chapter 14: your computer on WebSignIn fades in left of your phone (after the client's phone has gone), facing the
+ * Chapter 14: your computer on WebSignIn fades in left of your phone (after your phone from chapter 13 has gone), facing the
  * camera (body pitch 10° + lid 100° = an upright screen), and rests there.
  */
 const L14 = { position: [0.12, -0.42, 0] as Vec3, rotation: [10, 0, 0] as Vec3, size: 0.42, lid: 100, screen: 'webSignIn' as const, owner: 'you' as const, page: PAGE_TOP };

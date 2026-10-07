@@ -23,6 +23,7 @@ import { Ch05Lock } from '@/chapters/Ch05Lock';
 import { Ch06Submit } from '@/chapters/Ch06Submit';
 import { Ch07Release } from '@/chapters/Ch07Release';
 import { Ch08Quiet } from '@/chapters/Ch08Quiet';
+import { Ch13Real } from '@/chapters/Ch13Real';
 import { Ch14Close } from '@/chapters/Ch14Close';
 
 // three.js and the scene load after first paint; the CSS poster holds the spot meanwhile.
@@ -70,7 +71,7 @@ export default function Page() {
           <Ch06Submit stills={webgl === false} />
           <Ch07Release stills={webgl === false} />
           <Ch08Quiet stills={webgl === false} />
-
+          <Ch13Real stills={webgl === false} />
           <Ch14Close stills={webgl === false} />
 
           <footer className="px-4 pb-10 font-mono text-[12px] text-muted md:px-14">{copy.site.footer}</footer>
