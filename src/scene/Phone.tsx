@@ -74,6 +74,7 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
   const hintEl = useRef<HTMLDivElement>(null);
   const toEl = useRef<HTMLDivElement>(null);
   const dimEl = useRef<HTMLDivElement>(null);
+  const lastScreenScale = useRef(0);
   const glowMat = useRef<THREE.MeshBasicMaterial>(null);
   const glowBase = useRef(0.28);
 
@@ -150,6 +151,14 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
       f.mat.opacity = f.base * opacity;
     }
     for (const el of [frontEl.current, tagEl.current, backEl.current]) if (el) el.style.opacity = String(opacity);
+
+    // On-screen px per screen CSS px (at rest, ignoring the entrance grow). Screens read it as
+    // --ned-screen-scale to keep SPEC text legible (e.g. "example, estimated" ≥ 11 px, SPEC §8).
+    const screenScale = scale / grow / PX_PER_UNIT / pxToWorld;
+    if (frontEl.current && Math.abs(screenScale - lastScreenScale.current) > 0.005) {
+      lastScreenScale.current = screenScale;
+      frontEl.current.style.setProperty('--ned-screen-scale', screenScale.toFixed(3));
+    }
 
     // Screen crossfade and dim, straight from the pose.
     if (pose.screenFrom !== layers.from || pose.screenTo !== layers.to) setLayers({ from: pose.screenFrom, to: pose.screenTo });

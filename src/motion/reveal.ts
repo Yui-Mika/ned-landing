@@ -87,7 +87,13 @@ export function useLoadReveal({ enabled = true, delay, duration, from = {}, onDo
 
   const hidden: TargetAndTransition = reduced ? { opacity: 0 } : { opacity: 0, ...from };
   const shown: TargetAndTransition = { opacity: 1, y: 0, filter: 'blur(0px)' };
-  if (!('filter' in hidden)) delete shown.filter;
+  // No blur in this state (reduced motion, mobile), but an earlier render may already have set one: the
+  // hydration-safe flags read false on the first render, so the pending start state can carry blur(8px).
+  // Clear it explicitly instead of leaving the element blurred.
+  if (!('filter' in hidden)) {
+    hidden.filter = 'none';
+    shown.filter = 'none';
+  }
 
   useEffect(() => {
     if (!enabled) return;

@@ -2,8 +2,8 @@ import { copy } from '@/content/copy';
 import { FONT, Screen } from './parts';
 
 /**
- * Port of docs/design-reference/phone/OnbSplash.dc.html (variant mark). Markup and inline styles 1:1.
- * Left out: the boards' entrance animation (`.ned-in`).
+ * Port of docs/design-reference/phone/OnbSplash.dc.html (variant mascot: waving Teddy on the lilac tile).
+ * Markup and inline styles 1:1. Left out: the boards' entrance animation (`.ned-in`).
  */
 const s = copy.screens.onbSplash;
 
@@ -20,26 +20,25 @@ export function OnbSplashScreen() {
           alignItems: 'center',
           justifyContent: 'center',
           textDecoration: 'none',
-          color: '#FFFFFF',
-          background: '#7B2FBE',
+          color: '#111116',
+          background: '#F4F4F6',
         }}
       >
         <div
           style={{
-            width: 112,
-            height: 112,
-            borderRadius: 32,
-            background: 'rgba(255,255,255,0.14)',
+            width: 220,
+            height: 190,
+            borderRadius: 40,
+            background: '#EDE3FB',
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-end',
             justifyContent: 'center',
+            overflow: 'hidden',
           }}
         >
-          {/* TODO(asset): the board's mark image (88 × 90) has no source yet (src="#E6E6EB"); slot kept empty. */}
-          <div style={{ width: 88, height: 90 }} />
+          <img src="/design-assets/teddy-waving_5bb51609.png" alt="" style={{ width: 200, height: 160, objectFit: 'contain' }} />
         </div>
-        <div style={{ marginTop: 22, fontFamily: FONT.display, fontSize: 32, fontWeight: 700, letterSpacing: 6, paddingLeft: 6 }}>{s.wordmark}</div>
-        <div style={{ position: 'absolute', bottom: 40, fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>{s.tagline}</div>
+        <div style={{ marginTop: 24, fontFamily: FONT.display, fontSize: 32, fontWeight: 700, letterSpacing: 6, paddingLeft: 6 }}>{s.wordmark}</div>
       </a>
     </Screen>
   );

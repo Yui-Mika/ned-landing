@@ -13,7 +13,6 @@ const s = copy.screens.homeVN;
 /** Board icon paths (renderVals P). */
 const ICON = {
   submit: 'M12 19V5M5 12l7-7 7 7',
-  release: 'M12 3v12M7 10l5 5 5-5M5 21h14',
 } as const;
 
 const qa: CSSProperties = {
@@ -110,7 +109,11 @@ export function HomeVNScreen() {
                 {s.heroWhole}
                 <span style={{ fontSize: 20 }}>{s.heroUnit}</span>
               </div>
-              <div style={{ marginTop: 6, fontSize: 13, color: '#5E5E6A' }}>{s.heroSub}</div>
+              <div style={{ marginTop: 6, fontSize: 13, color: '#5E5E6A' }}>
+                {/* SPEC text: never under 11 px on screen, whatever the device scale (set by Phone.tsx). */}
+                <span style={{ fontSize: 'max(13px, calc(11px / var(--ned-screen-scale, 1)))' }}>{s.heroSubEstimate}</span>
+                {s.heroSubRest}
+              </div>
             </div>
             <div title={s.flagTitle} style={{ width: 40, height: 40, borderRadius: 9999, overflow: 'hidden', flexShrink: 0 }}>
               <svg width="40" height="40" viewBox="0 0 20 20" role="img" aria-label={s.flagLabel} style={{ display: 'block' }}>
@@ -224,7 +227,11 @@ export function HomeVNScreen() {
             type="button"
             style={{ ...card, padding: 0, border: 'none', overflow: 'hidden', background: '#EDE3FB', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}
           >
-            {/* TODO(asset): Teddy image from the board (/_blob/5bb51609…), 140 × 110 at top 18, centred. Not in the repo. */}
+            <img
+              src="/design-assets/teddy-waving_5bb51609.png"
+              alt=""
+              style={{ position: 'absolute', left: '50%', top: 18, width: 140, height: 110, marginLeft: -70, objectFit: 'contain' }}
+            />
             <span style={cardText}>{s.suggested.share}</span>
           </button>
           <a style={{ ...card, background: '#E3EDFC' }}>
