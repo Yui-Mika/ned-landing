@@ -101,6 +101,7 @@ Rules: put all URLs in ONE file `src/content/links.ts`. If a URL is empty, rende
 - **T7 Tilt** (20 vh): phone leans back 30° like lying on a desk (looking at a record).
 - **T8 Lift-off** (20–40 vh): a UI element (invite link, fingerprint) leaves the screen as a flat chip.
 - **T9 Owner turn** (30–40 vh): laptop turns 180° on its base; tag changes Client's computer → Your computer.
+- **Devices on stage never overlap:** no two device screen boxes intersect at any vh. A device that has to leave fades to 15% or less before the next one fades in. Exception: the T3 split and T6 fan, where devices stand side by side without overlapping.
 - Motion tokens: ease out `[0.22,1,0.36,1]`, inOut `[0.65,0,0.35,1]`; springs soft `{stiffness:140,damping:22}`, snap `{stiffness:420,damping:32}`; camera damping λ = 6.
 
 ### 5.4 3D navigation

@@ -43,9 +43,10 @@ function ZoomScrim() {
 }
 
 /**
- * Chapter 05 · Lock (1120–1360 vh). The devices live in the 3D stage (poses.ts, CH05: T2 Flip to the client's phone,
- * the client's computer on the Workspace, T4 Dock into the wallet panel, T5 Zoom, slide to lock, the lock glyph stamp,
- * T4 undock, T2 Flip back to your phone on Locked); this is the copy column, on the left.
+ * Chapter 05 · Lock (1120–1360 vh). The devices live in the 3D stage (poses.ts, CH05), one at a time: T2 Flip to the
+ * client's phone, which fades out; the client's computer on the Workspace; "Lock in wallet" opens the wallet panel;
+ * T5 Zoom, slide to lock, the lock glyph stamp; the computer fades out; your phone fades in on Locked. This is the
+ * copy column, on the left.
  */
 export function Ch05Lock({ stills = false }: { stills?: boolean }) {
   const [headlineLines, setHeadlineLines] = useState(2);

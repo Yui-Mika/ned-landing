@@ -25,8 +25,8 @@ const ZOOMS = [
   CH06.submitTap[0] - 6,
   CH06.doneAt + 2,
   CH06.doneAt + 12,
-  CH06.phoneIn[0] - 4,
-  CH06.phoneIn[0] + 6,
+  CH06.laptopOut[0] - 2,
+  CH06.laptopOut[1],
 ];
 
 /**

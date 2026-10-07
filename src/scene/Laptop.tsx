@@ -247,7 +247,13 @@ export function Laptop({ reduced, portrait }: Props) {
     if (pose.owner !== owner) setOwner(pose.owner);
     laptopLive.opacity = opacity;
     laptopLive.anchor = anchor.current;
-    if (panelEl.current) panelEl.current.style.opacity = ch05PanelAt(vh).opacity.toFixed(3);
+    if (panelEl.current) {
+      // The board's panel open motion (`.ned-pop`: opacity, 6 px rise, scale .97 → 1 from the top-right), scrubbed.
+      const { open } = ch05PanelAt(vh);
+      panelEl.current.style.opacity = open.toFixed(3);
+      panelEl.current.style.transformOrigin = 'top right';
+      panelEl.current.style.transform = reduced ? '' : `translate3d(0, ${(-6 * (1 - open)).toFixed(2)}px, 0) scale(${(0.97 + 0.03 * open).toFixed(4)})`;
+    }
     outer.current.visible = opacity > 0.001;
     for (const el of fadeEls.current) if (el) el.style.opacity = String(opacity);
     if (!outer.current.visible) return;

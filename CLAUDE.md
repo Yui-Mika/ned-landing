@@ -13,6 +13,7 @@ N.E.D landing page: scroll-told 3D landing for N.E.D Milestone Lock (Next.js App
 - Banned words are listed in SPEC section 7. Check every string you add (EN and VI) against it.
 - Screens drawn inside the phone/laptop follow SPEC section 12 (light tokens, radius 20/28, 52 px pill buttons, no outlines/gradients/glows/shadows inside screens).
 - Poses come from `src/scene/poses.ts`; URLs only from `src/content/links.ts`; strings only from `src/content/copy.ts`.
+- Devices on stage never overlap: no two device screen boxes intersect at any vh. A device that has to leave fades to 15% or less before the next one fades in. Exception: the T3 split and T6 fan, where devices stand side by side without overlapping.
 
 ## Dev-only test hooks
 - `?__reduced`, `window.__nedIntro`, `window.__nedBand` must never ship to production.

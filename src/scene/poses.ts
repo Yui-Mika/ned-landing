@@ -217,86 +217,73 @@ function ch04Phone(at: Vec3, rotation: Vec3, size: number, exit: Vec3, entry: Ve
 }
 
 /**
- * Chapter 05 · Lock (1120–1360 vh), every beat a window of scroll:
- * T2 Flip your phone → the client's (ContractDetailMiaAccepted) · the client's computer fades in, in place (WebWorkspace)
- * · tap "Lock in wallet" · T4 Dock: the phone flies into the panel corner on ContractLock and becomes the wallet panel
- * (86%) · T5 Zoom on the panel · slide to lock (thumb follows scroll; ContractLocked 4 vh after 100%) · lock glyph
- * stamps (landing layer) · T4 undock · T2 Flip back to your phone on ContractLockedVN.
+ * Chapter 05 · Lock (1120–1360 vh), every beat a window of scroll. One device on stage at a time (SPEC §5.3):
+ * T2 Flip your phone → the client's (ContractDetailMiaAccepted) · the phone fades out · the client's computer fades in,
+ * in place (WebWorkspace) · tap "Lock in wallet" · the wallet panel opens top-right (board app mode, ContractLock; the
+ * board's open motion: scale .97 → 1 from the top-right) · T5 Zoom on the panel · slide to lock (thumb follows scroll;
+ * ContractLocked 4 vh after 100%) · lock glyph stamps (landing layer) · the panel closes · the computer fades out ·
+ * your phone fades in on ContractLockedVN. Each outgoing device reaches 0 where the incoming one starts.
  */
 export const CH05 = {
   flip: [1122, 1146] as [number, number],
-  laptopIn: [1146, 1162] as [number, number],
-  tap: [1164, 1176] as [number, number],
-  toLock: [1170, 1178] as [number, number],
-  dock: [1178, 1200] as [number, number],
-  /** Docked phone fades out while the panel fades in (same screen, same place). Undock: the reverse. */
-  swapIn: [1200, 1206] as [number, number],
-  zoom: [1206, 1218, 1264, 1276] as [number, number, number, number],
+  phoneOut: [1146, 1152] as [number, number],
+  laptopIn: [1152, 1164] as [number, number],
+  tap: [1166, 1178] as [number, number],
+  panelOpen: [1180, 1186] as [number, number],
+  zoom: [1188, 1200, 1264, 1276] as [number, number, number, number],
   slide: [1220, 1248] as [number, number],
   stamp: [1254, 1262, 1268, 1276] as [number, number, number, number],
-  swapOut: [1282, 1288] as [number, number],
-  undock: [1288, 1310] as [number, number],
-  laptopOut: [1302, 1316] as [number, number],
-  flipBack: [1314, 1342] as [number, number],
+  panelClose: [1282, 1288] as [number, number],
+  laptopOut: [1290, 1304] as [number, number],
+  phoneIn: [1304, 1316] as [number, number],
 };
 /** Slide to lock: the thumb follows scroll over this window; the result shows 4 vh after 100%. */
 export const CH05_SLIDE = CH05.slide;
 export const CH05_LOCKED_AT = CH05.slide[1] + 4;
 
+/** Outgoing devices shrink a little as they fade (SPEC §5.3 one device at a time): phone 1 → 0.94, laptop 1 → 0.96. */
+export const FADE_SCALE = { phone: 0.94, laptop: 0.96 };
+
 /**
- * Panel state in the Workspace (WebWorkspace, mode app): which app screen, and its opacity. It is open (invisible)
- * for the whole dock flight, so the phone can measure where to land; it shows only while the phone is docked.
+ * Wallet panel in the Workspace (WebWorkspace, mode app): which app screen, and how far open (0 … 1) for the board's
+ * open motion (`.ned-pop`: opacity 0 → 1, 6 px rise, scale .97 → 1 from the top-right), scrubbed by scroll.
  */
-export function ch05PanelAt(vh: number): { screen: 'lock' | 'locked' | null; opacity: number } {
-  const [a, b] = CH05.swapIn;
-  const [c, d] = CH05.swapOut;
-  if (vh < CH05.dock[0] || vh > CH05.undock[1]) return { screen: null, opacity: 0 };
-  const opacity = Math.min(1, (vh - a) / (b - a), (d - vh) / (d - c));
-  return { screen: vh >= CH05_LOCKED_AT ? 'locked' : 'lock', opacity: Math.max(0, opacity) };
+export function ch05PanelAt(vh: number): { screen: 'lock' | 'locked' | null; open: number } {
+  const [a, b] = CH05.panelOpen;
+  const [c, d] = CH05.panelClose;
+  if (vh < a || vh > d) return { screen: null, open: 0 };
+  const open = Math.max(0, Math.min(1, (vh - a) / (b - a), (d - vh) / (d - c)));
+  return { screen: vh >= CH05_LOCKED_AT ? 'locked' : 'lock', open };
 }
 
-function ch05Phone(o: { from: Vec3; rotation: Vec3; size: number; park: Place; end: Vec3; endSize: number; dock: boolean }): Pose[] {
-  const c = (vh: number, screen: PhoneScreen, extra: Partial<Pose> = {}): Pose => ({ vh, ...o.park, screen, owner: 'client', ...extra });
-  const parkRot = o.park.rotation;
-  // Desktop: T4 Dock into the panel. Portrait (SPEC §8): the dock becomes a crossfade, the phone stays where it is.
-  const docked = (vh: number, screen: PhoneScreen, extra: Partial<Pose> = {}) => c(vh, screen, o.dock ? { dock: 1, ...extra } : extra);
+/**
+ * Chapter 05 phone: T2 Flip in place to the client's phone, which fades out (and shrinks a little) before the laptop
+ * fades in; after the laptop has gone, your phone fades in on ContractLockedVN.
+ */
+function ch05Phone(o: { at: Vec3; rotation: Vec3; size: number }): Pose[] {
+  const [pitch, yaw] = o.rotation;
+  const turned: Vec3 = [pitch, yaw + 360, 0];
+  const small = o.size * FADE_SCALE.phone;
+  const p = (vh: number, screen: PhoneScreen, owner: Owner, extra: Partial<Pose> = {}): Pose => ({ vh, device: 'phone', position: o.at, rotation: turned, size: o.size, screen, owner, ...extra });
   return [
     ...t2Flip({
       start: CH05.flip[0],
       end: CH05.flip[1],
-      from: o.from,
-      to: o.park.position,
+      from: o.at,
+      to: o.at,
       rotation: o.rotation,
       sizeFrom: o.size,
-      sizeTo: o.park.size,
+      sizeTo: o.size,
       fromScreen: 'cdAccepted',
       fromOwner: 'you',
       toScreen: 'cdMiaAccepted',
       toOwner: 'client',
     }),
-    c(CH05.toLock[0], 'cdMiaAccepted'),
-    // The client taps "Lock in wallet" on the computer: the wallet (this phone) opens on ContractLock.
-    c(CH05.toLock[1], 'lock'),
-    docked(CH05.dock[1], 'lock', { ease: 'ease', transform: 'T4 Dock' }),
-    docked(CH05.swapIn[1], 'lock', { opacity: 0 }),
-    // While hidden: the panel's result screen.
-    docked(CH05.swapOut[0], 'lockedClient', { opacity: 0, screenSwitch: 'cut' }),
-    docked(CH05.swapOut[1], 'lockedClient'),
-    c(CH05.undock[1], 'lockedClient', { ease: 'ease', transform: 'T4 Dock' }),
-    ...t2Flip({
-      start: CH05.flipBack[0],
-      end: CH05.flipBack[1],
-      from: o.park.position,
-      to: o.end,
-      rotation: parkRot,
-      sizeFrom: o.park.size,
-      sizeTo: o.endSize,
-      fromScreen: 'lockedClient',
-      fromOwner: 'client',
-      toScreen: 'lockedVN',
-      toOwner: 'you',
-    }),
-    { vh: 1360, device: 'phone', position: o.end, rotation: [parkRot[0], parkRot[1] + 360, parkRot[2]], size: o.endSize, screen: 'lockedVN', owner: 'you' },
+    p(CH05.phoneOut[1], 'cdMiaAccepted', 'client', { size: small, opacity: 0, ease: 'linear' }),
+    // Swapped while hidden: your phone, on the locked contract.
+    p(CH05.phoneIn[0], 'lockedVN', 'you', { size: small, opacity: 0, screenSwitch: 'cut' }),
+    p(CH05.phoneIn[1], 'lockedVN', 'you', { ease: 'easeOut' }),
+    p(1360, 'lockedVN', 'you'),
   ];
 }
 
@@ -305,11 +292,12 @@ function ch05Phone(o: { from: Vec3; rotation: Vec3; size: number; park: Place; e
  * computer fades in seen from behind · T9 Owner turn: it turns 180° on its base and is now Your computer (WebSubmit) ·
  * the two links are typed and added · two files dropped, a thin scan line passes each (its fingerprint shows after)
  * · the four "Done when" boxes ticked (T5 Zoom follows links → files → checks) · Submit → wallet panel (sign · submit)
- * → Submitted · in review (T5 Zoom) · your phone back on MilestoneSubmitted.
+ * → Submitted · in review (T5 Zoom) · the computer fades out · your phone fades in on MilestoneSubmitted.
+ * One device on stage at a time: each outgoing device reaches 0 where the incoming one starts.
  */
 export const CH06 = {
   toDetail: [1362, 1372] as [number, number],
-  phoneOut: [1380, 1398] as [number, number],
+  phoneOut: [1382, 1392] as [number, number],
   laptopIn: [1392, 1406] as [number, number],
   turn: [1408, 1440] as [number, number],
   links: [
@@ -324,7 +312,8 @@ export const CH06 = {
   panelAt: 1552,
   panelTap: [1564, 1574] as [number, number],
   doneAt: 1576,
-  phoneIn: [1600, 1614] as [number, number],
+  laptopOut: [1598, 1606] as [number, number],
+  phoneIn: [1606, 1616] as [number, number],
 };
 
 export type SubmitState = { links: number; draft: string; files: number; scanned: number; checks: number; panel: 'closed' | 'sign'; done: boolean };
@@ -353,26 +342,21 @@ export function ch06ScanAt(vh: number): { row: number; p: number } | null {
   return null;
 }
 
-function ch06Phone(o: { at: Vec3; rotation: Vec3; size: number; exit: Vec3; back: Place }): Pose[] {
+function ch06Phone(o: { at: Vec3; rotation: Vec3; size: number }): Pose[] {
+  const small = o.size * FADE_SCALE.phone;
   const you = (vh: number, screen: PhoneScreen, extra: Partial<Pose> = {}): Pose => ({ vh, device: 'phone', position: o.at, rotation: o.rotation, size: o.size, screen, owner: 'you', ...extra });
-  const [pitch, yaw] = o.rotation;
   return [
     you(CH06.toDetail[0], 'lockedVN'),
     you(CH06.toDetail[1], 'cdVinhLocked'),
     you(CH06.phoneOut[0], 'cdVinhLocked'),
-    you(CH06.phoneOut[1], 'cdVinhLocked', { position: o.exit, rotation: [pitch, yaw + 20, 0], opacity: 0, transform: 'T1 Glide' }),
-    // Swapped while out of view: the submitted state.
-    you(CH06.phoneIn[0], 'submitted', { position: o.exit, rotation: [pitch, yaw + 20, 0], opacity: 0, screenSwitch: 'cut' }),
-    { vh: CH06.phoneIn[1], ...o.back, screen: 'submitted', owner: 'you', ease: 'easeOut', transform: 'T1 Glide' },
-    { vh: 1620, ...o.back, screen: 'submitted', owner: 'you' },
+    // Fades out in place (and shrinks a little) before the computer fades in.
+    you(CH06.phoneOut[1], 'cdVinhLocked', { size: small, opacity: 0, ease: 'linear' }),
+    // Swapped while hidden: the submitted state. Back in the same place once the computer has gone.
+    you(CH06.phoneIn[0], 'submitted', { size: small, opacity: 0, screenSwitch: 'cut' }),
+    you(CH06.phoneIn[1], 'submitted', { ease: 'easeOut' }),
+    you(1620, 'submitted'),
   ];
 }
-
-/** Where the client's phone waits in chapter 05: in front of the laptop's right side (desktop); low right (portrait). */
-const CH05_PARK: Record<'desktop' | 'portrait', Place> = {
-  desktop: { device: 'phone', position: [0.74, -0.27, 0.3], rotation: [2, 346, 0], size: 0.5 },
-  portrait: { device: 'phone', position: [0.42, -1.2, 0.3], rotation: [4, 350, 0], size: 0.52 },
-};
 
 const phoneDesktop: Pose[] = [
   // Chapter 00 · Hero (0–140 vh). Phone rises 40 px and turns −40° → −18°, then T1 Glide to the left.
@@ -415,11 +399,11 @@ const phoneDesktop: Pose[] = [
   // rises dimmed on the new contract while the invite-link chip drops into it, then the dim lifts.
   ...ch04Phone([0.3, -0.04, 0], [2, -8, 0], 0.74, [1.35, -0.12, 0], [0.3, -1.8, 0]),
 
-  // Chapter 05 · Lock (1120–1360 vh): see CH05.
-  ...ch05Phone({ from: [0.3, -0.04, 0], rotation: [2, -8, 0], size: 0.74, park: CH05_PARK.desktop, end: [0.3, -0.04, 0], endSize: 0.74, dock: true }),
+  // Chapter 05 · Lock (1120–1360 vh): see CH05. The phone stays centred in the stage beside the copy (as in 04).
+  ...ch05Phone({ at: [0.3, -0.04, 0], rotation: [2, -8, 0], size: 0.74 }),
 
-  // Chapter 06 · Work and submit (1360–1620 vh): see CH06. Back in front of the laptop's right side at the end.
-  ...ch06Phone({ at: [0.3, -0.04, 0], rotation: [2, 706, 0], size: 0.74, exit: [1.35, -0.12, 0], back: { ...CH05_PARK.desktop, rotation: [2, 706, 0] } }),
+  // Chapter 06 · Work and submit (1360–1620 vh): see CH06. Same place; hidden while the computer is on stage.
+  ...ch06Phone({ at: [0.3, -0.04, 0], rotation: [2, 352, 0], size: 0.74 }),
 ];
 
 // Portrait (SPEC §8): phone at 92% width rising from the bottom, top ~60% visible.
@@ -452,17 +436,9 @@ const phonePortrait: Pose[] = [
   // Chapter 04 (portrait): your phone rising from the bottom, top ~60% visible.
   ...ch04Phone([0, -0.88, 0], [4, 0, 0], 0.86, [1.6, -0.76, 0], [0, -2, 0]),
 
-  // Chapter 05 (portrait): the T4 Dock is a crossfade between the phone and the browser card's panel.
-  ...ch05Phone({ from: [0, -0.88, 0], rotation: [4, 0, 0], size: 0.86, park: CH05_PARK.portrait, end: [0, -0.88, 0], endSize: 0.86, dock: false }),
-
-  // Chapter 06 (portrait): out while the browser card works; back, rising from the bottom, once the card has gone.
-  ...ch06Phone({
-    at: [0, -0.88, 0],
-    rotation: [4, 710, 0],
-    size: 0.86,
-    exit: [1.6, -0.88, 0],
-    back: { device: 'phone', position: [0, -0.88, 0], rotation: [4, 710, 0], size: 0.86 },
-  }),
+  // Chapters 05 and 06 (portrait): phone rising from the bottom; hidden while the browser card is on stage.
+  ...ch05Phone({ at: [0, -0.88, 0], rotation: [4, 0, 0], size: 0.86 }),
+  ...ch06Phone({ at: [0, -0.88, 0], rotation: [4, 360, 0], size: 0.86 }),
 ];
 
 /**
@@ -592,11 +568,12 @@ const laptopCh03: LaptopPose[] = [
   { vh: 826, ...L, lid: 105, opacity: 0, page: PAGE_TOP },
 ];
 
+/** Fades in and out in place; shrinks a little while faded (FADE_SCALE). */
 const laptopCh05: LaptopPose[] = [
-  { vh: CH05.laptopIn[0], ...L5, lid: 105, opacity: 0, page: PAGE_TOP },
+  { vh: CH05.laptopIn[0], ...L5, size: L5.size * FADE_SCALE.laptop, lid: 105, opacity: 0, page: PAGE_TOP },
   { vh: CH05.laptopIn[1], ...L5, lid: 105, page: PAGE_TOP, ease: 'easeOut' },
   { vh: CH05.laptopOut[0], ...L5, lid: 105, page: PAGE_TOP },
-  { vh: CH05.laptopOut[1], ...L5, lid: 105, opacity: 0, page: PAGE_TOP },
+  { vh: CH05.laptopOut[1], ...L5, size: L5.size * FADE_SCALE.laptop, lid: 105, opacity: 0, page: PAGE_TOP, ease: 'linear' },
 ];
 
 /**
@@ -613,7 +590,7 @@ const SB_SUBMIT: PageScroll = { focus: 'sb-submit', at: 0.72 };
 function ch06Laptop(k: Omit<LaptopPose, 'vh' | 'page' | 'screen' | 'owner' | 'lid'>): LaptopPose[] {
   const at = (vh: number, page: PageScroll, extra: Partial<LaptopPose> = {}): LaptopPose => ({ vh, ...k, ...L6, position: k.position, rotation: k.rotation, size: k.size, lid: 105, page, ...extra });
   return [
-    at(CH06.laptopIn[0], PAGE_TOP, { rotation: BEHIND, owner: 'client', opacity: 0 }),
+    at(CH06.laptopIn[0], PAGE_TOP, { rotation: BEHIND, owner: 'client', opacity: 0, size: k.size * FADE_SCALE.laptop }),
     at(CH06.laptopIn[1], PAGE_TOP, { rotation: BEHIND, owner: 'client', ease: 'easeOut' }),
     at(CH06.turn[0], PAGE_TOP, { rotation: BEHIND, owner: 'client' }),
     at(CH06.turn[1], PAGE_TOP, { transform: 'T9 Owner turn' }),
@@ -627,6 +604,8 @@ function ch06Laptop(k: Omit<LaptopPose, 'vh' | 'page' | 'screen' | 'owner' | 'li
     at(CH06.submitTap[0] - 4, SB_SUBMIT),
     at(CH06.doneAt, SB_SUBMIT),
     at(CH06.doneAt + 2, PAGE_TOP),
+    at(CH06.laptopOut[0], PAGE_TOP),
+    at(CH06.laptopOut[1], PAGE_TOP, { opacity: 0, size: k.size * FADE_SCALE.laptop, ease: 'linear' }),
   ];
 }
 const laptopCh06: LaptopPose[] = ch06Laptop({ position: L.position, rotation: L.rotation, size: L.size });
@@ -659,17 +638,17 @@ const NEED_LOCK: PageScroll = { focus: 'ws-lock', at: 0.4 };
 const PANEL_TOP: PageScroll = { focus: 'wallet-view', at: 0.62 };
 const PANEL_SLIDER: PageScroll = { focus: 'wallet-view', at: 0.44 };
 const laptopPortraitCh05: LaptopPose[] = [
-  { vh: CH05.laptopIn[0], ...P5, opacity: 0, page: NEED_LOCK },
+  { vh: CH05.laptopIn[0], ...P5, size: P5.size * FADE_SCALE.laptop, opacity: 0, page: NEED_LOCK },
   { vh: CH05.laptopIn[1], ...P5, page: NEED_LOCK, ease: 'easeOut' },
   { vh: CH05.tap[1], ...P5, page: NEED_LOCK },
-  { vh: CH05.swapIn[0], ...P5, page: PAGE_TOP },
-  { vh: CH05.swapIn[1], ...P5, page: PANEL_TOP },
+  { vh: CH05.panelOpen[0], ...P5, page: PAGE_TOP },
+  { vh: CH05.panelOpen[1], ...P5, page: PANEL_TOP },
   { vh: CH05.slide[0] - 2, ...P5, page: PANEL_TOP },
   { vh: CH05.slide[0] + 6, ...P5, page: PANEL_SLIDER },
-  { vh: CH05.swapOut[0], ...P5, page: PANEL_SLIDER },
-  { vh: CH05.swapOut[1], ...P5, page: PAGE_TOP },
+  { vh: CH05.panelClose[0], ...P5, page: PANEL_SLIDER },
+  { vh: CH05.panelClose[1], ...P5, page: PAGE_TOP },
   { vh: CH05.laptopOut[0], ...P5, page: PAGE_TOP },
-  { vh: CH05.laptopOut[1], ...P5, opacity: 0, page: PAGE_TOP },
+  { vh: CH05.laptopOut[1], ...P5, size: P5.size * FADE_SCALE.laptop, opacity: 0, page: PAGE_TOP, ease: 'linear' },
 ];
 
 /** Chapter 06 (portrait): the browser card turns the same way; it fades out before your phone comes back. */
@@ -679,8 +658,6 @@ const laptopPortraitCh06: LaptopPose[] = [
     rotation: (k.rotation === BEHIND ? [0, 180, 0] : [0, 0, 0]) as Vec3,
     page: k.page && { ...k.page, at: Math.min(k.page.at, 0.5) },
   })),
-  { vh: CH06.phoneIn[0] - 4, ...P5, screen: 'webSubmit', owner: 'you', page: PAGE_TOP },
-  { vh: CH06.phoneIn[0] + 4, ...P5, screen: 'webSubmit', owner: 'you', opacity: 0, page: PAGE_TOP },
 ];
 
 const laptopPortrait: LaptopPose[] = [...laptopPortraitCh03, ...laptopPortraitCh05, ...laptopPortraitCh06];
@@ -773,8 +750,8 @@ export const cameraTrack: CameraPose[] = [
   { vh: CH06.submitTap[0] - 6, zoom: 1, transform: 'T5 Zoom' },
   { vh: CH06.doneAt + 2, zoom: 1 },
   { vh: CH06.doneAt + 12, zoom: 1, fit: 1.75, focus: 'sb-done', copyId: 'ch06-title', transform: 'T5 Zoom' },
-  { vh: CH06.phoneIn[0] - 4, zoom: 1, fit: 1.75, focus: 'sb-done', copyId: 'ch06-title' },
-  { vh: CH06.phoneIn[0] + 6, zoom: 1, transform: 'T5 Zoom' },
+  { vh: CH06.laptopOut[0] - 2, zoom: 1, fit: 1.75, focus: 'sb-done', copyId: 'ch06-title' },
+  { vh: CH06.laptopOut[1], zoom: 1, transform: 'T5 Zoom' },
 ];
 
 export const cameraZoom = (k: CameraPose, portrait: boolean) => (portrait ? (k.zoomPortrait ?? k.zoom) : k.zoom);

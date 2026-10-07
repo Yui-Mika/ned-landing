@@ -18,7 +18,6 @@ import { stageViewport } from './viewport';
 import { usePhoneInteraction } from './usePhoneInteraction';
 import { SceneHtml } from './htmlLayer';
 import { dockTarget } from './dock';
-import { laptopLive } from './Laptop';
 
 /** Generic phone body in world units (no real brand shape). */
 export const BODY = { w: 0.96, h: 2.0, d: 0.1, r: 0.12 };
@@ -26,16 +25,6 @@ export const BODY = { w: 0.96, h: 2.0, d: 0.1, r: 0.12 };
 const PX_PER_UNIT = PHONE_SCREEN_PX.w / 0.88;
 const SCREEN = { w: PHONE_SCREEN_PX.w / PX_PER_UNIT, h: PHONE_SCREEN_PX.h / PX_PER_UNIT, r: 48 / PX_PER_UNIT };
 const DEG = Math.PI / 180;
-/**
- * The phone's front (bezel + glass edge) drawn again in the DOM layer, under the screen. Device screens are DOM over
- * the canvas, so while the phone is in front of the laptop screen the 3D body would be hidden under it.
- */
-const FRONT_PX = {
-  bezelX: ((BODY.w - SCREEN.w) / 2) * PX_PER_UNIT,
-  bezelY: ((BODY.h - SCREEN.h) / 2) * PX_PER_UNIT,
-  bodyR: BODY.r * 0.5 * PX_PER_UNIT,
-  glass: 0.01 * PX_PER_UNIT,
-};
 /** Drag, flip and hover are live only in the hero, before the T1 glide starts. */
 const INTERACTIVE_UNTIL_VH = 100;
 
@@ -91,7 +80,6 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
   const toEl = useRef<HTMLDivElement>(null);
   const dimEl = useRef<HTMLDivElement>(null);
   const tapEl = useRef<HTMLDivElement>(null);
-  const bezelEl = useRef<HTMLDivElement>(null);
   const lastScreenScale = useRef(0);
   const screenAnchor = useRef<THREE.Group>(null);
 
@@ -180,10 +168,6 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
         outer.current.position.lerp(tmp.dockPos, dock);
         outer.current.scale.setScalar(scale + (docked - scale) * dock);
       }
-    }
-    if (bezelEl.current) {
-      const show = laptopLive.opacity > 0.001 ? '' : 'none';
-      if (bezelEl.current.style.display !== show) bezelEl.current.style.display = show;
     }
 
     // Fade every material with the entrance (glow handled below). Opaque again once fully in.
@@ -293,35 +277,7 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
         </mesh>
         <group ref={screenAnchor} position={[0, 0, BODY.d / 2 + 0.003]} />
         <SceneHtml transform distanceFactor={400 / PX_PER_UNIT} position={[0, 0, BODY.d / 2 + 0.003]}>
-          <div ref={frontEl} data-phone-front={track} className="relative" style={{ opacity: 0, isolation: 'isolate' }}>
-            {/* Bezel in the DOM layer (landing layer, not part of the screen): only while the laptop is on stage. */}
-            <div
-              ref={bezelEl}
-              aria-hidden="true"
-              style={{
-                display: 'none',
-                position: 'absolute',
-                zIndex: -1,
-                left: -FRONT_PX.bezelX,
-                top: -FRONT_PX.bezelY,
-                right: -FRONT_PX.bezelX,
-                bottom: -FRONT_PX.bezelY,
-                borderRadius: FRONT_PX.bodyR,
-                background: '#1A1A22',
-              }}
-            >
-              <div
-                style={{
-                  position: 'absolute',
-                  left: FRONT_PX.bezelX - FRONT_PX.glass,
-                  top: FRONT_PX.bezelY - FRONT_PX.glass,
-                  right: FRONT_PX.bezelX - FRONT_PX.glass,
-                  bottom: FRONT_PX.bezelY - FRONT_PX.glass,
-                  borderRadius: 48 + FRONT_PX.glass,
-                  background: '#05050A',
-                }}
-              />
-            </div>
+          <div ref={frontEl} data-phone-front={track} className="relative" style={{ opacity: 0 }}>
             <PhoneScreenView key={layers.from} screen={layers.from} owner={frontOwner} />
             {layers.to !== layers.from && (
               <div key={layers.to} ref={toEl} className="absolute inset-0" style={{ opacity: 0 }}>
