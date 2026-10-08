@@ -132,28 +132,36 @@ From your description. Do not copy the reference's visuals, layout or branding.
 
 ---
 
-## 5. Video A: 60-second teaser (target 60 s; allowed 55–65 s)
+## 5. Video A: 60-second teaser (target 60 s)
 
-On-screen text is at most 7 words. Where a page headline is longer it is trimmed, and the cut is noted. Vietnamese VO lines are my drafts, not taken from `vi.ts` (not read). Check them against section 8 **[CONFIRM]**.
+**Decisions (8 Oct)**
+- Target 60 s. No hard time limit.
+- On-screen text in **English**, at most 7 words per beat (page headlines, trimmed where noted). Voice-over and subtitles in **Vietnamese** (the VO line below is also the subtitle).
+- The landing page has **no cursor**. A cursor is added in editing. Where the page has a tap mark (white circle), put the cursor on it.
+- End card: the wordmark as **text** "N.E.D" plus **two** live links (app and Workspace). No third card, no logo file.
+- Landing copy follows the product word rules since commit `27550bc`. Strings that still must not be readable are listed per clip in 7.1.
+- Vietnamese VO lines are drafts and need a native check **[CONFIRM]**.
 
-| Time | Shot | On-screen text | Visual (capture + motion) | Sound / VO (VI) |
-| --- | --- | --- | --- | --- |
-| 0–6 | Hook | "The work comes first. The money later." (trimmed from ch01) | Ch01: your phone "Files sent ✓", status-bar clock jumps 3 → 14 → 30 days. Fast push-in, text slams word by word | Low pulse. VO: "Bạn giao việc trước. Tiền đến sau." |
-| 6–11 | Logo + headline | "Locked before you start." → "Released when it's approved." | Purple glow sweep (dark → light), then ch00 hero phone enters after the sweep (SPEC §16). Logo **[CONFIRM]** (section 7) | Swell. VO: "N.E.D. Khóa trước khi bạn bắt đầu." |
-| 11–16 | Step 1 · Brief | "Your client writes one brief." | Ch03 laptop: "Done when" list typing, fingerprint changing per keystroke. Angled perspective, slow dolly | VO: "Khách hàng viết một bản mô tả. Dấu vân tay của nó được lưu trên chuỗi." |
-| 16–21 | Step 2 · Accept | "Read the brief. Choose once." (trimmed from ch04) | Ch04 phone: "VND to my Vietnamese bank account" card selected, "SIMULATED" chip visible, slide to accept. Do not let "licensed" read large (2.g) | VO: "Bạn đọc, chấp nhận, và chọn một lần nơi nhận tiền." |
-| 21–26 | Step 3 · Lock | "Your client locks it before you start." | Ch05 dock: cursor drags "Slide to lock", lock glyph stamps, phone "Locked · ≈ 13,010,000 VND" with "example, estimated" visible | Click + thud. VO: "Khách khóa toàn bộ số tiền trước khi bạn bắt đầu." |
-| 26–31 | Step 4 · Submit | "Submit before the deadline." | Ch06 laptop: two files dropped, **scan line** passes and leaves short codes, "Submitted · On time" | Scan sweep sound. VO: "Nộp trước hạn. Thời gian và dấu vân tay được ghi lại." |
-| 31–36 | Step 5 · Release (climax) | "≈ 6,500,000 VND" + small "example, estimated" | Ch07: cursor on "Slide to release", amount chip crosses the seam, $ 250 USDC → ≈ 6,500,000 VND; glow bloom on the landing layer only. Small line "Bank transfer simulated in this demo." Avoid the "Auto-release in" countdown frame (2.a) | Hit + shimmer. VO: "Khách duyệt, phần đó được chuyển đến bạn. Ví dụ, ước tính." |
-| 36–44 | If someone goes quiet | "Deadlines run on their own." (trimmed from ch08 line 3) then small "Unless the client requests changes in time." | Ch08 fan of three phones: Approved / "Review time over · anyone can release" / "Refunded to the client". Hide the "Disputes over quality" chip (2.f). Phone B's slider "moves by itself" in the page; recut so a cursor presses it **[CONFIRM]** whether that is possible from the page | VO: "Hết hạn duyệt mà không ai trả lời? Ai cũng có thể bấm Release now, trừ khi khách đã yêu cầu sửa đúng hạn. Trễ hạn nộp? Tiền được hoàn lại cho khách." |
-| 44–50 | Honest status | "What works today, and what comes next." | Ch13 Disclosures rows lighting. Chip "Demo on a test network". Fade only, no blur or slide on disclosure text (SPEC §14.4) | VO: "Bản demo chạy trên mạng thử nghiệm. Đối tác chi trả là mô phỏng." |
-| 50–60 | End card | "See a milestone released." | Logo + three cards: Try the app (test network) · Open the Workspace · third card **[CONFIRM]**. URLs from section 1.4. Badge "Test network" on each | Resolve chord. VO: "Mở Workspace hoặc thử ứng dụng trên mạng thử nghiệm." |
+| # | Time | Shot | On-screen text (EN) | Visual (capture + motion) | Sound · VO and subtitle (VI) |
+| --- | --- | --- | --- | --- | --- |
+| 01 | 0–6 | Hook | "The work comes first. The money later." (trimmed from ch01) | Ch01 your phone: "Files sent ✓", status-bar clock jumps 3 → 14 → 30 days. Fast push-in, text comes in word by word | Low pulse. "Bạn giao việc trước. Tiền đến sau." |
+| 02 | 6–11 | Wordmark + headline | "Locked before you start." → "Released when it's approved." | Ch00 hero: purple sweep (dark → light), then the phone enters after the sweep (SPEC §16). Wordmark "N.E.D" as text over the glow | Swell. "N.E.D. Khóa trước khi bạn bắt đầu." |
+| 03 | 11–16 | Step 1 · Brief | "Your client writes one brief." | Ch03 laptop: "Done when" list typing, fingerprint changing per keystroke. Angled perspective, slow dolly. Cut before "Contract created" (invite link) | "Khách hàng viết một bản mô tả. Dấu vân tay của nó được lưu trên chuỗi." |
+| 04 | 16–21 | Step 2 · Accept | "Read the brief. Choose once." (trimmed from ch04) | Ch04 phone: tap mark on "Accept and choose where earnings go", then "VND to my Vietnamese bank account" with "SIMULATED", slide to accept. Cursor added in editing | "Bạn đọc, chấp nhận, và chọn một lần nơi nhận tiền." |
+| 05 | 21–26 | Step 3 · Lock | "Your client locks it before you start." | Ch05: the laptop's Workspace overview, tap mark on "Lock in wallet", the wallet panel opens on the laptop, "Slide to lock"; then **your phone**: "Locked · ≈ 13,010,000 VND" with "example, estimated". Cursor added in editing | Click + thud. "Khách khóa toàn bộ số tiền trước khi bạn bắt đầu." |
+| 06 | 26–31 | Step 4 · Submit | "Submit before the deadline." | Ch06 laptop: two files dropped, **scan line** passes and leaves short codes, tap marks on Submit and in the wallet panel, "Submitted · On time". Cursor added in editing | Scan sweep. "Nộp trước hạn. Thời gian và dấu vân tay được ghi lại." |
+| 07 | 31–36 | Step 5 · Release (climax) | "≈ 6,500,000 VND" + small "example, estimated" | Ch07: "Slide to release" (cursor added in editing), the amount chip crosses the seam, $ 250 USDC → ≈ 6,500,000 VND; glow on the landing layer only. Small line "Bank transfer simulated in this demo." | Hit + shimmer. "Khách duyệt, phần đó được chuyển đến bạn. Ví dụ, ước tính." |
+| 08 | 36–44 | If someone goes quiet | "After the deadline, anyone can release." + small "Unless the client requests changes in time." | Ch08 fan of three phones: A Approved; B review clock to 0, the tap mark presses the slider, then it slides → released (cursor added in editing over the tap mark); C refunded to the client. The chip "No neutral arbiter yet." may show | "Hết hạn duyệt mà không ai trả lời? Ai cũng có thể bấm Release now, trừ khi khách đã yêu cầu sửa đúng hạn. Trễ hạn nộp? Tiền được hoàn lại cho khách." |
+| 09 | 44–50 | Honest status | "What works today, and what comes next." | Ch13 Disclosures rows lighting. Chip "Demo on a test network". Fade only, no blur or slide on disclosure text (SPEC §14.4) | "Bản demo chạy trên mạng thử nghiệm, với đối tác chuyển VND (mô phỏng)." |
+| 10 | 50–60 | End card | "N.E.D" · "See a milestone released." | Made in editing, not captured (7.2) | Resolve chord. "Thử ứng dụng hoặc mở Workspace, trên mạng thử nghiệm." |
 
 Running time: 60 s.
 
 ---
 
 ## 6. Video B: 2 min 30 s, narrated (150 s)
+
+> **Not used for the 60-second version.** Section 6 was left as written on 8 Oct and has stale items: chapter 02 has no USDC → VND flip, chapter 05 is no longer a dock, the VO still says "đối tác chi trả", the on-screen text still says "Deadlines run on their own", and there is no cursor on the page. Update it before any use.
 
 Landing chapters frame the story; 70 s (52–122 s) is a screen recording of the real product on devnet.
 
@@ -173,6 +181,8 @@ Landing chapters frame the story; 70 s (52–122 s) is a screen recording of the
 | 140–150 | End card | "See a milestone released." | Logo, three links | "Mở Workspace, viết bản mô tả và khóa một mốc." |
 
 ### 6.1 Real product recording (60–90 s; planned 70 s)
+
+> **Not used for the 60-second version.**
 
 From PS §7 (original plan) and TH "Checklist ngày demo". PS §7 says the **stage** version is now `final-pitch.md` §2–3 (Person A / Person B, Workspace for both roles, accept and lock in the wallet panel). I did not read that file, so the exact click path is **[CONFIRM]**.
 
@@ -212,41 +222,57 @@ Then check that Mia has ≥ 30 USDC again.
 
 ---
 
-## 7. Asset list
+## 7. Asset list (Video A)
 
-**To capture from the landing page** (chapters as built, section 3): 00 hero with sweep · 01 chat phones · 02 sign-in · 03 brief laptop + typing "Done when" · 04 accept · 05 dock + lock stamp · 06 submit + scan line · 07 release chip morph · 08 fan · 13 Disclosures · 14 cards. Chapters 10–12 are not built and cannot be captured.
+### 7.1 Footage list
 
-**To capture from the product:** the section 6.1 recording, desktop Workspace (Mia) and phone or wallet panel (Vinh); Explorer page of the vault.
+Capture from the landing page only (no product recording in Video A). The page has no cursor: it is added in editing. The vh range is the chapter's range in `src/content/chapters.ts` (chapter 08's action window is from `CH08` in `src/scene/poses.ts`). Record the range at a steady scroll and cut the clip in editing; tighter sub-ranges per scene **[CONFIRM]**. Clip length = scene length + 1 s.
 
-**Teddy images** (this repo, `public/`):
-- `public/teddy/`: curious, happy, proud, sleepy, surprised, thinking, waving (`.png`)
-- `public/design-assets/`: teddy-confused, teddy-curious, teddy-happy, teddy-thinking, teddy-waving (with hash suffixes)
-- Rules: inside screens Teddy always sits on a lilac tile `#EDE3FB`; free-floating only next to the hero phone (SPEC §12.4).
+| File | Scene | Chapter | vh to record | Clip length | Must not be readable |
+| --- | --- | --- | --- | --- | --- |
+| `scene01.mp4` | 01 Hook | 01 The problem | 140–360 | 7 s | none known |
+| `scene02.mp4` | 02 Wordmark + headline | 00 Hero | 0–20, from a fresh load at the top (the intro is time-based: sweep about 1.8 s, phone in at about 2.8 s; copy exits 20–70) | 6 s | Hero sub "…or its review time ends, it's released to you…" (reads as a release by itself, 2.a; not changed in `27550bc`) |
+| `scene03.mp4` | 03 Brief | 03 The brief | 560–860 | 6 s | `ned.app/c/7XqP2mWc#k=…` (invite link and its chip, 2.e); "Request from N.E.D Workspace · ned.app" (wallet panel); "…released on its own" (milestones note) |
+| `scene04.mp4` | 04 Accept | 04 Accept, and choose once | 860–1120 | 6 s | `ned.app/c/…` on the invite chip that drops into the phone |
+| `scene05.mp4` | 05 Lock | 05 Lock | 1120–1360 | 6 s | none known **[CONFIRM]** |
+| `scene06.mp4` | 06 Submit | 06 Work and submit | 1360–1620 | 6 s | "Request from N.E.D Workspace · ned.app" (wallet panel) |
+| `scene07.mp4` | 07 Release | 07 Review and release | 1620–1900 | 6 s | "Auto-release in 2 days 17 h" (review countdown) |
+| `scene08.mp4` | 08 If someone goes quiet | 08 If someone goes quiet | 1900–2200 (action 1910–2072) | 9 s | Phone B before its sheet: "Submitted · review by 3 Oct, 00:41 · auto-release …" and the "Auto-release" countdown label |
+| `scene09.mp4` | 09 Honest status | 13 What's real today | 2420–2600 | 7 s | "Version 1.0.0" on the Disclosures screen, if it would pass as the product's Disclosures (2.j) |
 
-**Logo**
-- Landing: no wordmark asset yet (COPY `site.wordmark: 'N.E.D', // TODO(asset)`).
-- Product repo: the pull added `assets/images/ned-logo.png` and `assets/images/ned-logo-banner.png` (seen in the pull diff; not opened). Whether they are the approved logo: **[CONFIRM]**.
+Scene 10 (end card) is made in editing; no footage.
 
-**Fonts** (SPEC §12.2): Space Grotesk 700 (amounts, titles), Inter 400/600 (body, rows), Space Mono 400 (addresses, fingerprints). Landing-layer display font for kinetic text: in SPEC §4, which I did not read for this brief **[CONFIRM]**.
+### 7.2 End card (made in editing)
+- Wordmark as text: **"N.E.D"**, Space Grotesk 700, on `#06060E` with the purple glow. No logo file.
+- Line: "See a milestone released."
+- Two links:
+  - Try the app (test network) · https://tdat10052499.github.io/Unihackfest-2026/
+  - Open the Workspace · https://unihackfest-2026.vercel.app
+- Chip: "Demo on a test network". No third card.
 
-**Colour tokens**
-- Landing background `#06060E`; band `#D4B5F7`, `#B87AED`, `#7B2FBE`, `#2A0B4D` (SPEC §16.2).
-- App screens (SPEC §12.1): background `#F4F4F6`, surface `#FFFFFF`, ink `#111116`, primary `#7B2FBE`, primary tint `#F2EAFB`, Teddy tile `#EDE3FB`, success `#E7F6EC` / `#127A3A`, warning `#FFF5E1` / `#8A5300`.
-
-**End card text**
-- Headline: "See a milestone released."
-- Line: "Hiring? Write a brief in the Workspace and lock a milestone."
-- Links: Try the app (test network) · https://tdat10052499.github.io/Unihackfest-2026/ — Open the Workspace · https://unihackfest-2026.vercel.app — third card **[CONFIRM]**
-- Chip: "Demo on a test network". Footer: "Built for Unihackfest 2026" (COPY `site.footer`).
+### 7.3 Other assets
+- **Cursor:** added in editing. The page's tap mark is a 56 px white circle that presses (scale 1 → 0.8 → 1); put the cursor tip on its centre.
+- **Teddy images** (this repo, `public/`):
+  - `public/teddy/`: curious, happy, proud, sleepy, surprised, thinking, waving (`.png`)
+  - `public/design-assets/`: teddy-confused, teddy-curious, teddy-happy, teddy-thinking, teddy-waving (with hash suffixes)
+  - Inside screens Teddy always sits on a lilac tile `#EDE3FB`; free-floating only next to the hero phone (SPEC §12.4).
+- **Fonts:** Space Grotesk (display and kinetic text; 700 for amounts and titles), Inter 400/600 (body), Space Mono 400 (addresses, fingerprints) (SPEC §12.2).
+- **Colour tokens**
+  - Landing background `#06060E`; glow `#D4B5F7`, `#B87AED`, `#7B2FBE`, `#2A0B4D` (SPEC §16.2).
+  - App screens (SPEC §12.1): background `#F4F4F6`, surface `#FFFFFF`, ink `#111116`, primary `#7B2FBE`, primary tint `#F2EAFB`, Teddy tile `#EDE3FB`, success `#E7F6EC` / `#127A3A`, warning `#FFF5E1` / `#8A5300`.
 
 ---
 
 ## 8. Script rules
 
+### 8.0 Language
+- On-screen text: English.
+- Voice-over and subtitles: Vietnamese.
+
 ### 8.1 Banned words (SPEC §7, plus PS §6) with Vietnamese equivalents to avoid
 | Never (EN) | Never (VI) |
 | --- | --- |
-| pay / payment (for USDC) | thanh toán, trả tiền |
+| pay / payment (for USDC) | thanh toán, trả tiền, chi trả |
 | escrow | ký quỹ, tài khoản ký quỹ |
 | deposit | đặt cọc, tiền cọc, nạp tiền (as a product claim) |
 | invest | đầu tư |
@@ -259,31 +285,32 @@ Then check that Mia has ≥ 30 USDC again.
 | first (as a claim) | đầu tiên, duy nhất |
 | free / zero fees | miễn phí, 0 phí, không mất phí |
 | credit score | điểm tín dụng |
-| auto-release (PS §6, D26) | tự động giải ngân, tự động chuyển |
+| auto-release, "on its own" (PS §6, D26) | tự động giải ngân, tự động chuyển |
 | "licensed partner", "our partner" (PS §6) | "đối tác được cấp phép", "đối tác của chúng tôi" |
+| payout partner, in VI | "đối tác chi trả" → say "đối tác chuyển VND (mô phỏng)" |
 | "nobody can move the funds" (PS §6) | "không ai có thể di chuyển tiền" |
 | "never touches crypto" (PS §6) | "không bao giờ chạm vào tiền mã hóa" |
 
 Use: lock (khóa), release (mở khóa chuyển cho bạn / chuyển đến bạn), refund (hoàn lại), receive earnings (nhận tiền công), record (bản ghi), contract (hợp đồng), milestone (mốc), test network (mạng thử nghiệm), simulated (mô phỏng). The SPEC prefers "chuyển đến bạn" over "giải ngân".
 
-Note: SPEC §7 says to use "licensed partner"; PS §6 says never. This brief follows the product (2.g) **[CONFIRM]**.
+SPEC §7 now bans "licensed partner" as well (commit `27550bc`), so the landing and the product agree on this.
 
 ### 8.2 Honesty lines (must appear)
-- "Demo on a test network" (chip on the hook or the end card, and on every link card).
-- "simulated" next to every payout partner or bank transfer mention.
-- "example, estimated" next to every VND figure on the landing shots.
-- Fee line exactly: "No N.E.D fee during the pilot." Never "free".
-- Video B: the fee disclosure from PS §4.3, in substance: "Demo on devnet: network fees use test SOL. Before launch, Vietnam users will hold no crypto, not even for fees."
+- "Demo on a test network" (on the honest-status beat and on the end card).
+- "simulated" (mô phỏng) next to every payout partner or bank transfer mention.
+- "example, estimated" next to every VND figure.
+- Fee line, if a fee is mentioned, exactly: "No N.E.D fee during the pilot." Never "free".
 
 ### 8.3 Release wording
 - Wherever release after the review deadline is mentioned, add "unless the client disputes (requests changes) in time". The product UI calls it "Request changes" (D27).
-- The product docs ban the word "auto-release" (D26). So the script never says "auto-release" or "on its own". It says "anyone can press Release now after the review deadline, unless the client requested changes in time".
+- On screen: "After the deadline, anyone can release." Never "Deadlines run on their own".
+- Never "auto-release" or "on its own". Say "anyone can press Release now after the review deadline, unless the client requested changes in time".
 
 ### 8.4 Never
 - "cheapest", "cheaper" (rẻ nhất, rẻ hơn). The product is not cheaper than Wise (DL).
-- Due or Nium named as live partners. Safest: do not name them in the video at all.
+- Due or Nium named as live partners. Safest: do not name them at all.
 - Mainnet, live money, a live partner, or that N.E.D holds or converts money.
-- Showing D30 screens, Swap, xStocks, Earn, or the old wallet Home (SPEC §12.5; DL D30).
+- D30 screens, Swap, xStocks, Earn, or the old wallet Home (SPEC §12.5; DL D30).
 
 ---
 
@@ -297,8 +324,8 @@ Note: SPEC §7 says to use "licensed partner"; PS §6 says never. This brief fol
 6. **[CONFIRM]** The recording follows `final-pitch.md` §2–3 (not read here) or PS §7. Which roles run in the Workspace and which in the wallet panel?
 7. **[CONFIRM]** `DEMO_USD_VND_RATE` on recording day, and the VND figure the app will show for 20 USDC.
 8. **[CONFIRM]** Chapter 08 phone B: can a cursor press the slider (D26), or does the page only show it moving by itself? If only by itself, cut away before it moves.
-9. **[CONFIRM]** Whether chapter 02 is complete (no commit is named "chapter 02").
-10. **[CONFIRM]** The landing-layer display font for kinetic text (SPEC §4 not read).
+9. ~~Whether chapter 02 is complete.~~ **Answered (8 Oct):** chapter 02 is done.
+10. ~~The landing-layer display font for kinetic text.~~ **Answered (8 Oct):** Space Grotesk.
 11. **[CONFIRM]** Vietnamese VO lines: draft translations, not from `vi.ts`. They need a native review against section 8.1.
 12. **[CONFIRM]** Mia's 30 USDC and both wallets' SOL are in place before recording (TH checklist; current balances not checked).
 13. **[CONFIRM]** Should Funded Jobs / lock at hire (D25, D29), shipped but not on the landing page, appear in Video B?
