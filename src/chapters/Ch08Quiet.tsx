@@ -17,7 +17,7 @@ const q = copy.quiet;
  * Chapter 08 · If someone goes quiet (1900–2200 vh). The three phones live in the 3D stage (poses.ts, CH08: T6 Fan,
  * A approved, B review clock → anyone releases, C missed deadline → anyone refunds); this is the copy column, on the
  * left. SPEC row 08 has three lines and no headline: the first line leads (as the h2), the other two follow, then the
- * landing-layer chip "Disputes over quality: planned after launch".
+ * landing-layer chip "No neutral arbiter yet.".
  */
 export function Ch08Quiet({ stills = false }: { stills?: boolean }) {
   const pinVh = ch.copyOut[1] - ch.start;

@@ -445,7 +445,7 @@ function ch07Phone(o: { at: Vec3; rotation: Vec3; size: number; left: Place }): 
 /**
  * Chapter 08 · If someone goes quiet (1900–2200 vh): your phone fades out of the split; the client's phone becomes
  * phone A ("Approved", MilestoneReleased) and T6 Fans into three side by side. Phone B (anyone): the board's review
- * clock counts to 0 with scroll → "Release now · anyone can" sheet, its slider moves with scroll → released.
+ * clock counts to 0 with scroll → "Release now · anyone can" sheet, the tap mark presses its slider, then the slider moves with scroll → released.
  * Phone C (anyone): "Not submitted · deadline passed" refund sheet, slider → "Refunded to client". Folds back at the end.
  */
 export const CH08 = {
@@ -454,7 +454,9 @@ export const CH08 = {
   /** The board's review clock (60 s review, 42 s left at t = 0) counts to 0 over this window. */
   clock: [1932, 1972] as [number, number],
   toSheetB: [1976, 1984] as [number, number],
-  slideB: [1990, 2014] as [number, number],
+  /** Tap mark on phone B's slider (TAPS), before the slider moves. */
+  tapB: [1984, 1994] as [number, number],
+  slideB: [1994, 2014] as [number, number],
   releasedB: [2018, 2026] as [number, number],
   slideC: [2036, 2060] as [number, number],
   refunded: [2064, 2072] as [number, number],
@@ -803,6 +805,7 @@ export const TAPS: { track: TrackName | 'laptop'; target: string; start: number;
   { track: 'laptop', target: 'ws-lock', start: CH05.tap[0], end: CH05.tap[1] },
   { track: 'laptop', target: 'sb-submit', start: CH06.submitTap[0], end: CH06.submitTap[1] },
   { track: 'laptop', target: 'panel-submit', start: CH06.panelTap[0], end: CH06.panelTap[1] },
+  { track: 'phoneB', target: 'anyone-release', start: CH08.tapB[0], end: CH08.tapB[1] },
 ];
 
 /* ------------------------------------------------------------------------------------------------------------ */

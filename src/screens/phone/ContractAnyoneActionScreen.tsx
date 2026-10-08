@@ -11,7 +11,8 @@ import { ContractDetailScreen } from './ContractDetailScreen';
 /**
  * Port of docs/design-reference/phone/ContractAnyoneAction.dc.html: `release` (kind release) and `refund`
  * (= phone/ContractAnyoneActionRefund). Markup and inline styles 1:1, including the board's dimmed, blurred background
- * card under the sheet. The slider thumb follows scroll (chapter 08: it "moves by itself"; CH08.slideB / slideC).
+ * card under the sheet. The slider thumb follows scroll (CH08.slideB / slideC); on phone B the landing-layer tap mark
+ * presses it first (CH08.tapB).
  * Left out: the sheet / backdrop entrance animations.
  */
 const s = copy.screens.anyoneAction;
@@ -20,11 +21,12 @@ const TRAVEL = 390 - 40 - 10 - 50;
 
 const feeRow: CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, padding: '12px 0', borderTop: '1px solid #F0F0F3' };
 
-function Thumb({ window: w }: { window: [number, number] }) {
+function Thumb({ window: w, tap }: { window: [number, number]; tap?: string }) {
   const x = useTransform(scrollVh, w, [0, TRAVEL], { clamp: true });
   return (
     <motion.div
       data-slider-thumb=""
+      data-tap-target={tap}
       style={{
         x,
         width: 50,
@@ -161,7 +163,7 @@ export function ContractAnyoneActionScreen({ kind }: { kind: 'release' | 'refund
             aria-label={k.slide}
             style={{ height: 60, padding: 5, boxSizing: 'border-box', display: 'flex', alignItems: 'center', borderRadius: 9999, background: '#F2EAFB', textDecoration: 'none', border: 'none' }}
           >
-            <Thumb window={rel ? CH08.slideB : CH08.slideC} />
+            <Thumb window={rel ? CH08.slideB : CH08.slideC} tap={rel ? 'anyone-release' : undefined} />
             <div style={{ flex: 1, textAlign: 'center', marginLeft: -50, fontFamily: FONT.display, fontSize: 16, fontWeight: 700, color: '#111116' }}>{k.slide}</div>
           </a>
           <a

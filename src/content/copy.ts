@@ -195,9 +195,9 @@ export const copy = {
       explorer: 'Explorer',
       rulesLabel: 'Contract rules',
       rules: [
-        'Released when the client approves, or automatically after the review time.',
+        'Released when the client approves, or anyone can press Release now after the review deadline, unless the client requested changes in time.',
         'Refunded to the client if a submission deadline is missed.',
-        'Nobody, including N.E.D, can move it any other way.',
+        'No instruction lets N.E.D move the locked money.',
       ],
       primary: 'View contract',
       secondary: 'Back to Home',
@@ -273,7 +273,7 @@ export const copy = {
         '@vinh accepts and chooses where earnings go.',
         'You lock 500.00 USDC in the program vault.',
         '@vinh submits each milestone.',
-        'You approve, or it is released automatically after the review time.',
+        'You approve, or anyone can press Release now after the review deadline, unless the client requested changes in time.',
         'If a submission deadline is missed, that milestone can be refunded to you.',
       ],
       slide: 'Slide to create',
@@ -360,9 +360,9 @@ export const copy = {
       review: '3 days each',
       rulesLabel: 'Contract rules',
       rules: [
-        'Released when the client approves, or automatically after the review time.',
+        'Released when the client approves, or anyone can press Release now after the review deadline, unless the client requested changes in time.',
         'Refunded to the client if a submission deadline is missed.',
-        'Nobody, including N.E.D, can move it any other way.',
+        'No instruction lets N.E.D move the locked money.',
       ],
       balanceLabel: 'Your balance',
       balance: '500.00 USDC',
@@ -410,7 +410,7 @@ export const copy = {
       back: 'Back',
       title: 'Submit milestone 1',
       headline: 'Submitted · in review',
-      sub: 'Auto-release in 3 days. Remember to send @mia the delivery link.',
+      sub: 'Anyone can press Release now after the review deadline, unless the client requested changes in time. Remember to send @mia the delivery link.',
       fingerprint: 'Fingerprint',
       reviewBy: 'Review by',
       reviewByV: '15 Oct, 18:00',
@@ -504,8 +504,8 @@ export const copy = {
       },
     },
     /**
-     * phone/Disclosures. Board strings 1:1, except the row "Disputes have no neutral arbiter" (it says a client can
-     * dispute; disputes are not available, SPEC §7 and §12.5). `id` names the rows chapter 13 lights.
+     * phone/Disclosures. Board strings 1:1, except the row "Disputes have no neutral arbiter" (left out until its
+     * product wording is ported; SPEC §12.5). `id` names the rows chapter 13 lights.
      */
     disclosures: {
       back: 'Back',
@@ -516,7 +516,7 @@ export const copy = {
         { id: 'kyc', title: 'No KYC yet', text: 'N.E.D does not check anyone’s identity in this version.' },
         { id: 'phone', title: 'Phone numbers are not verified', text: 'We don’t send a code. A number on a profile may not belong to that person.' },
         { id: 'audit', title: 'The program is not audited', text: 'The Solana program that locks and releases USDC has not had a security audit.' },
-        { id: 'partner', title: 'The payout partner is simulated', text: 'No licensed partner is connected in this demo. No VND is sent to any bank.' },
+        { id: 'partner', title: 'The payout partner is simulated', text: 'No payout partner is connected in this demo. No VND is sent to any bank.' },
         { id: 'fees', title: 'Network fees use test SOL', text: 'Each action costs about 0.000005 test SOL on devnet. N.E.D charges no fee during the pilot.' },
         { id: 'vn', title: 'After release in the Vietnam path', text: 'Once a milestone is released to the payout partner, you rely on that partner to send you the VND.' },
         { id: 'circle', title: 'Circle can freeze USDC addresses', text: 'USDC is issued by Circle, which can freeze an address. N.E.D cannot undo that.' },
@@ -600,7 +600,7 @@ export const copy = {
       groupLabel: 'Where earnings go',
       vnd: {
         title: 'VND to my Vietnamese bank account',
-        body: 'A licensed payout partner converts outside Vietnam and sends VND to your bank. Bank details are collected by the partner, not by N.E.D. Simulated in this demo.',
+        body: 'A payout partner (simulated in the demo) converts outside Vietnam and sends VND to your bank. Bank details are collected by the partner, not by N.E.D. Simulated in this demo.',
       },
       simulated: 'SIMULATED',
       vnOnly: 'You live in Vietnam, so earnings arrive in VND only. Receiving USDC in a wallet is for people who live outside Vietnam (change this in Settings).',
@@ -636,7 +636,7 @@ export const copy = {
       cards: [
         { role: 'Client', title: 'Write the brief', text: 'Scope, milestones and what counts as done. Its fingerprint is saved on-chain, so neither side can change it later.' },
         { role: 'Freelancer', title: 'Submit your work', text: 'Links and files from your computer, before the deadline. The chain clock records when you submitted.' },
-        { role: 'Client', title: 'Review and release', text: 'Check the delivery against the brief, then release. If you do nothing by the review deadline, it releases on its own.' },
+        { role: 'Client', title: 'Review and release', text: 'Check the delivery against the brief, then release. Anyone can press Release now after the review deadline, unless the client requested changes in time.' },
       ],
       phone: {
         title: 'Your phone stays the wallet',
@@ -771,7 +771,7 @@ export const copy = {
             { k: 'Deadline', v: '12 Oct 2026, 18:00', sub: 'On time · 9 days left' },
             { k: 'Network fee', v: '~0.000005 SOL', sub: 'devnet test SOL' },
           ],
-          note: 'After you submit, @mia has until 15 Oct, 18:00 to review. If she does nothing by then, it is released to your bank in VND.',
+          note: 'After you submit, @mia has until 15 Oct, 18:00 to review. Anyone can press Release now after the review deadline, unless the client requested changes in time.',
           confirm: 'Submit',
         },
       },
@@ -841,13 +841,13 @@ export const copy = {
         deliveryNote: 'Made from your links, file fingerprints and note. Only this goes on-chain; the delivery itself is encrypted with the contract key, so only you and @mia can read it.',
         onTimeTitle: 'How on-time is decided',
         onTime: 'The program accepts a submit only up to 12 Oct, 18:00 and records the time from the chain clock, not from your computer. After that, the milestone can be refunded to @mia.',
-        notAll: 'Some “Done when” items are not ticked. You can still submit; @mia may dispute.',
+        notAll: 'Some “Done when” items are not ticked. You can still submit.',
         submit: 'Submit milestone 1',
         submitNote: 'Opens your wallet to confirm. You cannot edit a delivery after submitting.',
       },
       done: {
         heading: 'Submitted · in review',
-        body: '@mia sees your delivery in her Workspace and on her phone. If she does nothing by 15 Oct, 18:00, it is released to your bank in VND.',
+        body: '@mia sees your delivery in her Workspace and on her phone. Anyone can press Release now after the review deadline (15 Oct, 18:00), unless the client requested changes in time.',
         recorded: 'Recorded at',
         recordedV: '3 Oct 2026, 00:31 · chain clock',
         deadline: 'Deadline',
@@ -938,7 +938,7 @@ export const copy = {
       items: [
         { text: 'no identity checks (KYC),', row: 'kyc' },
         { text: 'no security audit,', row: 'audit' },
-        { text: 'no way to settle disputes over quality (planned after launch),', row: null },
+        { text: 'no neutral arbiter yet,', row: null },
         { text: 'no lawyer review yet,', row: null },
         { text: 'USDC is issued by Circle which can freeze an address.', row: 'circle' },
       ],
@@ -960,10 +960,10 @@ export const copy = {
   },
   /** Chapter 08 copy column: SPEC §6 row 08, exact wording (three lines, no headline in the SPEC; the first leads). */
   quiet: {
-    l1: "No answer by the review deadline? It's released to you on its own.",
+    l1: 'No answer by the review deadline? Anyone can press Release now, unless the client requested changes in time.',
     l2: "Miss a submission deadline, and that milestone's money goes back to the client.",
-    l3: 'Deadlines run on their own: once one passes, anyone can trigger the next step.',
-    chip: 'Disputes over quality: planned after launch',
+    l3: 'After the deadline, anyone can release.',
+    chip: 'No neutral arbiter yet.',
   },
   /** Chapter 07 copy column and landing-layer block: SPEC §6 row 07, exact wording. */
   release: {
@@ -985,14 +985,14 @@ export const copy = {
   lock: {
     headline: 'Your client locks it before you start.',
     l1: 'The whole amount, per milestone, held by the program.',
-    l2: 'Nobody, including N.E.D, can move the money any other way.',
+    l2: 'No instruction lets N.E.D move the locked money.',
     chip: "You can see it's there",
   },
   /** Chapter 04 copy column: SPEC §6 row 04, exact wording. */
   accept: {
     headline: 'You read the brief, then choose once where the money goes.',
     l1: 'You choose once, when you accept the contract. You never type an address.',
-    l2: 'In Vietnam: VND to your bank through a licensed partner.',
+    l2: 'In Vietnam: VND to your bank through a payout partner (simulated in the demo).',
     chip: 'Partner in talks · simulated in the demo',
   },
   /** Chapter 03 copy column: SPEC §6 row 03, exact wording. */
@@ -1007,7 +1007,7 @@ export const copy = {
   signIn: {
     headline: 'Sign in with Google. Say where you live.',
     l1: 'No seed phrase. Your wallet is set up when you sign in.',
-    l2: 'Live in Vietnam? The app shows only VND. You never hold crypto.',
+    l2: 'Live in Vietnam? The app shows only VND. In Vietnam, you see only VND.',
     small: 'You can change it in Settings.',
   },
   /** Chapter 01 screens: a generic messaging app (not N.E.D), then the N.E.D splash. */

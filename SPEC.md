@@ -136,7 +136,12 @@ For chapters 02–13, build the screens as real React components (8 phone templa
 ## 7. COPY RULES (non-negotiable — this product is legally sensitive)
 - NEVER use these words anywhere on the page: **pay / payment** (for USDC), **escrow**, **deposit**, **invest**, **yield**, **interest**, **safe / secure-as-a-guarantee / "an toàn"**, **guaranteed**, **scam-free**, **tax-compliant**, **first** (as a claim), **free / zero fees**, **credit score**, **ký quỹ**, **thanh toán**.
 - USE: lock, release, refund, receive (the money / earnings), transfer, record, contract, milestone, test network, simulated.
-- Say "licensed partner" and "partner in talks · simulated in the demo". NEVER name Due or Nium as a live partner. NEVER say "our partner".
+- Say "payout partner (simulated in the demo)" and "partner in talks · simulated in the demo". NEVER say "licensed partner" or "licensed payout partner" (product-spec section 6, 8 Oct). NEVER name Due or Nium as a live partner. NEVER say "our partner".
+- Product word rules (product-spec section 6, 8 Oct; these win over the chapter copy in section 6):
+  - Never "auto-release", "automatically" or "on its own" for a release. Say: "anyone can press Release now after the review deadline, unless the client requested changes in time." Nothing releases by itself.
+  - Never "Nobody, including N.E.D, can move the money". Say: "No instruction lets N.E.D move the locked money."
+  - Never "You never hold crypto" (demo fees use devnet test SOL). Say: "In Vietnam, you see only VND."
+  - Never say disputes are planned or unavailable: a client can request changes. Say: "No neutral arbiter yet."
 - Say "test network" instead of "devnet / test money" in headlines; "devnet" allowed in small technical labels.
 - Fee line is exactly: "No N.E.D fee during the pilot." (not "free").
 - Money amounts in VND are always shown with "example, estimated".
@@ -233,7 +238,7 @@ The landing page itself stays dark (section 4). But every **screen drawn inside 
 - The hero Teddy next to the phone (section 4) is landing-layer and may float. Keep it only in chapter 00.
 
 ### 12.5 Boards you must NOT turn into landing content
-The design canvas still contains archived or "if shipped" work. Ignore: Swap, xStocks, Simple Earn, T.E.D. bot, old wallet-mode Home (archived 3 Oct), and the **Dispute / split** boards (disputes are NOT available; keep the line "Disputes over quality: planned after launch").
+The design canvas still contains archived or "if shipped" work. Ignore: Swap, xStocks, Simple Earn, T.E.D. bot, old wallet-mode Home (archived 3 Oct), and the **Dispute / split** boards. (Updated 8 Oct: the product has "request changes", but no neutral arbiter. Do not port those boards, do not say disputes are planned or unavailable; the line is "No neutral arbiter yet.")
 
 ### 12.6 App motion tokens (use inside screens; landing uses 12.7 to 12.9)
 - Ease: `cubic-bezier(.2, 0, 0, 1)` · Ease-out: `cubic-bezier(.16, 1, .3, 1)`
