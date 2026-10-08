@@ -55,7 +55,11 @@ export type PhoneScreen =
   | 'anyoneRefund'
   | 'releasedB'
   | 'refunded'
-  | 'disclosures';
+  | 'disclosures'
+  | 'homeVNReleased'
+  | 'homeIntlReleased';
+/** Where your phone is (chapter 09 T3 split): adds "· Vietnam" / "· abroad" to its owner tag. */
+export type TagPlace = 'vn' | 'abroad';
 /** Device transform vocabulary, exactly as named in SPEC §5.3. */
 export type TransformName =
   | 'T1 Glide'
@@ -83,6 +87,7 @@ export type Pose = {
   screenSwitch?: 'cut';
   via?: true;
   dock?: number;
+  place?: TagPlace;
 };
 
 export type Sampled = Omit<Pose, 'vh' | 'ease' | 'opacity' | 'dim' | 'transform' | 'screenSwitch' | 'via' | 'dock'> & {
@@ -504,25 +509,74 @@ const ch08C = (main: Pose[], to: Place) =>
   ]);
 
 /**
- * Chapter 13 · What's real today (2200–2380 vh, right after chapter 08). The client's phone from chapter 08 fades out
- * first; then your phone fades in on Disclosures. Its list scrolls with the page (`scroll`), and each row named by a
- * NOT YET item lights as that item appears in the copy column (`notYet[i]`); the timeline appears last.
+ * Chapter 09 · Two ways to receive (2200–2420 vh, right after chapter 08). The client's phone from chapter 08 fades
+ * out first; then your phone fades in on HomeVN (released) and T3 Splits: left "Your phone · Vietnam" (HomeVN), right
+ * "Your phone · abroad" (HomeIntl, from behind it). The ₫ / $ tints sit behind them on the landing layer.
+ * At the end the right phone fades out in place; the left one leaves at the start of chapter 13.
  */
-export const CH13 = {
+export const CH09 = {
   phoneOut: [2200, 2208] as [number, number],
   phoneIn: [2210, 2222] as [number, number],
+  split: [2228, 2256] as [number, number],
+  /** Tints: [in start, in end, out start, out end], each with its phone. */
+  tintVN: [2250, 2264, 2420, 2428] as [number, number, number, number],
+  tintAbroad: [2250, 2264, 2392, 2400] as [number, number, number, number],
+  abroadOut: [2392, 2400] as [number, number],
+  end: 2420,
+};
+/** Chapter 09 T3 Split: the same places as chapter 07's split (clear of the copy column); centre = before the split. */
+const SPLIT9: Record<'desktop' | 'portrait', { centre: Place; left: Place; right: Place }> = {
+  desktop: { centre: { device: 'phone', position: [0.335, 0.1, 0], rotation: [2, 720, 0], size: 0.6 }, ...SPLIT7.desktop },
+  portrait: { centre: { device: 'phone', position: [0, -0.66, 0], rotation: [4, 720, 0], size: 0.42 }, ...SPLIT7.portrait },
+};
+
+/** Chapter 09 stops for the main phone: the client's phone (chapter 08's phone A) fades out; your phone (Vietnam) fades in, splits left. */
+function ch09Phone(o: { from: Place; centre: Place; left: Place }): Pose[] {
+  const vn = { screen: 'homeVNReleased' as const, owner: 'you' as const, place: 'vn' as const };
+  return [
+    { vh: CH09.phoneOut[1], ...o.from, size: o.from.size * FADE_SCALE.phone, opacity: 0, screen: 'releasedClient', owner: 'client', ease: 'linear' },
+    { vh: CH09.phoneIn[0], ...o.centre, size: o.centre.size * FADE_SCALE.phone, opacity: 0, ...vn, screenSwitch: 'cut' },
+    { vh: CH09.phoneIn[1], ...o.centre, ...vn, ease: 'easeOut' },
+    { vh: CH09.split[0], ...o.centre, ...vn },
+    { vh: CH09.split[1], ...o.left, ...vn, ease: 'easeOut', transform: 'T3 Split' },
+    { vh: CH09.end, ...o.left, ...vn },
+  ];
+}
+/** Chapter 09, phone B (abroad): out from behind your phone (T3 Split) to the right; fades out in place at the end. */
+function ch09B(main: Pose[], right: Place): Pose[] {
+  const abroad = { screen: 'homeIntlReleased' as const, owner: 'you' as const, place: 'abroad' as const };
+  return [
+    { vh: CH09.split[0], ...behind(main, CH09.split[0]), ...abroad, screenSwitch: 'cut' },
+    { vh: CH09.split[1], ...right, ...abroad, ease: 'easeOut', transform: 'T3 Split' },
+    { vh: CH09.abroadOut[0], ...right, ...abroad },
+    { vh: CH09.abroadOut[1], ...right, size: right.size * FADE_SCALE.phone, opacity: 0, ...abroad, ease: 'linear' },
+  ];
+}
+
+/** Built chapters follow each other with no gap (chapters.ts): 13 after 09, 14 after 13. */
+const C13 = CH09.end;
+const C14 = C13 + 180;
+
+/**
+ * Chapter 13 · What's real today (2420–2600 vh, right after chapter 09). Your phone (Vietnam) from chapter 09 fades
+ * out first; then your phone fades in on Disclosures. Its list scrolls with the page (`scroll`), and each row named by
+ * a NOT YET item lights as that item appears in the copy column (`notYet[i]`); the timeline appears last.
+ */
+export const CH13 = {
+  phoneOut: [C13, C13 + 8] as [number, number],
+  phoneIn: [C13 + 10, C13 + 22] as [number, number],
   /** One window per NOT YET item (copy.real.notYet.items, same order): the item fades in, its row lights. */
   notYet: [
-    [2228, 2236],
-    [2246, 2254],
-    [2264, 2272],
-    [2282, 2290],
-    [2300, 2308],
+    [C13 + 28, C13 + 36],
+    [C13 + 46, C13 + 54],
+    [C13 + 64, C13 + 72],
+    [C13 + 82, C13 + 90],
+    [C13 + 100, C13 + 108],
   ] as [number, number][],
   /** The Disclosures list scrolls from its top (0) to its end (1) over this window. */
-  scroll: [2232, 2306] as [number, number],
-  timeline: [2318, 2326] as [number, number],
-  end: 2380,
+  scroll: [C13 + 32, C13 + 106] as [number, number],
+  timeline: [C13 + 118, C13 + 126] as [number, number],
+  end: C13 + 180,
 };
 /** Chapter 13 resting place of your phone: right of the copy column. */
 const P13: Record<'desktop' | 'portrait', Place> = {
@@ -530,10 +584,10 @@ const P13: Record<'desktop' | 'portrait', Place> = {
   portrait: { device: 'phone', position: [0, -0.66, 0], rotation: [2, 718, 0], size: 0.27 },
 };
 
-/** Chapter 13 stops for the main phone: the client's phone (chapter 08's phone A) fades out, your phone fades in on Disclosures. */
+/** Chapter 13 stops for the main phone: your phone (Vietnam, chapter 09) fades out, your phone fades in on Disclosures. */
 function ch13Phone(o: { from: Place; to: Place }): Pose[] {
   return [
-    { vh: CH13.phoneOut[1], ...o.from, size: o.from.size * FADE_SCALE.phone, opacity: 0, screen: 'releasedClient', owner: 'client', ease: 'linear' },
+    { vh: CH13.phoneOut[1], ...o.from, size: o.from.size * FADE_SCALE.phone, opacity: 0, screen: 'homeVNReleased', owner: 'you', place: 'vn', ease: 'linear' },
     { vh: CH13.phoneIn[0], ...o.to, size: o.to.size * FADE_SCALE.phone, opacity: 0, screen: 'disclosures', owner: 'you', screenSwitch: 'cut' },
     { vh: CH13.phoneIn[1], ...o.to, screen: 'disclosures', owner: 'you', ease: 'easeOut' },
     { vh: CH13.end, ...o.to, screen: 'disclosures', owner: 'you' },
@@ -541,15 +595,15 @@ function ch13Phone(o: { from: Place; to: Place }): Pose[] {
 }
 
 /**
- * Chapter 14 · Close + product links (2380–2540 vh, right after chapter 13). Your phone from chapter 13 fades out
+ * Chapter 14 · Close + product links (2600–2760 vh, right after chapter 13). Your phone from chapter 13 fades out
  * first; then your phone (Home) and your computer (WebSignIn) fade in side by side, facing the camera, and rest
  * there to the end of the page. They never overlap: the computer left of the phone, the copy column left of both.
  */
 export const CH14 = {
-  phoneOut: [2380, 2388] as [number, number],
-  phoneIn: [2390, 2402] as [number, number],
-  laptopIn: [2392, 2406] as [number, number],
-  end: 2540,
+  phoneOut: [C14, C14 + 8] as [number, number],
+  phoneIn: [C14 + 10, C14 + 22] as [number, number],
+  laptopIn: [C14 + 12, C14 + 26] as [number, number],
+  end: C14 + 160,
 };
 /** Chapter 14 resting place of your phone: right of the computer, facing the camera. */
 const P14: Record<'desktop' | 'portrait', Place> = {
@@ -620,10 +674,13 @@ const phoneDesktop: Pose[] = [
   // Chapter 08 · If someone goes quiet (1900–2200 vh): see CH08.
   ...ch08PhoneA({ from: SPLIT7.desktop.left, left: FAN8.desktop.left }),
 
-  // Chapter 13 · What's real today (2200–2380 vh): see CH13.
-  ...ch13Phone({ from: FAN8.desktop.left, to: P13.desktop }),
+  // Chapter 09 · Two ways to receive (2200–2420 vh): see CH09.
+  ...ch09Phone({ from: FAN8.desktop.left, centre: SPLIT9.desktop.centre, left: SPLIT9.desktop.left }),
 
-  // Chapter 14 · Close + product links (2380–2540 vh): see CH14.
+  // Chapter 13 · What's real today (2420–2600 vh): see CH13.
+  ...ch13Phone({ from: SPLIT9.desktop.left, to: P13.desktop }),
+
+  // Chapter 14 · Close + product links (2600–2760 vh): see CH14.
   ...ch14Phone({ from: P13.desktop, to: P14.desktop }),
 ];
 
@@ -662,7 +719,8 @@ const phonePortrait: Pose[] = [
   ...ch06Phone({ at: [0, -0.88, 0], rotation: [4, 360, 0], size: 0.86 }),
   ...ch07Phone({ at: [0, -0.88, 0], rotation: [4, 360, 0], size: 0.86, left: SPLIT7.portrait.left }),
   ...ch08PhoneA({ from: SPLIT7.portrait.left, left: FAN8.portrait.left }),
-  ...ch13Phone({ from: FAN8.portrait.left, to: P13.portrait }),
+  ...ch09Phone({ from: FAN8.portrait.left, centre: SPLIT9.portrait.centre, left: SPLIT9.portrait.left }),
+  ...ch13Phone({ from: SPLIT9.portrait.left, to: P13.portrait }),
   ...ch14Phone({ from: P13.portrait, to: P14.portrait }),
 ];
 
@@ -684,6 +742,7 @@ const phoneBDesktop: Pose[] = [
   // Chapter 08: your phone leaves first (fades, shrinks a little), then comes back as phone B of the fan.
   { vh: CH08.youOut[1], ...SPLIT7.desktop.right, size: SPLIT7.desktop.right.size * FADE_SCALE.phone, opacity: 0, screen: 'releasedVN', owner: 'you', ease: 'linear' },
   ...ch08B(phoneDesktop, FAN8.desktop.centre),
+  ...ch09B(phoneDesktop, SPLIT9.desktop.right),
 ];
 
 const phoneBPortrait: Pose[] = [
@@ -698,6 +757,7 @@ const phoneBPortrait: Pose[] = [
   { vh: 1898, ...SPLIT7.portrait.right, screen: 'releasedVN', owner: 'you' },
   { vh: CH08.youOut[1], ...SPLIT7.portrait.right, size: SPLIT7.portrait.right.size * FADE_SCALE.phone, opacity: 0, screen: 'releasedVN', owner: 'you', ease: 'linear' },
   ...ch08B(phonePortrait, FAN8.portrait.centre),
+  ...ch09B(phonePortrait, SPLIT9.portrait.right),
 ];
 
 /** Third phone: only for the T6 Fan (chapter 03). */
@@ -1140,6 +1200,7 @@ export function samplePose(trackIn: Pose[], vh: number, still = false): Sampled 
     // Discrete fields switch at the midpoint of the segment.
     screen: t < 0.5 ? a.screen : b.screen,
     owner: t < 0.5 ? a.owner : b.owner,
+    place: t < 0.5 ? a.place : b.place,
     screenFrom: a.screen,
     screenTo: b.screen,
     screenMix: a.screen === b.screen ? 1 : b.screenSwitch === 'cut' ? (t < 0.5 ? 0 : 1) : t,

@@ -2,7 +2,7 @@
 
 import type { Owner, PhoneScreen } from '@/scene/poses';
 import { PHONE_SCREEN_PX } from './size';
-import { HomeIntlScreen, HomeVNScreen } from './HomeScreen';
+import { HomeIntlReleasedScreen, HomeIntlScreen, HomeVNReleasedScreen, HomeVNScreen } from './HomeScreen';
 import { ContractLockedScreen } from './ContractLockedScreen';
 import { OnbSplashScreen } from './OnbSplashScreen';
 import { OnbWelcomeScreen } from './OnbWelcomeScreen';
@@ -81,6 +81,10 @@ function Board({ screen, owner }: { screen: PhoneScreen; owner: Exclude<Owner, '
       return <MilestoneReleasedScreen variant="refund" />;
     case 'disclosures':
       return <DisclosuresScreen />;
+    case 'homeVNReleased':
+      return <HomeVNReleasedScreen />;
+    case 'homeIntlReleased':
+      return <HomeIntlReleasedScreen />;
   }
 }
 

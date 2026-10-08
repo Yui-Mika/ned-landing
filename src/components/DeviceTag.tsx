@@ -1,5 +1,5 @@
 import { copy } from '@/content/copy';
-import type { Owner } from '@/scene/poses';
+import type { Owner, TagPlace } from '@/scene/poses';
 
 /** Owner colours (SPEC §4): indigo = Client's, purple = Yours, grey = Anyone. */
 export const OWNER_COLOR: Record<Owner, string> = {
@@ -8,7 +8,7 @@ export const OWNER_COLOR: Record<Owner, string> = {
   anyone: '#9CA3AF',
 };
 
-type Props = { owner: Owner; device?: 'phone' | 'computer'; size?: 'sm' | 'md' | 'lg'; className?: string };
+type Props = { owner: Owner; device?: 'phone' | 'computer'; size?: 'sm' | 'md' | 'lg'; className?: string; place?: TagPlace };
 
 const sizes = {
   sm: { pill: 'px-3 py-1 text-[12px]', dot: 'size-2' },
@@ -16,7 +16,7 @@ const sizes = {
   lg: { pill: 'px-5 py-2.5 text-[22px]', dot: 'size-3' },
 };
 
-export function DeviceTag({ owner, device = 'phone', size = 'sm', className = '' }: Props) {
+export function DeviceTag({ owner, device = 'phone', size = 'sm', className = '', place }: Props) {
   const color = OWNER_COLOR[owner];
   return (
     <span
@@ -25,6 +25,7 @@ export function DeviceTag({ owner, device = 'phone', size = 'sm', className = ''
     >
       <span aria-hidden="true" className={`${sizes[size].dot} rounded-full`} style={{ background: color }} />
       {copy.owners[owner][device]}
+      {place && ` · ${copy.owners.place[place]}`}
     </span>
   );
 }

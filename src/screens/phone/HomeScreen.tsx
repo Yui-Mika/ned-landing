@@ -7,9 +7,10 @@ import { DevnetChip, FONT, Screen, StatusBar, TONE, chipStyle, dotStyle, type To
  * Port of docs/design-reference/phone/HomeVN.dc.html and HomeIntl.dc.html (one markup, `view` vn | intl).
  * Markup and inline styles 1:1; strings from copy.screens.homeVN / homeIntl (board strings, SPEC numbers).
  * Left out: the share sheet (closed in these states) and the boards' entrance animations.
+ * `released` (chapter 09): HomeVN stage released / HomeIntl clientStage released (copy.screens.home*Released).
  */
-const V = copy.screens.homeVN;
-const I = copy.screens.homeIntl;
+const HV = copy.screens.homeVN;
+const HI = copy.screens.homeIntl;
 
 /** Board icon paths (renderVals P). */
 const ICON = {
@@ -113,7 +114,7 @@ function FlagUS() {
     xs.forEach((cx) => stars.push([cx, cy]));
   });
   return (
-    <svg width="40" height="40" viewBox="0 0 20 20" role="img" aria-label={I.flagLabel} style={{ display: 'block' }}>
+    <svg width="40" height="40" viewBox="0 0 20 20" role="img" aria-label={HI.flagLabel} style={{ display: 'block' }}>
       {stripes}
       <rect width="10" height="10.769" fill="#3C3B6E" />
       {stars.map(([cx, cy]) => (
@@ -126,7 +127,9 @@ function FlagUS() {
 const tab: CSSProperties = { flex: 1, height: 56, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, textDecoration: 'none' };
 const tabLabel: CSSProperties = { fontSize: 11, fontWeight: 500, color: '#5E5E6A' };
 
-export function HomeScreen({ view }: { view: 'vn' | 'intl' }) {
+export function HomeScreen({ view, released = false }: { view: 'vn' | 'intl'; released?: boolean }) {
+  const V = released ? { ...HV, ...copy.screens.homeVNReleased } : HV;
+  const I = released ? { ...HI, ...copy.screens.homeIntlReleased } : HI;
   const vn = view === 'vn';
   const s = vn ? V : I;
   return (
@@ -418,3 +421,5 @@ export function HomeScreen({ view }: { view: 'vn' | 'intl' }) {
 
 export const HomeVNScreen = () => <HomeScreen view="vn" />;
 export const HomeIntlScreen = () => <HomeScreen view="intl" />;
+export const HomeVNReleasedScreen = () => <HomeScreen view="vn" released />;
+export const HomeIntlReleasedScreen = () => <HomeScreen view="intl" released />;

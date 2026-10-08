@@ -14,6 +14,7 @@ import { PhonePoster } from '@/components/PhonePoster';
 import { Teddy } from '@/components/Teddy';
 import { RefractionBand } from '@/components/hero/RefractionBand';
 import { ChapterGlow } from '@/components/ChapterGlow';
+import { CurrencyTints } from '@/components/CurrencyTints';
 import { Ch00Hero } from '@/chapters/Ch00Hero';
 import { Ch01Problem } from '@/chapters/Ch01Problem';
 import { Ch02SignIn } from '@/chapters/Ch02SignIn';
@@ -23,6 +24,7 @@ import { Ch05Lock } from '@/chapters/Ch05Lock';
 import { Ch06Submit } from '@/chapters/Ch06Submit';
 import { Ch07Release } from '@/chapters/Ch07Release';
 import { Ch08Quiet } from '@/chapters/Ch08Quiet';
+import { Ch09Receive } from '@/chapters/Ch09Receive';
 import { Ch13Real } from '@/chapters/Ch13Real';
 import { Ch14Close } from '@/chapters/Ch14Close';
 
@@ -54,6 +56,7 @@ export default function Page() {
         {/* Back to front: light band / chapter glows, 3D canvas (transparent), poster, copy. */}
         <RefractionBand />
         <ChapterGlow chapterId="01" />
+        <CurrencyTints />
         {webgl && <Stage eventSource={root} reduced={reduced} onReady={onReady} />}
         <PhonePoster stageReady={stageReady} />
         <Teddy />
@@ -71,6 +74,7 @@ export default function Page() {
           <Ch06Submit stills={webgl === false} />
           <Ch07Release stills={webgl === false} />
           <Ch08Quiet stills={webgl === false} />
+          <Ch09Receive stills={webgl === false} />
           <Ch13Real stills={webgl === false} />
           <Ch14Close stills={webgl === false} />
 

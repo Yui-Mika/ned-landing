@@ -11,7 +11,7 @@ import { copy } from '@/content/copy';
 import { DeviceTag, OWNER_COLOR } from '@/components/DeviceTag';
 import { PHONE_SCREEN_PX } from '@/screens/phone/size';
 import { PhoneScreenView } from '@/screens/phone/PhoneScreenView';
-import { samplePose, tracks, type Owner, type PhoneScreen, type TrackName } from './poses';
+import { samplePose, tracks, type Owner, type PhoneScreen, type TagPlace, type TrackName } from './poses';
 import { TAP_PX, drawTap } from './tap';
 import { registerFocusResolver, screenPointToWorld } from './focus';
 import { stageViewport } from './viewport';
@@ -114,6 +114,8 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
   // "Anyone" (grey, SPEC §4): a phone that stands for anyone triggering a step (chapter 08). Tags only; flips never apply.
   const [anyone, setAnyone] = useState(false);
   const tagOwner: Owner = anyone ? 'anyone' : frontOwner;
+  // Where your phone is (chapter 09): "Your phone · Vietnam" / "· abroad". Tags only.
+  const [place, setPlace] = useState<TagPlace | undefined>(undefined);
 
   const screenGeo = useMemo(() => roundedRect(SCREEN.w + 0.02, SCREEN.h + 0.02, SCREEN.r + 0.01), []);
   const glowTex = useMemo(() => glowTexture(), []);
@@ -226,6 +228,7 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
     const p = pose.owner === 'anyone' ? 'you' : pose.owner;
     if (p !== storyOwner) setStoryOwner(p);
     if ((pose.owner === 'anyone') !== anyone) setAnyone(pose.owner === 'anyone');
+    if (pose.place !== place) setPlace(pose.place);
     const hero = vh < INTERACTIVE_UNTIL_VH;
     if (hero !== inHero) setInHero(hero);
 
@@ -314,7 +317,7 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
           position={portrait ? [-BODY.w / 2 + 0.24, BODY.h / 2 + 0.09, BODY.d / 2] : [0, -BODY.h / 2 - 0.13, BODY.d / 2]}
         >
           <div ref={tagEl} style={{ opacity: 0 }}>
-            <DeviceTag owner={tagOwner} size="md" />
+            <DeviceTag owner={tagOwner} size="md" place={place} />
           </div>
         </SceneHtml>
 

@@ -32,6 +32,8 @@ export const copy = {
     you: { phone: 'Your phone', computer: 'Your computer' },
     client: { phone: "Client's phone", computer: "Client's computer" },
     anyone: { phone: 'Anyone', computer: 'Anyone' },
+    /** Where your phone is (chapter 09 T3 split): "Your phone · Vietnam" / "Your phone · abroad" (SPEC row 09). */
+    place: { vn: 'Vietnam', abroad: 'abroad' },
   },
   /**
    * Text INSIDE device screens: ported from docs/design-reference boards (board strings, SPEC numbers).
@@ -118,6 +120,32 @@ export const copy = {
         records: 'Keep a record of what you receive',
       },
       nav: { label: 'Main', home: 'Home', contracts: 'Contracts', records: 'Records', settings: 'Settings' },
+    },
+    /**
+     * phone/HomeVN · stage released (chapter 09): only the fields that differ from homeVN. Board: milestone 1 released
+     * → "Received this month" = milestone 1, milestone 2 still locked. SPEC numbers (board samples 10 / 20 USDC);
+     * Logo refresh removed as in homeVN.
+     */
+    homeVNReleased: {
+      heroWhole: '≈ 6,500,000',
+      heroSubRest: ' · $250.00 · 1 contract · rate of 2 Oct',
+      statA: { label: 'Received this month', value: '≈ 6,500,000 VND' },
+      needs: [{ title: 'Submit milestone 2 · due in 16 days', sub: 'Landing page design · ≈ 6,500,000 VND', icon: 'submit', tone: 'purple' }],
+      rows: [
+        { seed: 'mia', title: 'Landing page design', party: 'from @mia', deadline: 'Milestone 2 due 19 Oct', status: 'Locked · work in progress', tone: 'purple', total: '≈ 13,010,000 VND', totalSub: '$500.00 · estimate' },
+      ],
+    },
+    /**
+     * phone/HomeIntl · clientStage released (chapter 09): only the fields that differ from homeIntl. The board has no
+     * freelancer-abroad Home; nearest: this board with its "USDC balance" set to the SPEC 250.00 USDC (board: 0.00 in
+     * this stage). Milestone 2 still locked: 250.00 USDC. Logo refresh removed as in homeIntl.
+     */
+    homeIntlReleased: {
+      heroWhole: '250.00',
+      statA: { label: 'Locked in your contracts', value: '250.00 USDC' },
+      rows: [
+        { seed: 'vinh', title: 'Landing page design', party: 'to @vinh', deadline: 'Milestone 2 due 19 Oct', status: 'Locked · work in progress', tone: 'purple', total: '500.00 USDC', totalSub: 'total' },
+      ],
     },
     /** phone/OnbWelcome (no states). */
     onbWelcome: {
@@ -884,6 +912,11 @@ export const copy = {
   },
   /** The invite-link chip (T8): the same string as the link field it lifts off (web/WebContractNew, created). */
   inviteLink: 'ned.app/c/7XqP2mWc#k=Qm4tY8vR2LkN9sQe',
+  /** Chapter 09 copy column: SPEC §6 row 09, exact wording. */
+  receive: {
+    headline: 'Where you live decides how you receive it.',
+    small: 'Bank transfers need an identity check by the partner.',
+  },
   /**
    * Chapter 13 copy column: SPEC §6 row 13 headline + the "Honest status" list of SPEC §1, verbatim. NOT YET is split
    * at its commas (one item per line, so each lights its Disclosures row); NEXT is the timeline Now · Next · Then · Later.

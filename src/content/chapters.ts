@@ -36,11 +36,12 @@ const base: Base[] = [
   { id: '06', name: 'Work and submit', start: 1360, end: 1620 },
   { id: '07', name: 'Review and release', start: 1620, end: 1900 },
   { id: '08', name: 'If someone goes quiet', start: 1900, end: 2200 },
-  // Chapters 09–12 are not built yet (SPEC: 09 2200–2420 · 10 2420–2620 · 11 2620–2800 · 12 2800–2960). Built
-  // chapters follow each other with no gap: 13 starts where 08 ends (SPEC length 180 vh), 14 where 13 ends (160 vh).
-  { id: '13', name: "What's real today", start: 2200, end: 2380 },
+  { id: '09', name: 'Two ways to receive', start: 2200, end: 2420 },
+  // Chapters 10–12 are not built yet (SPEC: 10 2420–2620 · 11 2620–2800 · 12 2800–2960). Built chapters follow each
+  // other with no gap: 13 starts where 09 ends (SPEC length 180 vh), 14 where 13 ends (160 vh).
+  { id: '13', name: "What's real today", start: 2420, end: 2600 },
   // The last chapter's copy never exits: the exit window lies past the end of the page.
-  { id: '14', name: 'See a milestone released', start: 2380, end: 2540, copyOut: [2580, 2580 + text.scrub.window] },
+  { id: '14', name: 'See a milestone released', start: 2600, end: 2760, copyOut: [2800, 2800 + text.scrub.window] },
 ];
 
 export const chapters: Chapter[] = base.map(withCopyWindows);
@@ -52,7 +53,7 @@ export const chapterById = (id: string): Chapter => {
 };
 
 /** Chapters that are built so far. The page is only as long as these (plus a short spacer). */
-export const BUILT_UNTIL_VH = 2540;
+export const BUILT_UNTIL_VH = 2760;
 
 export function chapterAt(vh: number): Chapter {
   for (let i = chapters.length - 1; i >= 0; i--) if (vh >= chapters[i].start) return chapters[i];
