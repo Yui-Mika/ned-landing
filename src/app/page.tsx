@@ -42,6 +42,10 @@ export default function Page() {
   const onReady = useCallback(() => setStageReady(true), []);
 
   useEffect(() => setWebgl(hasWebGL()), []);
+  // Dev-only layout audit (src/dev/audit.ts); removed from production builds.
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'production') void import('@/dev/audit').then((m) => m.installAudit());
+  }, []);
   // Chapter 00 load reveal: starts once fonts and the first poster frame are ready (≤ 1.2 s).
   useRevealGate();
   // Hero intro (§16): sweep, then the phone enters. Input or a mid-page load skips it.

@@ -115,9 +115,10 @@ const SPLIT: Record<'desktop' | 'portrait', { left: Place; right: Place }> = {
     left: { device: 'phone', position: [-0.62, -0.04, 0], rotation: [2, 16, 0], size: 0.66 },
     right: { device: 'phone', position: [-0.06, -0.04, 0], rotation: [2, -14, 0], size: 0.66 },
   },
+  // Portrait: 12 px clear of both edges and of each other at 360 px; Phone.tsx fits them under the copy.
   portrait: {
-    left: { device: 'phone', position: [-0.5, -0.46, 0], rotation: [3, 12, 0], size: 0.47 },
-    right: { device: 'phone', position: [0.5, -0.46, 0], rotation: [3, -12, 0], size: 0.47 },
+    left: { device: 'phone', position: [-0.49, -0.9, 0], rotation: [3, 12, 0], size: 0.44 },
+    right: { device: 'phone', position: [0.49, -0.9, 0], rotation: [3, -12, 0], size: 0.44 },
   },
 };
 
@@ -819,26 +820,28 @@ const phoneDesktop: Pose[] = [
   ...ch14Phone({ from: P13.desktop, to: P14.desktop }),
 ];
 
-// Portrait (SPEC §8): phone at 92% width rising from the bottom, top ~60% visible.
+// Portrait (SPEC §8, mobile layout pass): poses ask for a large phone near the bottom; Phone.tsx shrinks and shifts
+// it into the stage zone under the copy (scene/zone.ts), so it is always whole and centred.
 const phonePortrait: Pose[] = [
-  { vh: 0, device: 'phone', position: [0.04, -1.06, 0], rotation: [6, -18, 0], size: 0.92, screen: 'home', owner: 'you' },
-  { vh: 60, device: 'phone', position: [0.04, -0.88, 0], rotation: [4, -8, 0], size: 0.92, screen: 'home', owner: 'you', ease: 'easeOut' },
-  { vh: 100, device: 'phone', position: [0.04, -0.88, 0], rotation: [4, -8, 0], size: 0.92, screen: 'home', owner: 'you' },
-  { vh: 140, device: 'phone', position: [-0.1, -0.94, 0], rotation: [4, 10, 0], size: 0.86, screen: 'home', owner: 'you', ease: 'ease', transform: 'T1 Glide' },
+  // Chapter 00: under the hero copy; once the copy has faded the stage zone grows and the phone with it.
+  { vh: 0, device: 'phone', position: [0, -0.9, 0], rotation: [6, -18, 0], size: 0.92, screen: 'home', owner: 'you' },
+  { vh: 60, device: 'phone', position: [0, -0.9, 0], rotation: [4, -8, 0], size: 0.92, screen: 'home', owner: 'you', ease: 'easeOut' },
+  { vh: 100, device: 'phone', position: [0, -0.9, 0], rotation: [4, -8, 0], size: 0.92, screen: 'home', owner: 'you' },
+  { vh: 140, device: 'phone', position: [0, -0.9, 0], rotation: [4, 10, 0], size: 0.92, screen: 'home', owner: 'you', ease: 'ease', transform: 'T1 Glide' },
 
-  // Chapter 01 (portrait): copy on top, phone rising from the bottom; the split shrinks both phones.
-  { vh: 158, device: 'phone', position: [0, -0.9, 0], rotation: [4, 6, 0], size: 0.86, screen: 'chatYou', owner: 'you' },
-  { vh: 255, device: 'phone', position: [0, -0.9, 0], rotation: [4, 4, 0], size: 0.86, screen: 'chatYou', owner: 'you' },
+  // Chapter 01 (portrait): copy on top, phone below; the split shrinks both phones.
+  { vh: 158, device: 'phone', position: [0, -0.9, 0], rotation: [4, 6, 0], size: 0.92, screen: 'chatYou', owner: 'you' },
+  { vh: 255, device: 'phone', position: [0, -0.9, 0], rotation: [4, 4, 0], size: 0.92, screen: 'chatYou', owner: 'you' },
   { vh: 290, ...SPLIT.portrait.left, screen: 'chatYou', owner: 'you', transform: 'T3 Split' },
   { vh: 318, ...SPLIT.portrait.left, screen: 'chatYou', owner: 'you' },
   { vh: 332, ...SPLIT.portrait.left, dim: DIM, screen: 'chatYou', owner: 'you' },
-  { vh: 346, device: 'phone', position: [-0.12, -0.84, 0], rotation: [4, 6, 0], size: 0.72, dim: DIM, screen: 'chatYou', owner: 'you', transform: 'T3 Split' },
-  { vh: 360, device: 'phone', position: [0, -0.88, 0], rotation: [4, 0, 0], size: 0.86, screen: 'splash', owner: 'you', ease: 'easeOut' },
+  { vh: 346, device: 'phone', position: [0, -0.9, 0], rotation: [4, 6, 0], size: 0.72, dim: DIM, screen: 'chatYou', owner: 'you', transform: 'T3 Split' },
+  { vh: 360, device: 'phone', position: [0, -0.9, 0], rotation: [4, 0, 0], size: 0.92, screen: 'splash', owner: 'you', ease: 'easeOut' },
 
-  // Chapter 02 (portrait): copy on top, phone rising from the bottom; the flip parks it a little right.
-  ...ch02Screens([0, -0.88, 0], [4, 0, 0], 0.86),
-  ...t2Flip({ start: 516, end: 544, from: [0, -0.88, 0], to: [0.06, -0.88, 0], rotation: [4, 0, 0], sizeFrom: 0.86, sizeTo: 0.86, toScreen: 'homeIntl' }),
-  { vh: 560, device: 'phone', position: [0.06, -0.88, 0], rotation: [4, 360, 0], size: 0.86, screen: 'homeIntl', owner: 'client' },
+  // Chapter 02 (portrait): copy on top, phone below, centred; the flip turns it in place.
+  ...ch02Screens([0, -0.9, 0], [4, 0, 0], 0.92),
+  ...t2Flip({ start: 516, end: 544, from: [0, -0.9, 0], to: [0, -0.9, 0], rotation: [4, 0, 0], sizeFrom: 0.92, sizeTo: 0.92, toScreen: 'homeIntl' }),
+  { vh: 560, device: 'phone', position: [0, -0.9, 0], rotation: [4, 360, 0], size: 0.92, screen: 'homeIntl', owner: 'client' },
 
   // Chapter 03 (portrait): out to the right while the browser card rises; back for the fan.
   { vh: 584, device: 'phone', position: [1.6, -0.88, 0], rotation: [4, 340, 0], size: 0.86, opacity: 0, screen: 'homeIntl', owner: 'client', transform: 'T1 Glide' },

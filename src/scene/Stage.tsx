@@ -34,6 +34,19 @@ function CameraRig({ reduced, portrait }: { reduced: boolean; portrait: boolean 
   const viewport = useThree((s) => s.viewport);
   const tmp = useRef({ a: new THREE.Vector3(), b: new THREE.Vector3(), t: new THREE.Vector3() }).current;
   useFrame((_, dt) => {
+    // Portrait (mobile layout pass): no camera zoom or pan. Every device fits the stage zone whole (scene/zone.ts),
+    // so a zoomed device would spill over the copy; the active element is already in view.
+    if (portrait) {
+      const step = (from: number, to: number) => (reduced ? to : THREE.MathUtils.damp(from, to, CAMERA_LAMBDA, dt));
+      camera.position.set(step(camera.position.x, 0), step(camera.position.y, 0), CAMERA.z);
+      const zoom = step(camera.zoom, 1);
+      if (Math.abs(zoom - camera.zoom) > 1e-5) {
+        camera.zoom = zoom;
+        camera.updateProjectionMatrix();
+      }
+      camera.lookAt(camera.position.x, camera.position.y, 0);
+      return;
+    }
     const cam = sampleCamera(scrollVh.get(), reduced, portrait);
     // Zoom and on-screen placement for one keyframe.
     const resolve = (k: CameraPose): { zoom: number; at: [number, number] } => {
@@ -112,12 +125,13 @@ export default function Stage({ eventSource, reduced, onReady }: Props) {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-0" role="img" aria-label={copy.site.canvasLabel}>
+    <div data-stage="" className="fixed inset-0 z-0" role="img" aria-label={copy.site.canvasLabel}>
       <Canvas
         eventSource={eventSource as RefObject<HTMLElement>}
         eventPrefix="client"        frameloop={hidden ? 'never' : 'always'}
-        dpr={[1, 1.75]}
-        gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+        // Portrait: pixel ratio at most 1.5 and no MSAA (the screens are DOM; the bodies are small).
+        dpr={[1, portrait ? 1.5 : 1.75]}
+        gl={{ antialias: !portrait, alpha: true, powerPreference: 'high-performance' }}
         camera={{ fov: CAMERA.fov, position: [0, 0, CAMERA.z], near: 0.1, far: 50 }}
       >
         <ambientLight intensity={0.35} />

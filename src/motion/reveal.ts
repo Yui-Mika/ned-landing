@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { useAnimationControls, type TargetAndTransition } from 'motion/react';
 import { PORTRAIT_QUERY, useReducedMotionSafe } from './flags';
 import { EASE_OUT, text } from './tokens';
@@ -51,17 +51,21 @@ export function useRevealGate() {
   }, []);
 }
 
-/** Narrow / touch layout: no blur, shorter stagger, smaller rise (§14.4). */
+/**
+ * Portrait layout (the viewport, not the pointer type): no blur, shorter stagger, smaller rise (§14.4).
+ * Hydration-safe and correct from the first client render after hydration, so no render ever applies the
+ * desktop blur on a phone (a style written in such a render used to stay on the words: headlines stuck blurred).
+ */
 export function useIsMobile() {
-  const [mobile, setMobile] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia(PORTRAIT_QUERY);
-    const update = () => setMobile(mq.matches);
-    update();
-    mq.addEventListener('change', update);
-    return () => mq.removeEventListener('change', update);
-  }, []);
-  return mobile;
+  return useSyncExternalStore(
+    (onChange) => {
+      const mq = window.matchMedia(PORTRAIT_QUERY);
+      mq.addEventListener('change', onChange);
+      return () => mq.removeEventListener('change', onChange);
+    },
+    () => window.matchMedia(PORTRAIT_QUERY).matches,
+    () => false,
+  );
 }
 
 type RevealStep = {

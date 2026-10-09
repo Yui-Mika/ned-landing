@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { motion } from 'motion/react';
 import { useLoadReveal } from '@/motion/reveal';
+import { text } from '@/motion/tokens';
 import { useChapterCopy, useScrub } from './ChapterCopy';
 
 type Props = {
@@ -26,7 +27,9 @@ export function RevealBlock({ children, line = 0, delay = 0, duration = 500, ris
   const ctx = useChapterCopy();
   const scrub = useScrub(line);
   const reveal = ctx?.loadReveal ?? false;
-  const controls = useLoadReveal({ enabled: reveal, delay, duration, from: { y: rise }, onDone: onRevealed });
+  // Portrait: no step travels more than 12 px (mobile layout pass).
+  const travel = ctx?.mobile ? Math.min(rise, text.reveal.riseMobileMax) : rise;
+  const controls = useLoadReveal({ enabled: reveal, delay, duration, from: { y: travel }, onDone: onRevealed });
 
   return (
     <motion.div

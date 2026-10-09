@@ -4,8 +4,19 @@
     {
       "name": "next-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3000
+    },
+    {
+      "name": "audit-sink",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/audit-sink.mjs"
+      ],
+      "port": 3999
     }
   ]
 }

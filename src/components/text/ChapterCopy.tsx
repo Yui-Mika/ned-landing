@@ -1,12 +1,13 @@
 'use client';
 
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { useTransform, type MotionValue } from 'motion/react';
 import { useHydrated, useReducedMotionSafe } from '@/motion/flags';
 import { chapterById } from '@/content/chapters';
 import { scrollVh } from '@/motion/scroll';
 import { text } from '@/motion/tokens';
 import { useIsMobile } from '@/motion/reveal';
+import { registerCopyColumn } from '@/scene/zone';
 
 type Ctx = {
   chapterId: string;
@@ -48,9 +49,17 @@ export function ChapterCopy({ chapterId, lines, children, className, fadeOnly = 
     }),
     [chapterId, chapter.copyIn, chapter.copyOut, lines, reduced, mobile, fadeOnly],
   );
+  // Portrait: the column is this chapter's copy zone; the stage zone starts under it (scene/zone.ts).
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!mobile || !root.current) return;
+    return registerCopyColumn(chapterId, root.current, Math.max(1, lines), !reduced);
+  }, [mobile, chapterId, lines, reduced]);
   return (
     <ChapterCopyContext.Provider value={value}>
-      <div className={className}>{children}</div>
+      <div ref={root} data-copy={chapterId} className={className}>
+        {children}
+      </div>
     </ChapterCopyContext.Provider>
   );
 }
@@ -59,7 +68,7 @@ export function ChapterCopy({ chapterId, lines, children, className, fadeOnly = 
  * Per-line window inside a chapter window: lines start `lineStep` vh apart and all last the same,
  * so line 0 starts at the window start and the last line ends at the window end.
  */
-function lineWindow([a, b]: [number, number], line: number, lines: number, staggered: boolean): [number, number] {
+export function lineWindow([a, b]: [number, number], line: number, lines: number, staggered: boolean): [number, number] {
   const span = b - a;
   const step = staggered && lines > 1 ? Math.min(text.scrub.lineStep, (span * 0.5) / (lines - 1)) : 0;
   const duration = span - step * (lines - 1);
@@ -70,7 +79,8 @@ function lineWindow([a, b]: [number, number], line: number, lines: number, stagg
 export type Scrub = {
   opacity: MotionValue<number>;
   y: MotionValue<number>;
-  filter?: MotionValue<string>;
+  /** Always set: a static 'none' when there is no blur, so a blur written by an earlier render never lingers. */
+  filter: MotionValue<string> | 'none';
   visibility: MotionValue<string>;
   willChange: MotionValue<string>;
 };
@@ -104,5 +114,5 @@ export function useScrub(line: number, { blur = false }: { blur?: boolean } = {}
 
   // Server HTML (and no-JS) carries no scrub styles, so copy is never server-rendered hidden (§14.4).
   if (!ctx || !hydrated) return null;
-  return { opacity, y, filter: blurPx ? filter : undefined, visibility, willChange };
+  return { opacity, y, filter: blurPx ? filter : 'none', visibility, willChange };
 }

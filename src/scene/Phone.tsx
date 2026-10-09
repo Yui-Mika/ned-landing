@@ -18,6 +18,7 @@ import { stageViewport } from './viewport';
 import { usePhoneInteraction } from './usePhoneInteraction';
 import { SceneHtml } from './htmlLayer';
 import { dockTarget } from './dock';
+import { stageZone } from './zone';
 
 /** Generic phone body in world units (no real brand shape). */
 export const BODY = { w: 0.96, h: 2.0, d: 0.1, r: 0.12 };
@@ -27,6 +28,32 @@ const SCREEN = { w: PHONE_SCREEN_PX.w / PX_PER_UNIT, h: PHONE_SCREEN_PX.h / PX_P
 const DEG = Math.PI / 180;
 /** Drag, flip and hover are live only in the hero, before the T1 glide starts. */
 const INTERACTIVE_UNTIL_VH = 100;
+/** The hero hint fades out over the first 40 vh. */
+const HINT_UNTIL_VH = 40;
+/** Portrait: the owner tag row above the phone (local units: gap 0.09 + tag), and the hint row above it (CSS px). */
+const TAG_ROW = 0.17;
+const HINT_ROW_PX = 24;
+
+/**
+ * Portrait (mobile layout pass): shrink and shift the phone so the phone, its tag row and (in the hero) the hint row
+ * lie inside the stage zone (scene/zone.ts). Never grows the pose; a pure function of scroll. Positions in world
+ * units at z = 0, `k` = CSS px per world unit, `w` × `h` = the canvas in CSS px.
+ */
+function fitToStage(vh: number, pos: { x: number; y: number; scale: number }, k: number, w: number, h: number, hint: boolean) {
+  const z = stageZone(vh);
+  const bodyW = BODY.w * pos.scale * k;
+  const bodyH = BODY.h * pos.scale * k;
+  const f = Math.min(1, (z.r - z.l) / bodyW, (z.b - z.t - (hint ? HINT_ROW_PX : 0)) / (bodyH + TAG_ROW * pos.scale * k));
+  const s = pos.scale * f;
+  const cx = w / 2 + pos.x * k;
+  const cy = h / 2 - pos.y * k;
+  const half = (BODY.w * s * k) / 2;
+  const top = cy - (BODY.h * s * k) / 2 - (TAG_ROW * s * k + (hint ? HINT_ROW_PX : 0));
+  const bottom = cy + (BODY.h * s * k) / 2;
+  const dx = cx - half < z.l ? z.l - (cx - half) : cx + half > z.r ? z.r - (cx + half) : 0;
+  const dy = top < z.t ? z.t - top : bottom > z.b ? z.b - bottom : 0;
+  return { x: pos.x + dx / k, y: pos.y - dy / k, scale: s };
+}
 
 type Person = Exclude<Owner, 'anyone'>;
 
@@ -115,7 +142,7 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
   const [anyone, setAnyone] = useState(false);
   const tagOwner: Owner = anyone ? 'anyone' : frontOwner;
   // Where your phone is (chapter 09): "Your phone · Vietnam" / "· abroad". Tags only.
-  const [place, setPlace] = useState<TagPlace | undefined>(undefined);
+  const [tagPlace, setTagPlace] = useState<TagPlace | undefined>(undefined);
 
   const screenGeo = useMemo(() => roundedRect(SCREEN.w + 0.02, SCREEN.h + 0.02, SCREEN.r + 0.01), []);
   const glowTex = useMemo(() => glowTexture(), []);
@@ -161,8 +188,10 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
     const pxToWorld = vp.height / state.size.height;
     const lift = reduced ? 0 : (1 - enter) * intro.phone.rise * pxToWorld;
     const grow = reduced ? 1 : intro.phone.scaleFrom + (1 - intro.phone.scaleFrom) * enter;
-    const scale = (portrait ? (pose.size * vp.width) / BODY.w : (pose.size * vp.height) / BODY.h) * grow;
-    outer.current.position.set((pose.position[0] * vp.width) / 2, (pose.position[1] * vp.height) / 2 - lift, pose.position[2]);
+    let place = { x: (pose.position[0] * vp.width) / 2, y: (pose.position[1] * vp.height) / 2, scale: portrait ? (pose.size * vp.width) / BODY.w : (pose.size * vp.height) / BODY.h };
+    if (portrait) place = fitToStage(vh, place, state.size.height / vp.height, state.size.width, state.size.height, interactive && vh < HINT_UNTIL_VH);
+    const scale = place.scale * grow;
+    outer.current.position.set(place.x, place.y - lift, pose.position[2]);
     outer.current.scale.setScalar(scale);
     // T4 Dock (desktop): blend toward the wallet panel's place in the laptop screen (measured, see dock.ts).
     let dock = 0;
@@ -228,7 +257,7 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
     const p = pose.owner === 'anyone' ? 'you' : pose.owner;
     if (p !== storyOwner) setStoryOwner(p);
     if ((pose.owner === 'anyone') !== anyone) setAnyone(pose.owner === 'anyone');
-    if (pose.place !== place) setPlace(pose.place);
+    if (pose.place !== tagPlace) setTagPlace(pose.place);
     const hero = vh < INTERACTIVE_UNTIL_VH;
     if (hero !== inHero) setInHero(hero);
 
@@ -242,7 +271,7 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
 
     // Hint enters with Teddy, just after the phone; fades after the first interaction or with scroll.
     if (hintEl.current) {
-      const fade = interacted ? 0 : Math.max(0, 1 - vh / 40);
+      const fade = interacted ? 0 : Math.max(0, 1 - vh / HINT_UNTIL_VH);
       hintEl.current.style.opacity = String(fade * companions * pose.opacity);
     }
   });
@@ -316,8 +345,8 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
           distanceFactor={1}
           position={portrait ? [-BODY.w / 2 + 0.24, BODY.h / 2 + 0.09, BODY.d / 2] : [0, -BODY.h / 2 - 0.13, BODY.d / 2]}
         >
-          <div ref={tagEl} style={{ opacity: 0 }}>
-            <DeviceTag owner={tagOwner} size="md" place={place} />
+          <div ref={tagEl} data-device-tag={track} style={{ opacity: 0 }}>
+            <DeviceTag owner={tagOwner} size="md" place={tagPlace} />
           </div>
         </SceneHtml>
 
@@ -338,14 +367,15 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
         </SceneHtml>
       </group>
 
-      {/* "Drag me" hint (right of the phone; above it on portrait). Fades after the first interaction. */}
+      {/* "Drag me" hint (right of the phone; on portrait centred in its own row above the tag row, inside the stage
+          zone). Fades after the first interaction. */}
       {interactive && (
-        <SceneHtml position={portrait ? [BODY.w / 2 - 0.04, BODY.h / 2 + 0.09, BODY.d / 2] : [BODY.w / 2 + 0.12, -0.35, 0]}>
+        <SceneHtml position={portrait ? [0, BODY.h / 2 + TAG_ROW, BODY.d / 2] : [BODY.w / 2 + 0.12, -0.35, 0]}>
           <div
             ref={hintEl}
             data-phone-hint=""
             style={{ opacity: 0 }}
-            className={`whitespace-nowrap font-mono text-[12px] tracking-wider text-muted uppercase ${portrait ? '-translate-x-full -translate-y-1/2 text-right' : '-translate-y-1/2'}`}
+            className={`whitespace-nowrap font-mono text-[12px] tracking-wider text-muted uppercase ${portrait ? '-translate-x-1/2 -translate-y-full pb-1 text-center' : '-translate-y-1/2'}`}
           >
             <span aria-hidden="true">{portrait ? '↓ ' : '← '}</span>
             {copy.hero.dragHint}

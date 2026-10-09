@@ -26,7 +26,26 @@ export const getLenis = () => lenis;
 
 export const getK = () => (isPortrait() ? K_PORTRAIT : 1);
 
-const pxPerVh = () => (window.innerHeight / 100) * getK();
+/**
+ * CSS px per `vh` as the page lays it out. Section heights use `vh`, which on phones is the large viewport (lvh):
+ * it does not change when the browser toolbar shows or hides, while window.innerHeight does. Reading 100lvh from a
+ * probe keeps the story position still when the toolbar moves. Desktop: 100lvh = innerHeight.
+ */
+let lvhProbe: HTMLDivElement | null = null;
+let lvhPx = 0;
+function stableVh() {
+  if (!lvhProbe) {
+    lvhProbe = document.createElement('div');
+    lvhProbe.setAttribute('aria-hidden', 'true');
+    lvhProbe.style.cssText = 'position:absolute;left:0;top:0;width:0;height:100lvh;visibility:hidden;pointer-events:none';
+    document.body.appendChild(lvhProbe);
+    window.addEventListener('resize', () => (lvhPx = 0));
+  }
+  if (!lvhPx) lvhPx = lvhProbe.offsetHeight || window.innerHeight;
+  return lvhPx;
+}
+
+const pxPerVh = () => (stableVh() / 100) * getK();
 
 export function syncScrollVh() {
   scrollVh.set(window.scrollY / pxPerVh());

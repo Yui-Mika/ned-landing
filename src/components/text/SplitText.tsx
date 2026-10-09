@@ -92,7 +92,7 @@ function Word({ word, index, line, last, onRevealed, ref }: WordProps) {
     enabled: ctx?.loadReveal ?? false,
     delay: h.delay + index * (mobile ? h.staggerMobile : h.stagger),
     duration: h.duration,
-    from: mobile ? { y: h.rise } : { y: h.rise, filter: `blur(${h.blur}px)` },
+    from: mobile ? { y: h.riseMobile } : { y: h.rise, filter: `blur(${h.blur}px)` },
     onDone: onRevealed,
   });
 

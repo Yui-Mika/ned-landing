@@ -135,3 +135,36 @@ body {
 .skip-link:focus {
   top: 12px;
 }
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Mobile layout pass (portrait only; same query as PORTRAIT_QUERY). Desktop is untouched.
+   Zones, top to bottom: the top bar, the copy zone (each chapter's pinned copy column) and the stage zone
+   (scene/zone.ts). Units are stable (lvh / svh, safe-area insets) so the browser toolbar causes no jump.
+   --------------------------------------------------------------------------------------------------------------- */
+[data-top-bar] {
+  padding-top: env(safe-area-inset-top);
+}
+@media (max-width: 767px), (orientation: portrait) and (max-width: 1024px) {
+  /* The stage keeps the large viewport's height: no canvas resize when the toolbar shows or hides. */
+  [data-stage] {
+    bottom: auto;
+    height: 100lvh;
+  }
+  /* Copy zone: pinned under the top bar (57 px + notch), 12 px below it. */
+  .sticky:has(> [data-copy]) {
+    padding-top: calc(57px + env(safe-area-inset-top) + 12px);
+    padding-left: calc(16px + env(safe-area-inset-left));
+    padding-right: calc(16px + env(safe-area-inset-right));
+  }
+  /* Type on portrait: headline clamp(26px, 7.4vw, 34px), body 15 px, chips ≥ 12 px. No text changes. */
+  [data-copy] :is(h1, h2) {
+    font-size: clamp(26px, 7.4vw, 34px);
+    line-height: 1.08;
+  }
+  [data-copy] :is(p, li, a, button, [data-product] span):not(.font-mono, .font-mono *) {
+    font-size: 15px;
+  }
+  [data-copy] .text-\[11px\] {
+    font-size: 12px;
+  }
+}

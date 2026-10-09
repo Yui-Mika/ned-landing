@@ -25,10 +25,12 @@ export const text = {
     maxWaitMs: 1200,
     topBar: { delay: 0, duration: 400 },
     chip: { delay: 100, duration: 500, rise: 12 },
-    headline: { delay: 200, duration: 700, stagger: 60, staggerMobile: 40, rise: '0.5em', blur: 8 },
+    headline: { delay: 200, duration: 700, stagger: 60, staggerMobile: 40, rise: '0.5em', riseMobile: 12, blur: 8 },
     sub: { after: 300, duration: 600, rise: 16 },
     buttons: { after: 80, duration: 500, stagger: 80, rise: 12 },
     cue: { delay: 1300, duration: 300 },
+    /** Portrait: no load-reveal step travels more than this (px). */
+    riseMobileMax: 12,
     /** prefers-reduced-motion: every step is a plain opacity fade, all at once. */
     reducedDuration: 200,
   },
@@ -38,7 +40,8 @@ export const text = {
     /** Lines leave one after another, this many vh apart. */
     lineStep: 3,
     rise: 32,
-    riseMobile: 20,
+    /** Portrait: copy crossfades with at most 12 px of travel, never blur (mobile layout pass). */
+    riseMobile: 12,
     blur: 6,
   },
 };
