@@ -919,6 +919,31 @@ export const copy = {
     alt: 'QR code that opens the N.E.D mobile app on a test network',
     close: 'Close',
   },
+  /**
+   * Chapter 12 copy column: SPEC §6 row 12 headline and proof row, exact wording. The two lists use only SPEC §1
+   * sentences ("is software that lets…", "Every step leaves a public record…", "What N.E.D is NOT…") and the §7
+   * replacement "No instruction lets N.E.D move the locked money."; list labels from the chapter name.
+   */
+  does: {
+    headline: "N.E.D is software. The money moves by the contract's rules.",
+    does: {
+      label: 'What N.E.D does',
+      items: [
+        'N.E.D Milestone Lock is software that lets a freelancer and a client agree on work in milestones, with the money locked before work starts.',
+        'Every step leaves a public record (Solana Explorer) and a Records page.',
+      ],
+    },
+    doesnt: {
+      label: "What N.E.D doesn't do",
+      items: ['It does not hold money, convert money, or charge a fee during the pilot.', 'No instruction lets N.E.D move the locked money.'],
+    },
+    proof: [
+      'Sign in with Google. No seed phrase.',
+      'You confirm every step that moves money.',
+      'No N.E.D fee during the pilot.',
+      'Every lock and release is a public record.',
+    ],
+  },
   /** Chapter 09 copy column: SPEC §6 row 09, exact wording. */
   receive: {
     headline: 'Where you live decides how you receive it.',

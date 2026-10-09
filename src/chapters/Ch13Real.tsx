@@ -27,7 +27,7 @@ function FadeIn({ window: w, children }: { window: [number, number]; children: R
 }
 
 const label = 'font-mono text-[12px] tracking-wider text-accent';
-const body = 'text-[14px] leading-relaxed text-muted md:text-[15px]';
+const body = 'text-[13px] leading-snug text-muted md:text-[15px] md:leading-relaxed';
 
 /**
  * Chapter 13 · What's real today (SPEC §6 row 13). Your phone shows Disclosures in the 3D stage (poses.ts, CH13): the

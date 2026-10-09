@@ -1,4 +1,5 @@
 import { easeFn, type EaseName } from '@/motion/tokens';
+import { chapterById } from '@/content/chapters';
 
 /**
  * Poses table (SPEC §10.2). Key = story vh (desktop units; K is applied by the scroll layer).
@@ -555,13 +556,49 @@ function ch09B(main: Pose[], right: Place): Pose[] {
   ];
 }
 
-/** Built chapters follow each other with no gap (chapters.ts): 13 after 09, 14 after 13. */
-const C13 = CH09.end;
-const C14 = C13 + 180;
+/** Built chapters follow each other with no gap; their starts come from chapters.ts. */
+const C12 = chapterById('12').start;
+const C13 = chapterById('13').start;
+const C14 = chapterById('14').start;
 
 /**
- * Chapter 13 · What's real today (2420–2600 vh, right after chapter 09). Your phone (Vietnam) from chapter 09 fades
- * out first; then your phone fades in on Disclosures. Its list scrolls with the page (`scroll`), and each row named by
+ * Chapter 12 · What N.E.D does and doesn't do. Your phone (Vietnam) from chapter 09 fades out first; then your phone
+ * fades in on ContractLocked (Vietnam: the program vault, "Owned by the program, not by N.E.D", Explorer) and turns
+ * slowly with scroll (`turn`, yaw −12° → +12°), then rests until chapter 13 takes over.
+ */
+export const CH12 = {
+  phoneOut: [C12, C12 + 8] as [number, number],
+  phoneIn: [C12 + 10, C12 + 22] as [number, number],
+  turn: [C12 + 22, C12 + 150] as [number, number],
+  end: chapterById('12').end,
+};
+/** Chapter 12 places of your phone: right of the copy column, at the start and the end of the slow turn. */
+const P12: Record<'desktop' | 'portrait', { from: Place; to: Place }> = {
+  desktop: {
+    from: { device: 'phone', position: [0.35, -0.04, 0], rotation: [2, 708, 0], size: 0.7 },
+    to: { device: 'phone', position: [0.35, -0.04, 0], rotation: [2, 732, 0], size: 0.7 },
+  },
+  portrait: {
+    from: { device: 'phone', position: [0, -0.7, 0], rotation: [2, 710, 0], size: 0.25 },
+    to: { device: 'phone', position: [0, -0.7, 0], rotation: [2, 730, 0], size: 0.25 },
+  },
+};
+
+/** Chapter 12 stops for the main phone: your phone (Vietnam, chapter 09) fades out, your phone fades in on ContractLocked and turns. */
+function ch12Phone(o: { from: Place; to: { from: Place; to: Place } }): Pose[] {
+  const locked = { screen: 'lockedVN' as const, owner: 'you' as const };
+  return [
+    { vh: CH12.phoneOut[1], ...o.from, size: o.from.size * FADE_SCALE.phone, opacity: 0, screen: 'homeVNReleased', owner: 'you', place: 'vn', ease: 'linear' },
+    { vh: CH12.phoneIn[0], ...o.to.from, size: o.to.from.size * FADE_SCALE.phone, opacity: 0, ...locked, screenSwitch: 'cut' },
+    { vh: CH12.phoneIn[1], ...o.to.from, ...locked, ease: 'easeOut' },
+    { vh: CH12.turn[1], ...o.to.to, ...locked, ease: 'linear' },
+    { vh: CH12.end, ...o.to.to, ...locked },
+  ];
+}
+
+/**
+ * Chapter 13 · What's real today (right after chapter 12). Your phone on ContractLocked from chapter 12 fades out
+ * first; then your phone fades in on Disclosures. Its list scrolls with the page (`scroll`), and each row named by
  * a NOT YET item lights as that item appears in the copy column (`notYet[i]`); the timeline appears last.
  */
 export const CH13 = {
@@ -583,13 +620,13 @@ export const CH13 = {
 /** Chapter 13 resting place of your phone: right of the copy column. */
 const P13: Record<'desktop' | 'portrait', Place> = {
   desktop: { device: 'phone', position: [0.35, -0.04, 0], rotation: [2, 716, 0], size: 0.7 },
-  portrait: { device: 'phone', position: [0, -0.66, 0], rotation: [2, 718, 0], size: 0.27 },
+  portrait: { device: 'phone', position: [0, -0.7, 0], rotation: [2, 718, 0], size: 0.25 },
 };
 
-/** Chapter 13 stops for the main phone: your phone (Vietnam, chapter 09) fades out, your phone fades in on Disclosures. */
+/** Chapter 13 stops for the main phone: your phone on ContractLocked (chapter 12) fades out, then fades in on Disclosures. */
 function ch13Phone(o: { from: Place; to: Place }): Pose[] {
   return [
-    { vh: CH13.phoneOut[1], ...o.from, size: o.from.size * FADE_SCALE.phone, opacity: 0, screen: 'homeVNReleased', owner: 'you', place: 'vn', ease: 'linear' },
+    { vh: CH13.phoneOut[1], ...o.from, size: o.from.size * FADE_SCALE.phone, opacity: 0, screen: 'lockedVN', owner: 'you', ease: 'linear' },
     { vh: CH13.phoneIn[0], ...o.to, size: o.to.size * FADE_SCALE.phone, opacity: 0, screen: 'disclosures', owner: 'you', screenSwitch: 'cut' },
     { vh: CH13.phoneIn[1], ...o.to, screen: 'disclosures', owner: 'you', ease: 'easeOut' },
     { vh: CH13.end, ...o.to, screen: 'disclosures', owner: 'you' },
@@ -597,7 +634,7 @@ function ch13Phone(o: { from: Place; to: Place }): Pose[] {
 }
 
 /**
- * Chapter 14 · Close + product links (2600–2760 vh, right after chapter 13). Your phone from chapter 13 fades out
+ * Chapter 14 · Close + product links (right after chapter 13). Your phone from chapter 13 fades out
  * first; then your phone (Home) and your computer (WebSignIn) fade in side by side, facing the camera, and rest
  * there to the end of the page. They never overlap: the computer left of the phone, the copy column left of both.
  */
@@ -679,10 +716,13 @@ const phoneDesktop: Pose[] = [
   // Chapter 09 · Two ways to receive (2200–2420 vh): see CH09.
   ...ch09Phone({ from: FAN8.desktop.left, centre: SPLIT9.desktop.centre, left: SPLIT9.desktop.left }),
 
-  // Chapter 13 · What's real today (2420–2600 vh): see CH13.
-  ...ch13Phone({ from: SPLIT9.desktop.left, to: P13.desktop }),
+  // Chapter 12 · What N.E.D does and doesn't do: see CH12.
+  ...ch12Phone({ from: SPLIT9.desktop.left, to: P12.desktop }),
 
-  // Chapter 14 · Close + product links (2600–2760 vh): see CH14.
+  // Chapter 13 · What's real today: see CH13.
+  ...ch13Phone({ from: P12.desktop.to, to: P13.desktop }),
+
+  // Chapter 14 · Close + product links: see CH14.
   ...ch14Phone({ from: P13.desktop, to: P14.desktop }),
 ];
 
@@ -722,7 +762,8 @@ const phonePortrait: Pose[] = [
   ...ch07Phone({ at: [0, -0.88, 0], rotation: [4, 360, 0], size: 0.86, left: SPLIT7.portrait.left }),
   ...ch08PhoneA({ from: SPLIT7.portrait.left, left: FAN8.portrait.left }),
   ...ch09Phone({ from: FAN8.portrait.left, centre: SPLIT9.portrait.centre, left: SPLIT9.portrait.left }),
-  ...ch13Phone({ from: SPLIT9.portrait.left, to: P13.portrait }),
+  ...ch12Phone({ from: SPLIT9.portrait.left, to: P12.portrait }),
+  ...ch13Phone({ from: P12.portrait.to, to: P13.portrait }),
   ...ch14Phone({ from: P13.portrait, to: P14.portrait }),
 ];
 

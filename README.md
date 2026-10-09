@@ -21,8 +21,9 @@ Next.js (App Router) · TypeScript · Tailwind v4 · Lenis · Motion (Framer Mot
 | 08 If someone goes quiet (T6 fan of three phones, review clock to 0, anyone releases / refunds) | Built |
 | 14 Close + product links (your phone on Home, your computer on WebSignIn, three product cards) | Built |
 | 09 Two ways to receive (T3 split: your phone in Vietnam on HomeVN, abroad on HomeIntl; ₫ / $ tints) | Built |
-| 13 What's real today (Disclosures scrolls with the page, rows light with the NOT YET lines, timeline; follows 09 for now) | Built |
-| 10–12, orbit nav, present mode, EN/VI | Not yet |
+| 12 What N.E.D does and doesn't do (your phone turns slowly on ContractLocked; does / doesn't lists, proof row) | Built |
+| 13 What's real today (Disclosures scrolls with the page, rows light with the NOT YET lines, timeline) | Built |
+| 10–11, orbit nav, present mode, EN/VI | Not yet |
 
 ## Run it
 
@@ -39,7 +40,7 @@ npm run typecheck
 | --- | --- |
 | `src/content/links.ts` | **Every product URL** (all three live). An empty `url` would render a disabled "Coming soon" card, no href. If the app URL changes, regenerate `public/qr/`. |
 | `src/content/copy.ts` | All on-screen English strings (`vi.ts` will mirror the keys). |
-| `src/content/chapters.ts` | Chapter names and vh ranges (SPEC §6). |
+| `src/content/chapters.ts` | Chapter names, SPEC §6 lengths and `built` flags; built chapters are laid out back to back. |
 | `src/scene/poses.ts` | **Poses table**: key = vh → device position / rotation / size / screen / owner. |
 | `src/scene/Stage.tsx` | The one fixed `<Canvas>` behind the page; camera rig. |
 | `src/scene/Phone.tsx` | Generic phone body + real HTML screen (drei `<Html transform>`). |
