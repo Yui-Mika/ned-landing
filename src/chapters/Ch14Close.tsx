@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useRef, useState, type MouseEvent, type RefObject } from 'react';
 import { copy } from '@/content/copy';
 import { links, type ProductLink } from '@/content/links';
 import { chapterById } from '@/content/chapters';
 import { Chip } from '@/components/Chip';
+import { QrDialog, qrDevice } from '@/components/QrDialog';
 import { StaticPhones } from '@/components/StaticPhones';
 import { ChapterCopy } from '@/components/text/ChapterCopy';
 import { RevealBlock } from '@/components/text/RevealBlock';
@@ -17,8 +18,15 @@ const c = copy.close;
 /**
  * One product card from links.ts (SPEC §2): a live link opens in a new tab with rel="noopener"; an empty URL renders a
  * disabled card with a "Coming soon" chip and no href. Every card shows the "Test network" badge.
+ * `onOpenQr` (the app card): a plain left click on a desktop-like device opens the QR dialog instead; any other click
+ * (modifier keys, phones, tablets, no JavaScript) follows the link.
  */
-function ProductCard({ link: l }: { link: ProductLink }) {
+function ProductCard({ link: l, onOpenQr, cardRef }: { link: ProductLink; onOpenQr?: () => void; cardRef?: RefObject<HTMLAnchorElement | null> }) {
+  const onClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (!onOpenQr || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || !qrDevice()) return;
+    e.preventDefault();
+    onOpenQr();
+  };
   const body = (
     <>
       <span className="flex items-center justify-between gap-2">
@@ -45,7 +53,7 @@ function ProductCard({ link: l }: { link: ProductLink }) {
   );
   const box = 'block rounded-2xl border border-white/10 bg-surface-2/80 px-4 py-3 md:py-3.5';
   return l.url ? (
-    <a href={l.url} target="_blank" rel="noopener" data-product={l.id} className={`${box} transition-colors hover:border-accent/60 hover:bg-accent/10`}>
+    <a ref={cardRef} href={l.url} target="_blank" rel="noopener" data-product={l.id} onClick={onClick} className={`${box} transition-colors hover:border-accent/60 hover:bg-accent/10`}>
       {body}
     </a>
   ) : (
@@ -65,6 +73,10 @@ export function Ch14Close({ stills = false }: { stills?: boolean }) {
   const [headlineLines, setHeadlineLines] = useState(1);
   const line = { headline: 0, client: headlineLines, cards: headlineLines + 1 };
   const height = `calc(var(--k) * ${ch.end - ch.start}vh + 100svh)`;
+  const [qrOpen, setQrOpen] = useState(false);
+  const appCard = useRef<HTMLAnchorElement>(null);
+  const openQr = useCallback(() => setQrOpen(true), []);
+  const closeQr = useCallback(() => setQrOpen(false), []);
 
   return (
     <section id={`chapter-${ch.id}`} aria-labelledby="ch14-title" className="relative" style={{ height }}>
@@ -86,7 +98,7 @@ export function Ch14Close({ stills = false }: { stills?: boolean }) {
               {links.map((l, i) => (
                 <li key={l.id}>
                   <RevealBlock line={line.cards + i}>
-                    <ProductCard link={l} />
+                    {l.qr ? <ProductCard link={l} onOpenQr={openQr} cardRef={appCard} /> : <ProductCard link={l} />}
                   </RevealBlock>
                 </li>
               ))}
@@ -99,6 +111,7 @@ export function Ch14Close({ stills = false }: { stills?: boolean }) {
           )}
         </div>
       </div>
+      <QrDialog open={qrOpen} onClose={closeQr} returnFocus={appCard} />
     </section>
   );
 }

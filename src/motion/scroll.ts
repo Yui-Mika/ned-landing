@@ -21,6 +21,9 @@ export function setLenis(instance: Lenis | null) {
   lenis = instance;
 }
 
+/** The Lenis instance (null under reduced motion), e.g. to stop smooth scrolling while a dialog is open. */
+export const getLenis = () => lenis;
+
 export const getK = () => (isPortrait() ? K_PORTRAIT : 1);
 
 const pxPerVh = () => (window.innerHeight / 100) * getK();

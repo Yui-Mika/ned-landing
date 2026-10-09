@@ -912,6 +912,13 @@ export const copy = {
   },
   /** The invite-link chip (T8): the same string as the link field it lifts off (web/WebContractNew, created). */
   inviteLink: 'unihackfest-2026.vercel.app/c/7XqP2mWc#k=Qm4tY8vR2LkN9sQe',
+  /** Chapter 14: the QR dialog for "Try the app (test network)" (desktop only). */
+  qr: {
+    title: 'Scan to open the app',
+    body: 'Point your phone camera at the code. The app runs on a test network.',
+    alt: 'QR code that opens the N.E.D mobile app on a test network',
+    close: 'Close',
+  },
   /** Chapter 09 copy column: SPEC §6 row 09, exact wording. */
   receive: {
     headline: 'Where you live decides how you receive it.',

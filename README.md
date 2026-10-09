@@ -37,7 +37,7 @@ npm run typecheck
 
 | Path | What |
 | --- | --- |
-| `src/content/links.ts` | **Every product URL.** Empty `url` → disabled "Coming soon" card, no href. |
+| `src/content/links.ts` | **Every product URL** (all three live). An empty `url` would render a disabled "Coming soon" card, no href. If the app URL changes, regenerate `public/qr/`. |
 | `src/content/copy.ts` | All on-screen English strings (`vi.ts` will mirror the keys). |
 | `src/content/chapters.ts` | Chapter names and vh ranges (SPEC §6). |
 | `src/scene/poses.ts` | **Poses table**: key = vh → device position / rotation / size / screen / owner. |

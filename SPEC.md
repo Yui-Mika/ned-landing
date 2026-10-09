@@ -54,7 +54,7 @@ Example numbers (always labelled "example, estimated"): milestone = 250 USDC; ra
 |---|---|---|---|
 | Workspace (computer) | Open the Workspace | https://unihackfest-2026.vercel.app | live (test network) |
 | Mobile app | Try the app (test network) | https://tdat10052499.github.io/Unihackfest-2026/ | live (test network) |
-| Communication Hub | Open the Communication Hub | NONE YET, use placeholder (empty URL → disabled "Coming soon" card) | coming soon |
+| Community Hub | Open the Community Hub | https://unihackfest-2026.vercel.app/jobs | live (test network) |
 
 Rules: put all URLs in ONE file `src/content/links.ts`. If a URL is empty, render the card disabled with a "Coming soon" chip and no `href` (not `#`). Links open in a new tab with `rel="noopener"`. Every link card shows the badge "Test network".
 
@@ -249,9 +249,9 @@ The design canvas still contains archived or "if shipped" work. Ignore: Swap, xS
 - Only `opacity` and `transform`. Motion never blocks a tap.
 - Replace section 5.3 "motion tokens" with these two curves for consistency: `EASE = [0.2, 0, 0, 1]`, `EASE_OUT = [0.16, 1, 0.3, 1]`.
 
-## 13. THIRD PRODUCT LINK = COMMUNITY HUB (confirm name)
+## 13. THIRD PRODUCT LINK = COMMUNITY HUB (confirmed)
 
-The design canvas has a **"Jobs site · community hub (separate from the Workspace)"**: overview landing, find jobs, job detail and apply, post a job (budget locked), applicants, legal. Treat this as the third link. Until the owner confirms the name and URL, keep the card as in section 2 (disabled, "Coming soon", no href) and use the label `Community Hub` (not "Communication Hub"). Description line for the card: "Find and post jobs, then lock the budget." (Keep the label and line in `links.ts` so they can be changed in one place.)
+The design canvas has a **"Jobs site · community hub (separate from the Workspace)"**: overview landing, find jobs, job detail and apply, post a job (budget locked), applicants, legal. Treat this as the third link. Name and URL are confirmed: label `Community Hub` (not "Communication Hub"), URL `https://unihackfest-2026.vercel.app/jobs`, a live card like the other two (new tab, `rel="noopener"`, "Test network" badge), as in section 2. Description line for the card: "Find and post jobs, then lock the budget." (Keep the label and line in `links.ts` so they can be changed in one place.)
 Banned-word rules (section 7) apply to this card too: say "budget locked", never "escrow" or "deposit".
 
 ## 14. TEXT ANIMATION SYSTEM (all copy on the page)

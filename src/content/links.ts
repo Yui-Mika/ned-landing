@@ -10,6 +10,8 @@ export type ProductLink = {
   description?: string;
   url: string;
   status: 'live' | 'coming-soon';
+  /** QR code images for this URL (chapter 14 dialog). */
+  qr?: { svg: string; png: string };
 };
 
 export const links: ProductLink[] = [
@@ -17,8 +19,10 @@ export const links: ProductLink[] = [
     id: 'mobile',
     product: 'Mobile app',
     label: 'Try the app (test network)',
+    // If this URL changes, regenerate the QR files in public/qr/ (try-the-app.svg and try-the-app.png) to match.
     url: 'https://tdat10052499.github.io/Unihackfest-2026/',
     status: 'live',
+    qr: { svg: '/qr/try-the-app.svg', png: '/qr/try-the-app.png' },
   },
   {
     id: 'workspace',
@@ -28,12 +32,12 @@ export const links: ProductLink[] = [
     status: 'live',
   },
   {
-    // SPEC §13: jobs site / community hub, separate from the Workspace. Name and URL to be confirmed by the owner.
+    // SPEC §13: jobs site / community hub, separate from the Workspace.
     id: 'hub',
     product: 'Community Hub',
     label: 'Open the Community Hub',
     description: 'Find and post jobs, then lock the budget.',
-    url: '', // TODO(asset): Community Hub URL (keep empty → disabled "Coming soon", no href)
-    status: 'coming-soon',
+    url: 'https://unihackfest-2026.vercel.app/jobs',
+    status: 'live',
   },
 ];
