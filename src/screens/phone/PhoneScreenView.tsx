@@ -18,6 +18,8 @@ import { MilestoneReviewScreen } from './MilestoneReviewScreen';
 import { MilestoneReleasedScreen } from './MilestoneReleasedScreen';
 import { ContractAnyoneActionScreen, ContractDetailLogoClock } from './ContractAnyoneActionScreen';
 import { DisclosuresScreen } from './DisclosuresScreen';
+import { RecordsScreen } from './RecordsScreen';
+import { ContractCloseScreen } from './ContractCloseScreen';
 import { SUBMITTED_FP } from '@/screens/web/WebSubmitScreen';
 
 function Board({ screen, owner }: { screen: PhoneScreen; owner: Exclude<Owner, 'anyone'> }) {
@@ -85,6 +87,12 @@ function Board({ screen, owner }: { screen: PhoneScreen; owner: Exclude<Owner, '
       return <HomeVNReleasedScreen />;
     case 'homeIntlReleased':
       return <HomeIntlReleasedScreen />;
+    case 'records':
+      return <RecordsScreen />;
+    case 'contractClose':
+      return <ContractCloseScreen />;
+    case 'contractClosed':
+      return <ContractCloseScreen done />;
   }
 }
 

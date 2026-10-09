@@ -147,6 +147,50 @@ export const copy = {
         { seed: 'vinh', title: 'Landing page design', party: 'to @vinh', deadline: 'Milestone 2 due 19 Oct', status: 'Locked · work in progress', tone: 'purple', total: '500.00 USDC', totalSub: 'total' },
       ],
     },
+    /**
+     * phone/Records · view vn (chapter 10). Board strings; SPEC amount (board sample: 10 USDC) and the SPEC label
+     * "example, estimated" in place of the board's "(estimate)" for the VND total.
+     */
+    records: {
+      title: 'Records',
+      intro: 'A record of what you received, for your own tax return, visa or loan. Not tax advice.',
+      month: 'October 2026 · received',
+      export: 'Export CSV',
+      monthTotal: '≈ 6,500,000 VND',
+      monthSubEstimate: 'example, estimated',
+      monthSubRest: ' · $250.00 · rate of 2 Oct 2026',
+      rows: [
+        { title: 'Landing page design · Milestone 1', meta: '3 Oct 2026 · from @mia', amt: '≈ 6,500,000 VND', sub: '$250.00 · estimate', status: 'Released to payout partner' },
+      ],
+      explorer: 'Explorer',
+      foot: 'VND amounts are estimates at the rate of 2 Oct 2026. The payout partner is simulated in this demo, so no bank transfer took place.',
+      nav: { label: 'Main', home: 'Home', contracts: 'Contracts', records: 'Records', settings: 'Settings' },
+    },
+    /**
+     * phone/ContractClose (ask) and phone/ContractClosed (= ContractClose done). The board has one contract state only
+     * ("never locked"); SPEC amount (board sample: 20.00 USDC).
+     */
+    contractClose: {
+      back: 'Back',
+      title: 'Close contract',
+      job: 'Landing page design',
+      party: 'to @vinh · never locked',
+      amt: '500.00 USDC',
+      amtSub: 'not locked',
+      closeTitle: 'Close and return rent',
+      closeBefore: 'Closing deletes the contract account on Solana. The rent, about ',
+      closeStrong: '0.008 test SOL',
+      closeAfter: ', comes back to you.',
+      closeNote: 'Only possible when a contract was never locked, or every milestone is done.',
+      fees: { label: 'Fees', ned: 'N.E.D fee', nedV: 'None during the pilot', network: 'Network fee', networkV: '~0.000005 SOL', networkSub: 'devnet test SOL' },
+      slide: 'Slide to close',
+      done: {
+        title: 'Contract closed',
+        body: '≈ 0.008 test SOL rent returned. It no longer shows in Active.',
+        explorer: 'View on Explorer',
+        back: 'Back to Contracts',
+      },
+    },
     /** phone/OnbWelcome (no states). */
     onbWelcome: {
       teddyAlt: 'Teddy, the N.E.D bear, waving hello',
@@ -623,6 +667,55 @@ export const copy = {
   },
   /** Text inside the laptop screen: web boards (board strings, SPEC numbers). */
   web: {
+    /**
+     * web/WebRecords · who mia · view activity (the Date · Event · Contract · With · Amount · Chain table, SPEC row 10).
+     * Board strings; SPEC amounts for Landing page design (board 20 / 10 USDC → 500 / 250) and Logo refresh (board 10 →
+     * 250, as in chapter 08). Icon set keeps the board's 15.00 USDC (SPEC gives no number for it).
+     */
+    records: {
+      brand: { mark: 'N.E.D', name: 'Workspace' },
+      devnet: 'Devnet · test money',
+      wallet: { handle: 'mia', label: 'Your wallet, @mia', sub: 'USDC wallet' },
+      nav: { label: 'Workspace', overview: 'Overview', newContract: 'New contract', jobs: 'Jobs', records: 'Records', settings: 'Settings', inWallet: 'in wallet' },
+      title: 'Records',
+      subtitle: 'Every contract you created and every milestone step, read from the chain.',
+      periodLabel: 'Period',
+      period: ['All time', 'October 2026', 'September 2026'],
+      export: 'Export CSV',
+      stats: [
+        { label: 'Contracts created', value: '3', sub: '2 active · 1 closed' },
+        { label: 'Locked now', value: '500.00 USDC', sub: 'Held by the program in 2 contracts' },
+        { label: 'Released', value: '265.00 USDC', sub: '2 milestones · to @vinh and @linh' },
+        { label: 'Refunded to you', value: '0.00 USDC', sub: 'No missed deadlines' },
+      ],
+      viewsLabel: 'Records view',
+      views: ['By contract', 'All activity'],
+      filtersLabel: 'Filter by event',
+      filters: ['All', 'Created', 'Accepted', 'Locked', 'Submitted', 'Released', 'Closed'],
+      tableLabel: 'All activity',
+      columns: ['Date', 'Event', 'Contract', 'With', 'Amount', 'Chain'],
+      view: 'View',
+      // Board order (newest first) for the period "All time" and the filter "All".
+      activity: [
+        { when: '3 Oct 2026, 09:15', kind: 'released', title: 'You released milestone 1 to the payout partner for @vinh', contract: 'Landing page design', party: '@vinh', amt: '250.00 USDC' },
+        { when: '3 Oct 2026, 00:31', kind: 'submitted', title: '@vinh submitted milestone 1 · on time', contract: 'Landing page design', party: '@vinh', amt: '—' },
+        { when: '2 Oct 2026, 23:09', kind: 'review', title: 'Review time over · anyone can release', contract: 'Logo refresh', party: '@vinh', amt: '250.00 USDC' },
+        { when: '2 Oct 2026, 23:08', kind: 'submitted', title: '@vinh submitted milestone 1', contract: 'Logo refresh', party: '@vinh', amt: '—' },
+        { when: '2 Oct 2026, 23:06', kind: 'locked', title: 'You locked the contract', contract: 'Logo refresh', party: '@vinh', amt: '250.00 USDC' },
+        { when: '2 Oct 2026, 23:05', kind: 'accepted', title: '@vinh accepted · VND via payout partner', contract: 'Logo refresh', party: '@vinh', amt: '—' },
+        { when: '2 Oct 2026, 23:02', kind: 'created', title: 'You created the contract · brief saved', contract: 'Logo refresh', party: '@vinh', amt: '250.00 USDC' },
+        { when: '2 Oct 2026, 22:12', kind: 'locked', title: 'You locked the contract', contract: 'Landing page design', party: '@vinh', amt: '500.00 USDC' },
+        { when: '2 Oct 2026, 22:05', kind: 'accepted', title: '@vinh accepted · VND via payout partner', contract: 'Landing page design', party: '@vinh', amt: '—' },
+        { when: '2 Oct 2026, 21:40', kind: 'created', title: 'You created the contract · brief saved', contract: 'Landing page design', party: '@vinh', amt: '500.00 USDC' },
+        { when: '23 Sep 2026, 09:06', kind: 'closed', title: 'Contract closed · rent returned', contract: 'Icon set', party: '@linh', amt: '—' },
+        { when: '23 Sep 2026, 09:05', kind: 'released', title: 'You released milestone 1 to @linh', contract: 'Icon set', party: '@linh', amt: '15.00 USDC' },
+        { when: '22 Sep 2026, 16:20', kind: 'submitted', title: '@linh submitted milestone 1 · on time', contract: 'Icon set', party: '@linh', amt: '—' },
+        { when: '18 Sep 2026, 10:44', kind: 'locked', title: 'You locked the contract', contract: 'Icon set', party: '@linh', amt: '15.00 USDC' },
+        { when: '18 Sep 2026, 10:40', kind: 'accepted', title: '@linh accepted · USDC to own wallet', contract: 'Icon set', party: '@linh', amt: '—' },
+        { when: '18 Sep 2026, 10:15', kind: 'created', title: 'You created the contract · brief saved', contract: 'Icon set', party: '@linh', amt: '15.00 USDC' },
+      ],
+      foot: 'Read from devnet program accounts and transactions. Amounts are devnet test USDC. Not a tax document.',
+    },
     /** web/WebSignIn · panelOpen false (the signed-out wallet panel is a separate board). Board strings 1:1. */
     signIn: {
       brand: { mark: 'N.E.D', name: 'Workspace' },
@@ -918,6 +1011,13 @@ export const copy = {
     body: 'Point your phone camera at the code. The app runs on a test network.',
     alt: 'QR code that opens the N.E.D mobile app on a test network',
     close: 'Close',
+  },
+  /** Chapter 10 copy column: headline, L1, L2 and small as given by the owner (SPEC §6 row 10, product word rules). */
+  records: {
+    headline: 'Every step leaves a record.',
+    l1: 'Every lock and release is a public record.',
+    l2: 'When every milestone is done, the contract can be closed.',
+    small: 'Not tax advice.',
   },
   /**
    * Chapter 12 copy column: SPEC §6 row 12 headline and proof row, exact wording. The two lists use only SPEC §1

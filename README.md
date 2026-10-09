@@ -21,9 +21,10 @@ Next.js (App Router) · TypeScript · Tailwind v4 · Lenis · Motion (Framer Mot
 | 08 If someone goes quiet (T6 fan of three phones, review clock to 0, anyone releases / refunds) | Built |
 | 14 Close + product links (your phone on Home, your computer on WebSignIn, three product cards) | Built |
 | 09 Two ways to receive (T3 split: your phone in Vietnam on HomeVN, abroad on HomeIntl; ₫ / $ tints) | Built |
+| 10 Records, then close (one device at a time: Records + T7 Tilt, WebRecords table, slide to close → closed) | Built |
 | 12 What N.E.D does and doesn't do (your phone turns slowly on ContractLocked; does / doesn't lists, proof row) | Built |
 | 13 What's real today (Disclosures scrolls with the page, rows light with the NOT YET lines, timeline) | Built |
-| 10–11, orbit nav, present mode, EN/VI | Not yet |
+| 11, orbit nav, present mode, EN/VI | Not yet |
 
 ## Run it
 
@@ -46,7 +47,7 @@ npm run typecheck
 | `src/scene/Phone.tsx` | Generic phone body + real HTML screen (drei `<Html transform>`). |
 | `src/scene/Laptop.tsx` | Generic laptop body (lid on a hinge, 0°–105°) with a web board on its screen; a browser card on portrait. |
 | `src/scene/focus.ts` | Finds a `data-focus` element on any device screen in 3D (T5 Zoom camera, T8 chip). |
-| `src/screens/web/` | Web boards (WebSignIn, WebContractNew, WebWorkspace, WebSubmit, WebWalletPanel sign/app modes), ported 1:1 from `docs/design-reference/web`. |
+| `src/screens/web/` | Web boards (WebSignIn, WebContractNew, WebWorkspace, WebSubmit, WebRecords, WebWalletPanel sign/app modes), ported 1:1 from `docs/design-reference/web`. |
 | `src/scene/dock.ts` | T4 Dock target: where the phone sits when it is the wallet panel (measured every frame). Unused since chapter 05 went one-device-at-a-time; kept for chapter 11. |
 | `src/scene/usePhoneInteraction.ts` | Drag (±35° / ±15°, spring back), click to flip owner, hover tilt. |
 | `src/screens/phone/` | Phone screen templates (light app theme). |

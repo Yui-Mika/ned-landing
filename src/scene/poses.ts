@@ -58,7 +58,10 @@ export type PhoneScreen =
   | 'refunded'
   | 'disclosures'
   | 'homeVNReleased'
-  | 'homeIntlReleased';
+  | 'homeIntlReleased'
+  | 'records'
+  | 'contractClose'
+  | 'contractClosed';
 /** Where your phone is (chapter 09 T3 split): adds "· Vietnam" / "· abroad" to its owner tag. */
 export type TagPlace = 'vn' | 'abroad';
 /** Device transform vocabulary, exactly as named in SPEC §5.3. */
@@ -557,12 +560,66 @@ function ch09B(main: Pose[], right: Place): Pose[] {
 }
 
 /** Built chapters follow each other with no gap; their starts come from chapters.ts. */
+const C10 = chapterById('10').start;
 const C12 = chapterById('12').start;
+
+/**
+ * Chapter 10 · Records, then close. One device at a time: your phone (Vietnam) from chapter 09 fades out; your phone
+ * fades in on Records and leans back (T7 Tilt); it fades out; the client's computer fades in on WebRecords (All
+ * activity) and the page scrolls to the table; it fades out; the client's phone fades in on ContractClose, the slider
+ * follows scroll, and ContractClosed shows 4 vh after 100%.
+ */
+export const CH10 = {
+  phoneOut: [C10, C10 + 8] as [number, number],
+  recordsIn: [C10 + 10, C10 + 22] as [number, number],
+  tilt: [C10 + 32, C10 + 52] as [number, number],
+  recordsOut: [C10 + 60, C10 + 68] as [number, number],
+  laptopIn: [C10 + 70, C10 + 84] as [number, number],
+  table: [C10 + 92, C10 + 106] as [number, number],
+  laptopOut: [C10 + 124, C10 + 132] as [number, number],
+  closeIn: [C10 + 134, C10 + 146] as [number, number],
+  slide: [C10 + 150, C10 + 174] as [number, number],
+  closed: [C10 + 178, C10 + 182] as [number, number],
+  end: chapterById('10').end,
+};
+/** Chapter 10 places of the phone: at rest right of the copy column, and leaning back 30° (T7 Tilt). */
+const P10: Record<'desktop' | 'portrait', { rest: Place; tilt: Place }> = {
+  desktop: {
+    rest: { device: 'phone', position: [0.3, -0.04, 0], rotation: [2, 716, 0], size: 0.72 },
+    tilt: { device: 'phone', position: [0.3, -0.04, 0], rotation: [-30, 716, 0], size: 0.72 },
+  },
+  portrait: {
+    rest: { device: 'phone', position: [0, -0.58, 0], rotation: [4, 718, 0], size: 0.4 },
+    tilt: { device: 'phone', position: [0, -0.58, 0], rotation: [-30, 718, 0], size: 0.4 },
+  },
+};
+
+/** Chapter 10 stops for the main phone (see CH10). The computer in between is on the laptop track. */
+function ch10Phone(o: { from: Place; at: { rest: Place; tilt: Place } }): Pose[] {
+  const rec = { screen: 'records' as const, owner: 'you' as const };
+  const close = { screen: 'contractClose' as const, owner: 'client' as const };
+  const { rest, tilt } = o.at;
+  return [
+    { vh: CH10.phoneOut[1], ...o.from, size: o.from.size * FADE_SCALE.phone, opacity: 0, screen: 'homeVNReleased', owner: 'you', place: 'vn', ease: 'linear' },
+    { vh: CH10.recordsIn[0], ...rest, size: rest.size * FADE_SCALE.phone, opacity: 0, ...rec, screenSwitch: 'cut' },
+    { vh: CH10.recordsIn[1], ...rest, ...rec, ease: 'easeOut' },
+    { vh: CH10.tilt[0], ...rest, ...rec },
+    { vh: CH10.tilt[1], ...tilt, ...rec, transform: 'T7 Tilt' },
+    { vh: CH10.recordsOut[0], ...tilt, ...rec },
+    { vh: CH10.recordsOut[1], ...tilt, size: tilt.size * FADE_SCALE.phone, opacity: 0, ...rec, ease: 'linear' },
+    { vh: CH10.closeIn[0], ...rest, size: rest.size * FADE_SCALE.phone, opacity: 0, ...close, screenSwitch: 'cut' },
+    { vh: CH10.closeIn[1], ...rest, ...close, ease: 'easeOut' },
+    { vh: CH10.closed[0], ...rest, ...close },
+    { vh: CH10.closed[1], ...rest, screen: 'contractClosed', owner: 'client' },
+    { vh: CH10.end, ...rest, screen: 'contractClosed', owner: 'client' },
+  ];
+}
+
 const C13 = chapterById('13').start;
 const C14 = chapterById('14').start;
 
 /**
- * Chapter 12 · What N.E.D does and doesn't do. Your phone (Vietnam) from chapter 09 fades out first; then your phone
+ * Chapter 12 · What N.E.D does and doesn't do. The client's phone from chapter 10 fades out first; then your phone
  * fades in on ContractLocked (Vietnam: the program vault, "Owned by the program, not by N.E.D", Explorer) and turns
  * slowly with scroll (`turn`, yaw −12° → +12°), then rests until chapter 13 takes over.
  */
@@ -584,11 +641,11 @@ const P12: Record<'desktop' | 'portrait', { from: Place; to: Place }> = {
   },
 };
 
-/** Chapter 12 stops for the main phone: your phone (Vietnam, chapter 09) fades out, your phone fades in on ContractLocked and turns. */
+/** Chapter 12 stops for the main phone: the client's phone on ContractClosed (chapter 10) fades out, your phone fades in on ContractLocked and turns. */
 function ch12Phone(o: { from: Place; to: { from: Place; to: Place } }): Pose[] {
   const locked = { screen: 'lockedVN' as const, owner: 'you' as const };
   return [
-    { vh: CH12.phoneOut[1], ...o.from, size: o.from.size * FADE_SCALE.phone, opacity: 0, screen: 'homeVNReleased', owner: 'you', place: 'vn', ease: 'linear' },
+    { vh: CH12.phoneOut[1], ...o.from, size: o.from.size * FADE_SCALE.phone, opacity: 0, screen: 'contractClosed', owner: 'client', ease: 'linear' },
     { vh: CH12.phoneIn[0], ...o.to.from, size: o.to.from.size * FADE_SCALE.phone, opacity: 0, ...locked, screenSwitch: 'cut' },
     { vh: CH12.phoneIn[1], ...o.to.from, ...locked, ease: 'easeOut' },
     { vh: CH12.turn[1], ...o.to.to, ...locked, ease: 'linear' },
@@ -716,8 +773,11 @@ const phoneDesktop: Pose[] = [
   // Chapter 09 · Two ways to receive (2200–2420 vh): see CH09.
   ...ch09Phone({ from: FAN8.desktop.left, centre: SPLIT9.desktop.centre, left: SPLIT9.desktop.left }),
 
+  // Chapter 10 · Records, then close: see CH10.
+  ...ch10Phone({ from: SPLIT9.desktop.left, at: P10.desktop }),
+
   // Chapter 12 · What N.E.D does and doesn't do: see CH12.
-  ...ch12Phone({ from: SPLIT9.desktop.left, to: P12.desktop }),
+  ...ch12Phone({ from: P10.desktop.rest, to: P12.desktop }),
 
   // Chapter 13 · What's real today: see CH13.
   ...ch13Phone({ from: P12.desktop.to, to: P13.desktop }),
@@ -762,7 +822,8 @@ const phonePortrait: Pose[] = [
   ...ch07Phone({ at: [0, -0.88, 0], rotation: [4, 360, 0], size: 0.86, left: SPLIT7.portrait.left }),
   ...ch08PhoneA({ from: SPLIT7.portrait.left, left: FAN8.portrait.left }),
   ...ch09Phone({ from: FAN8.portrait.left, centre: SPLIT9.portrait.centre, left: SPLIT9.portrait.left }),
-  ...ch12Phone({ from: SPLIT9.portrait.left, to: P12.portrait }),
+  ...ch10Phone({ from: SPLIT9.portrait.left, at: P10.portrait }),
+  ...ch12Phone({ from: P10.portrait.rest, to: P12.portrait }),
   ...ch13Phone({ from: P12.portrait.to, to: P13.portrait }),
   ...ch14Phone({ from: P13.portrait, to: P14.portrait }),
 ];
@@ -853,7 +914,7 @@ export const TAPS: { track: TrackName | 'laptop'; target: string; start: number;
 /* Laptop (chapter 03 on). A generic body; the screen shows a web board.                                        */
 /* ------------------------------------------------------------------------------------------------------------ */
 
-export type LaptopScreen = 'webContractNew' | 'webWorkspace' | 'webSubmit' | 'webSignIn';
+export type LaptopScreen = 'webContractNew' | 'webWorkspace' | 'webSubmit' | 'webSignIn' | 'webRecords';
 
 /** Page scroll inside the laptop screen: an element (data-focus) placed at `at` (0 top … 1 bottom) of the screen. */
 export type PageScroll = { focus: string; at: number } | null;
@@ -962,7 +1023,22 @@ const laptopCh14: LaptopPose[] = [
   { vh: CH14.end, ...L14 },
 ];
 
-const laptopDesktop: LaptopPose[] = [...laptopCh03, ...laptopCh05, ...laptopCh06, ...laptopCh14];
+/** Chapter 10: the client's computer on WebRecords fades in and out in place (chapter 03's place); the page scrolls to the table. */
+const RC_TABLE: PageScroll = { focus: 'rc-table', at: 0.5 };
+function ch10Laptop(k: { position: Vec3; rotation: Vec3; size: number; table: PageScroll }): LaptopPose[] {
+  const at = (vh: number, page: PageScroll, extra: Partial<LaptopPose> = {}): LaptopPose => ({ vh, ...k, lid: 105, screen: 'webRecords', owner: 'client', page, ...extra });
+  return [
+    at(CH10.laptopIn[0], PAGE_TOP, { opacity: 0, size: k.size * FADE_SCALE.laptop }),
+    at(CH10.laptopIn[1], PAGE_TOP, { ease: 'easeOut' }),
+    at(CH10.table[0], PAGE_TOP),
+    at(CH10.table[1], k.table),
+    at(CH10.laptopOut[0], k.table),
+    at(CH10.laptopOut[1], k.table, { opacity: 0, size: k.size * FADE_SCALE.laptop, ease: 'linear' }),
+  ];
+}
+const laptopCh10 = ch10Laptop({ position: L.position, rotation: L.rotation, size: L.size, table: RC_TABLE });
+
+const laptopDesktop: LaptopPose[] = [...laptopCh03, ...laptopCh05, ...laptopCh06, ...laptopCh10, ...laptopCh14];
 
 /** Portrait (SPEC §8): the laptop becomes a cropped browser card (the board's narrower responsive layout). */
 const laptopPortraitCh03: LaptopPose[] = laptopCh03.map((k) => {
@@ -1020,7 +1096,9 @@ const laptopPortraitCh14: LaptopPose[] = [
   { vh: CH14.end, ...P14_CARD },
 ];
 
-const laptopPortrait: LaptopPose[] = [...laptopPortraitCh03, ...laptopPortraitCh05, ...laptopPortraitCh06, ...laptopPortraitCh14];
+const laptopPortraitCh10 = ch10Laptop({ position: P5.position, rotation: [0, 0, 0], size: P5.size, table: { focus: 'rc-table', at: 0.35 } });
+
+const laptopPortrait: LaptopPose[] = [...laptopPortraitCh03, ...laptopPortraitCh05, ...laptopPortraitCh06, ...laptopPortraitCh10, ...laptopPortraitCh14];
 
 export const laptopTracks = { desktop: laptopDesktop, portrait: laptopPortrait };
 

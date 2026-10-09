@@ -13,6 +13,7 @@ import { WebContractNewScreen } from '@/screens/web/WebContractNewScreen';
 import { WebWorkspaceScreen } from '@/screens/web/WebWorkspaceScreen';
 import { WebSubmitScreen } from '@/screens/web/WebSubmitScreen';
 import { WebSignInScreen } from '@/screens/web/WebSignInScreen';
+import { WebRecordsScreen } from '@/screens/web/WebRecordsScreen';
 import { ContractLockScreen } from '@/screens/phone/ContractLockScreen';
 import { ContractLockedScreen } from '@/screens/phone/ContractLockedScreen';
 import { ch03BriefAt, ch05PanelAt, ch06ScanAt, ch06SubmitAt, laptopTracks, sampleLaptop, type BriefState, type LaptopScreen, type SubmitState, type Owner, type PageScroll } from './poses';
@@ -175,6 +176,10 @@ function ScreenContent({
         <WorkspaceScreen size={size} panelRef={panelRef}>
           {tap}
         </WorkspaceScreen>
+      ) : screen === 'webRecords' ? (
+        <WebRecordsScreen width={size.w} height={size.h}>
+          {tap}
+        </WebRecordsScreen>
       ) : screen === 'webSignIn' ? (
         <WebSignInScreen width={size.w} height={size.h}>
           {tap}
