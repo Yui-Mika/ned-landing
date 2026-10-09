@@ -11,12 +11,30 @@ import { WebWalletPanel } from './WebWalletPanel';
  * wallet panel opens under the wallet button, as on the board (mode app: the phone screen at 86%).
  * Left out: hover styles, the entrance animations, links between boards.
  */
-const s = copy.web.workspace;
+type Tone = keyof typeof TONE;
+type Stat = { label: string; value: string; sub: string };
+type Need = { title: string; sub: string; when: string; cta: string; icon: 'lock' | 'submit'; tone: Tone; wTone: Tone };
+type Row = { seed: string; title: string; party: string; ms: string; next: string; amt: string; amtSub: string; status: string; tone: Tone };
+/** The board's renderVals for one `who`, resolved in copy.ts. */
+type WS = Omit<typeof copy.web.workspace, 'stats' | 'needs' | 'rows' | 'name' | 'cta' | 'ctaIcon' | 'isClient' | 'wallet' | 'table'> & {
+  wallet: { handle: string; label: string; sub: string };
+  name: string;
+  cta: string;
+  ctaIcon: 'plus' | 'share';
+  isClient: boolean;
+  stats: readonly Stat[];
+  needs: readonly Need[];
+  rows: readonly Row[];
+  table: { label: string; cols: readonly string[] };
+};
+const WHO: Record<'mia' | 'vinh', WS> = { mia: copy.web.workspace, vinh: copy.web.workspaceVinh };
 
 /** Board renderVals TONE (web): [background, text, dot]. */
 const TONE = {
   info: ['#EEEFFE', '#3730A3', '#4F46E5'],
   purple: ['#F2EAFB', '#6A22B0', '#7B2FBE'],
+  warning: ['#FFF5E1', '#8A5300', '#F59E0B'],
+  success: ['#E7F6EC', '#127A3A', '#16A34A'],
 } as const;
 const chip = (t: keyof typeof TONE): CSSProperties => ({
   display: 'inline-flex',
@@ -50,8 +68,11 @@ const GRID = '2.2fr 1.3fr 1fr 1.8fr 1.4fr 1.3fr';
 /** Lock icon path (the boards' lock: web/WebWalletPanel request row). */
 const LOCK = 'M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4';
 const PLUS = 'M12 5v14M5 12h14';
+/** Board renderVals P: the need icons and the freelancer's "Share" CTA icon. */
+const NEED_ICON = { lock: LOCK, submit: 'M12 19V5M5 12l7-7 7 7' } as const;
+const SHARE = 'M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13';
 
-function Nav() {
+function Nav({ s }: { s: WS }) {
   const n = s.nav;
   return (
     <nav aria-label={n.label} style={{ flex: '1 1 200px', maxWidth: '100%', display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -67,12 +88,14 @@ function Nav() {
         </svg>
         {n.contracts}
       </a>
-      <a style={nav}>
-        <svg {...navIcon} strokeLinejoin={undefined}>
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-        {n.newContract}
-      </a>
+      {s.isClient && (
+        <a style={nav}>
+          <svg {...navIcon} strokeLinejoin={undefined}>
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          {n.newContract}
+        </a>
+      )}
       <a style={nav}>
         <svg {...navIcon}>
           <path d="M4 8h16v11H4zM9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M4 13h16" />
@@ -101,7 +124,8 @@ function Nav() {
   );
 }
 
-function Main() {
+function Main({ s }: { s: WS }) {
+  const mia = s.isClient;
   return (
     <main style={{ flex: '999 1 560px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
@@ -125,7 +149,7 @@ function Main() {
           }}
         >
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d={PLUS} />
+            <path d={s.ctaIcon === 'share' ? SHARE : PLUS} />
           </svg>
           {s.cta}
         </a>
@@ -153,10 +177,10 @@ function Main() {
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                 <span
                   aria-hidden="true"
-                  style={{ width: 40, height: 40, borderRadius: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: TONE.purple[0] }}
+                  style={{ width: 40, height: 40, borderRadius: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: TONE[n.tone][0] }}
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TONE.purple[1]} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d={LOCK} />
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={TONE[n.tone][1]} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d={NEED_ICON[n.icon]} />
                   </svg>
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -165,13 +189,13 @@ function Main() {
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-                <span style={chip('info')}>
-                  <span style={dot('info')} />
+                <span style={chip(n.wTone)}>
+                  <span style={dot(n.wTone)} />
                   {n.when}
                 </span>
                 <a
-                  data-tap-target="ws-lock"
-                  data-focus="ws-lock"
+                  data-tap-target={mia ? 'ws-lock' : undefined}
+                  data-focus={mia ? 'ws-lock' : undefined}
                   style={{
                     height: 40,
                     padding: '0 16px',
@@ -254,8 +278,8 @@ function Main() {
                   <span style={{ display: 'block', fontSize: 11, color: '#5E5E6A' }}>{r.amtSub}</span>
                 </span>
                 <span role="cell">
-                  <span style={chip('info')}>
-                    <span style={dot('info')} />
+                  <span style={chip(r.tone)}>
+                    <span style={dot(r.tone)} />
                     {r.status}
                   </span>
                 </span>
@@ -275,10 +299,13 @@ type Props = {
   panel: ReactNode | null;
   /** Ref to the panel wrapper: the laptop fades it in and out with scroll (T4 Dock crossfade). */
   panelRef?: React.Ref<HTMLDivElement>;
+  /** Board prop `who`: mia (chapter 05) or vinh (chapter 11). */
+  who?: 'mia' | 'vinh';
   children?: ReactNode;
 };
 
-export function WebWorkspaceScreen({ width, height, panel, panelRef, children }: Props) {
+export function WebWorkspaceScreen({ width, height, panel, panelRef, who = 'mia', children }: Props) {
+  const s = WHO[who];
   return (
     <div
       inert
@@ -304,7 +331,7 @@ export function WebWorkspaceScreen({ width, height, panel, panelRef, children }:
           panel={
             panel && (
               <div ref={panelRef} style={{ position: 'absolute', right: 0, top: 'calc(100% + 10px)', zIndex: 40, maxWidth: width - 32 }}>
-                <WebWalletPanel mode="app" screen={panel} />
+                <WebWalletPanel who={who} mode="app" screen={panel} />
               </div>
             )
           }
@@ -312,8 +339,8 @@ export function WebWorkspaceScreen({ width, height, panel, panelRef, children }:
         <div
           style={{ maxWidth: 1280, margin: '0 auto', padding: 24, boxSizing: 'border-box', display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'flex-start' }}
         >
-          <Nav />
-          <Main />
+          <Nav s={s} />
+          <Main s={s} />
         </div>
       </div>
       {children}

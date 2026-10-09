@@ -35,7 +35,7 @@ const rows: Row[] = [
   { id: '08', name: 'If someone goes quiet', length: 300, built: true },
   { id: '09', name: 'Two ways to receive', length: 220, built: true },
   { id: '10', name: 'Records, then close', length: 200, built: true },
-  { id: '11', name: 'One wallet, two screens', length: 180, built: false },
+  { id: '11', name: 'One wallet, two screens', length: 180, built: true },
   { id: '12', name: "What N.E.D does and doesn't do", length: 160, built: true },
   { id: '13', name: "What's real today", length: 180, built: true },
   { id: '14', name: 'See a milestone released', length: 160, built: true },

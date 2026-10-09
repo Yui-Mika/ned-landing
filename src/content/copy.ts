@@ -979,13 +979,15 @@ export const copy = {
       greeting: 'Good afternoon,',
       name: 'Mia',
       cta: 'New contract',
+      ctaIcon: 'plus',
+      isClient: true,
       stats: [
         { label: 'Locked in your contracts', value: '0.00 USDC', sub: 'Held by the program, not by N.E.D' },
         { label: 'Waiting for your review', value: '0', sub: '' },
         { label: 'Active contracts', value: '1', sub: 'With @vinh' },
       ],
       needsTitle: 'Needs your action',
-      needs: [{ title: 'Lock 500.00 USDC', sub: 'Landing page design · @vinh accepted', when: 'Ready to lock', cta: 'Lock in wallet' }],
+      needs: [{ title: 'Lock 500.00 USDC', sub: 'Landing page design · @vinh accepted', when: 'Ready to lock', cta: 'Lock in wallet', icon: 'lock', tone: 'purple', wTone: 'info' }],
       contractsTitle: 'Your contracts',
       history: 'History',
       table: { label: 'Your contracts', cols: ['Contract', 'Freelancer', 'Milestones', 'Next step', 'Amount', 'Status'] },
@@ -999,6 +1001,66 @@ export const copy = {
           amt: '500.00 USDC',
           amtSub: 'to VND via payout partner',
           status: 'Ready to lock',
+          tone: 'info',
+        },
+      ],
+    },
+    /**
+     * web/WebWorkspace · who vinh · panel open on Home (chapter 11). Board strings; SPEC numbers (board samples: 30 / 20
+     * USDC) and the SPEC label "example, estimated" in place of the board's "Estimate"; Logo refresh removed as on the
+     * HomeVN port, so "Active contracts" is 1 (board: 2, "Both from @mia" → "From @mia").
+     */
+    workspaceVinh: {
+      brand: { mark: 'N.E.D', name: 'Workspace' },
+      devnet: 'Devnet · test money',
+      wallet: { handle: 'vinh', label: 'Your wallet, @vinh', sub: 'Vietnam view · VND' },
+      nav: {
+        label: 'Workspace',
+        overview: 'Overview',
+        contracts: 'Contracts',
+        newContract: 'New contract',
+        jobs: 'Jobs',
+        records: 'Records',
+        settings: 'Settings',
+        settingsSub: 'in wallet',
+      },
+      phoneCard: { title: 'On your phone too', body: 'Same Google sign-in, same wallet. Confirm steps from your phone when you are away.' },
+      greeting: 'Good afternoon,',
+      name: 'Vinh',
+      cta: 'Share @vinh',
+      ctaIcon: 'share',
+      isClient: false,
+      stats: [
+        { label: 'Locked for you', value: '≈ 13,010,000 VND', sub: 'example, estimated · $500.00 · rate of 2 Oct' },
+        { label: 'To submit', value: '1', sub: 'Next deadline 12 Oct, 18:00' },
+        { label: 'Active contracts', value: '1', sub: 'From @mia' },
+      ],
+      needsTitle: 'Needs your action',
+      needs: [
+        {
+          title: 'Submit milestone 1',
+          sub: 'Landing page design for @mia · wireframes and visual design',
+          when: 'Due 12 Oct, 18:00 · 9 days',
+          cta: 'Open delivery form',
+          icon: 'submit',
+          tone: 'purple',
+          wTone: 'warning',
+        },
+      ],
+      contractsTitle: 'Your contracts',
+      history: 'History',
+      table: { label: 'Your contracts', cols: ['Contract', 'Client', 'Milestones', 'Next step', 'Amount', 'Status'] },
+      rows: [
+        {
+          seed: 'mia',
+          title: 'Landing page design',
+          party: '@mia',
+          ms: '0 of 2 done',
+          next: 'Submit milestone 1 by 12 Oct, 18:00',
+          amt: '≈ 13,010,000 VND',
+          amtSub: '$500.00 · estimate',
+          status: 'Working',
+          tone: 'purple',
         },
       ],
     },
@@ -1018,6 +1080,13 @@ export const copy = {
     l1: 'Every lock and release is a public record.',
     l2: 'When every milestone is done, the contract can be closed.',
     small: 'Not tax advice.',
+  },
+  /** Chapter 11 copy column: SPEC §6 row 11, exact wording. */
+  oneWallet: {
+    headline: 'Your phone and your computer, one wallet.',
+    l1: 'The wallet panel in the Workspace is the N.E.D app itself. Same Google sign-in.',
+    l2: 'Open a contract on any device you sign in on.',
+    l3: 'You confirm every step that moves money.',
   },
   /**
    * Chapter 12 copy column: SPEC §6 row 12 headline and proof row, exact wording. The two lists use only SPEC §1

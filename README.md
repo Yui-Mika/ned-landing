@@ -22,9 +22,10 @@ Next.js (App Router) · TypeScript · Tailwind v4 · Lenis · Motion (Framer Mot
 | 14 Close + product links (your phone on Home, your computer on WebSignIn, three product cards) | Built |
 | 09 Two ways to receive (T3 split: your phone in Vietnam on HomeVN, abroad on HomeIntl; ₫ / $ tints) | Built |
 | 10 Records, then close (one device at a time: Records + T7 Tilt, WebRecords table, slide to close → closed) | Built |
+| 11 One wallet, two screens (no dock: Workspace with the wallet panel open on Home, then your phone on the same Home) | Built |
 | 12 What N.E.D does and doesn't do (your phone turns slowly on ContractLocked; does / doesn't lists, proof row) | Built |
 | 13 What's real today (Disclosures scrolls with the page, rows light with the NOT YET lines, timeline) | Built |
-| 11, orbit nav, present mode, EN/VI | Not yet |
+| Orbit nav, present mode, EN/VI | Not yet |
 
 ## Run it
 

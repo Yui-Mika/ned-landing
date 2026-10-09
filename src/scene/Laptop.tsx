@@ -16,6 +16,7 @@ import { WebSignInScreen } from '@/screens/web/WebSignInScreen';
 import { WebRecordsScreen } from '@/screens/web/WebRecordsScreen';
 import { ContractLockScreen } from '@/screens/phone/ContractLockScreen';
 import { ContractLockedScreen } from '@/screens/phone/ContractLockedScreen';
+import { HomeVNScreen } from '@/screens/phone/HomeScreen';
 import { ch03BriefAt, ch05PanelAt, ch06ScanAt, ch06SubmitAt, laptopTracks, sampleLaptop, type BriefState, type LaptopScreen, type SubmitState, type Owner, type PageScroll } from './poses';
 import { registerFocusResolver, screenPointToWorld, offsetIn } from './focus';
 import { TAP_PX, drawTap } from './tap';
@@ -176,6 +177,11 @@ function ScreenContent({
         <WorkspaceScreen size={size} panelRef={panelRef}>
           {tap}
         </WorkspaceScreen>
+      ) : screen === 'webWorkspaceVinh' ? (
+        // Chapter 11: the wallet panel stays open on Home (no panelRef: chapter 05's scrubbed open motion does not apply).
+        <WebWorkspaceScreen who="vinh" width={size.w} height={size.h} panel={<HomeVNScreen />}>
+          {tap}
+        </WebWorkspaceScreen>
       ) : screen === 'webRecords' ? (
         <WebRecordsScreen width={size.w} height={size.h}>
           {tap}

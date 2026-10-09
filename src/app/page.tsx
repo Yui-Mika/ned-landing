@@ -26,6 +26,7 @@ import { Ch07Release } from '@/chapters/Ch07Release';
 import { Ch08Quiet } from '@/chapters/Ch08Quiet';
 import { Ch09Receive } from '@/chapters/Ch09Receive';
 import { Ch10Records } from '@/chapters/Ch10Records';
+import { Ch11OneWallet } from '@/chapters/Ch11OneWallet';
 import { Ch12Does } from '@/chapters/Ch12Does';
 import { Ch13Real } from '@/chapters/Ch13Real';
 import { Ch14Close } from '@/chapters/Ch14Close';
@@ -78,6 +79,7 @@ export default function Page() {
           <Ch08Quiet stills={webgl === false} />
           <Ch09Receive stills={webgl === false} />
           <Ch10Records stills={webgl === false} />
+          <Ch11OneWallet stills={webgl === false} />
           <Ch12Does stills={webgl === false} />
           <Ch13Real stills={webgl === false} />
           <Ch14Close stills={webgl === false} />
