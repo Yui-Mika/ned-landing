@@ -6,7 +6,7 @@ export const copy = {
   site: {
     title: "N.E.D — Locked before you start. Released when it's approved.",
     description:
-      "Your client locks USDC for each milestone. When a milestone is approved, or its review time ends, it's released to you: to your wallet where that's allowed, or as VND to your bank account in Vietnam.",
+      "Your client locks USDC for each milestone. When a milestone is approved, it's released to you: to your wallet where that's allowed, or as VND to your bank account in Vietnam.",
     wordmark: 'N.E.D', // TODO(asset): real wordmark
     skipLink: 'Skip to content',
     canvasLabel: 'Illustration of the N.E.D app',
@@ -20,7 +20,7 @@ export const copy = {
   },
   hero: {
     headline: "Locked before you start. Released when it's approved.",
-    sub: "Your client locks USDC for each milestone. When a milestone is approved, or its review time ends, it's released to you: to your wallet where that's allowed, or as VND to your bank account in Vietnam.",
+    sub: "Your client locks USDC for each milestone. When a milestone is approved, it's released to you: to your wallet where that's allowed, or as VND to your bank account in Vietnam.",
     chip: 'Demo on a test network',
     ctaDemo: 'Try the demo',
     ctaScroll: 'Scroll',
@@ -600,7 +600,7 @@ export const copy = {
       groupLabel: 'Where earnings go',
       vnd: {
         title: 'VND to my Vietnamese bank account',
-        body: 'A payout partner (simulated in the demo) converts outside Vietnam and sends VND to your bank. Bank details are collected by the partner, not by N.E.D. Simulated in this demo.',
+        body: 'A payout partner (simulated in the demo) converts outside Vietnam and sends VND to your bank. Bank details are collected by the partner, not by N.E.D.',
       },
       simulated: 'SIMULATED',
       vnOnly: 'You live in Vietnam, so earnings arrive in VND only. Receiving USDC in a wallet is for people who live outside Vietnam (change this in Settings).',
@@ -720,7 +720,7 @@ export const copy = {
       created: {
         heading: 'Contract created',
         body: 'Send this invite link to @vinh. The brief travels inside it, encrypted: the part after # is the key, and browsers never send that part to a server.',
-        link: 'ned.app/c/7XqP2mWc#k=Qm4tY8vR2LkN9sQe',
+        link: 'unihackfest-2026.vercel.app/c/7XqP2mWc#k=Qm4tY8vR2LkN9sQe',
         copy: 'Copy link',
         fingerprint: 'Brief fingerprint · on-chain',
         next: 'Next',
@@ -741,7 +741,7 @@ export const copy = {
       close: 'Close wallet',
       app: { dialog: 'Your N.E.D Wallet', label: 'N.E.D Wallet' },
       sign: {
-        request: { before: 'Request from ', app: 'N.E.D Workspace', after: ' · ned.app' },
+        request: { before: 'Request from ', app: 'N.E.D Workspace', after: ' · unihackfest-2026.vercel.app' },
         kicker: 'Confirm to sign',
         cancel: 'Cancel',
         footer: 'Signed with the wallet linked to your Google account. N.E.D never holds your money.',
@@ -911,7 +911,7 @@ export const copy = {
     },
   },
   /** The invite-link chip (T8): the same string as the link field it lifts off (web/WebContractNew, created). */
-  inviteLink: 'ned.app/c/7XqP2mWc#k=Qm4tY8vR2LkN9sQe',
+  inviteLink: 'unihackfest-2026.vercel.app/c/7XqP2mWc#k=Qm4tY8vR2LkN9sQe',
   /** Chapter 09 copy column: SPEC §6 row 09, exact wording. */
   receive: {
     headline: 'Where you live decides how you receive it.',
@@ -1007,7 +1007,7 @@ export const copy = {
   signIn: {
     headline: 'Sign in with Google. Say where you live.',
     l1: 'No seed phrase. Your wallet is set up when you sign in.',
-    l2: 'Live in Vietnam? The app shows only VND. In Vietnam, you see only VND.',
+    l2: 'Live in Vietnam? The app shows only VND.',
     small: 'You can change it in Settings.',
   },
   /** Chapter 01 screens: a generic messaging app (not N.E.D), then the N.E.D splash. */
