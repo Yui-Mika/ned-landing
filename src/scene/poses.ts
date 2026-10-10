@@ -183,6 +183,21 @@ function t2Flip(o: {
   ];
 }
 
+/**
+ * Portrait chapter 03 (mobile layout pass): a carousel instead of the T6 Fan. In after the browser card has gone
+ * (it reaches 0 at 826), three steps with 6 vh cross-dissolves, held until chapter 04 takes the phone out.
+ */
+export const CAROUSEL3 = {
+  in: [826, 834] as [number, number],
+  steps: [
+    [838, 844],
+    [848, 854],
+  ] as [number, number][],
+  out: 866,
+};
+/** Portrait windows in which the phone is a carousel (owner tag under it). */
+export const PORTRAIT_CAROUSELS: [number, number][] = [[CAROUSEL3.in[0], 874]];
+
 /** T6 Fan end poses (chapter 03): the client's phone in the middle, steps 1 and 3 fanned out on either side. */
 const FAN: Record<'desktop' | 'portrait', { centre: Place; left: Place; right: Place }> = {
   desktop: {
@@ -843,11 +858,16 @@ const phonePortrait: Pose[] = [
   ...t2Flip({ start: 516, end: 544, from: [0, -0.9, 0], to: [0, -0.9, 0], rotation: [4, 0, 0], sizeFrom: 0.92, sizeTo: 0.92, toScreen: 'homeIntl' }),
   { vh: 560, device: 'phone', position: [0, -0.9, 0], rotation: [4, 360, 0], size: 0.92, screen: 'homeIntl', owner: 'client' },
 
-  // Chapter 03 (portrait): out to the right while the browser card rises; back for the fan.
-  { vh: 584, device: 'phone', position: [1.6, -0.88, 0], rotation: [4, 340, 0], size: 0.86, opacity: 0, screen: 'homeIntl', owner: 'client', transform: 'T1 Glide' },
-  { vh: 800, device: 'phone', position: [1.6, -0.7, 0], rotation: [4, 340, 0], size: 0.5, opacity: 0, screen: 'cn2', owner: 'client', screenSwitch: 'cut' },
-  { vh: 828, ...FAN.portrait.centre, screen: 'cn2', owner: 'client', ease: 'easeOut', transform: 'T1 Glide' },
-  { vh: 860, ...FAN.portrait.centre, screen: 'cn2', owner: 'client' },
+  // Chapter 03 (portrait): hidden while the browser card is on stage. Then, instead of the T6 Fan, a carousel: one
+  // phone in the stage zone takes the three steps in turn (cross-dissolves of 6 vh), owner tag under it.
+  { vh: 584, device: 'phone', position: [0, -0.9, 0], rotation: [4, 360, 0], size: 0.92, opacity: 0, screen: 'homeIntl', owner: 'client' },
+  { vh: CAROUSEL3.in[0], device: 'phone', position: [0, -0.9, 0], rotation: [4, 360, 0], size: 0.92, opacity: 0, screen: 'cn1', owner: 'client', screenSwitch: 'cut' },
+  { vh: CAROUSEL3.in[1], device: 'phone', position: [0, -0.9, 0], rotation: [4, 360, 0], size: 0.92, screen: 'cn1', owner: 'client', ease: 'easeOut' },
+  { vh: CAROUSEL3.steps[0][0], device: 'phone', position: [0, -0.9, 0], rotation: [4, 360, 0], size: 0.92, screen: 'cn1', owner: 'client' },
+  { vh: CAROUSEL3.steps[0][1], device: 'phone', position: [0, -0.9, 0], rotation: [4, 360, 0], size: 0.92, screen: 'cn2', owner: 'client' },
+  { vh: CAROUSEL3.steps[1][0], device: 'phone', position: [0, -0.9, 0], rotation: [4, 360, 0], size: 0.92, screen: 'cn2', owner: 'client' },
+  { vh: CAROUSEL3.steps[1][1], device: 'phone', position: [0, -0.9, 0], rotation: [4, 360, 0], size: 0.92, screen: 'cn3', owner: 'client' },
+  { vh: CAROUSEL3.out, device: 'phone', position: [0, -0.9, 0], rotation: [4, 360, 0], size: 0.92, screen: 'cn3', owner: 'client' },
 
   // Chapter 04 (portrait): your phone rising from the bottom, top ~60% visible.
   ...ch04Phone([0, -0.88, 0], [4, 0, 0], 0.86, [1.6, -0.76, 0], [0, -2, 0]),
@@ -892,7 +912,7 @@ const phoneBPortrait: Pose[] = [
   { vh: 318, ...SPLIT.portrait.right, screen: 'chatClient', owner: 'client' },
   { vh: 332, ...SPLIT.portrait.right, dim: DIM, screen: 'chatClient', owner: 'client' },
   { vh: 346, ...behind(phonePortrait, 346), dim: DIM, screen: 'chatClient', owner: 'client', transform: 'T3 Split' },
-  ...t6Fan(phonePortrait, FAN.portrait.left, 'cn1'),
+  // Chapter 03: no fan on portrait (the carousel uses the main phone only).
   { vh: CH07.split[0], ...behind(phonePortrait, CH07.split[0]), screen: 'releasedVN', owner: 'you' },
   { vh: CH07.split[1], ...SPLIT7.portrait.right, screen: 'releasedVN', owner: 'you', ease: 'easeOut', transform: 'T3 Split' },
   { vh: 1898, ...SPLIT7.portrait.right, screen: 'releasedVN', owner: 'you' },
@@ -903,7 +923,7 @@ const phoneBPortrait: Pose[] = [
 
 /** Third phone: only for the T6 Fan (chapter 03). */
 const phoneCDesktop: Pose[] = [...t6Fan(phoneDesktop, FAN.desktop.right, 'cn3'), ...ch08C(phoneDesktop, FAN8.desktop.right)];
-const phoneCPortrait: Pose[] = [...t6Fan(phonePortrait, FAN.portrait.right, 'cn3'), ...ch08C(phonePortrait, FAN8.portrait.right)];
+const phoneCPortrait: Pose[] = [...ch08C(phonePortrait, FAN8.portrait.right)];
 
 export const tracks = {
   phone: { desktop: phoneDesktop, portrait: phonePortrait },

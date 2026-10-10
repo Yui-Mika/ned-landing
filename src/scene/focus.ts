@@ -36,9 +36,13 @@ export function offsetIn(el: HTMLElement, root: HTMLElement) {
   return { x, y };
 }
 
+/** How far the container holding `el` is panned inside its screen (CSS px); see Laptop.tsx (portrait). */
+export type Shift = (el: HTMLElement) => { x: number; y: number };
+
 /**
  * Maps an element inside a screen (CSS px, `w` × `h`, drawn on a plane at `anchor`, `pxPerUnit` CSS px per world
- * unit) to world space. `scrollY` = how far the screen's page is scrolled (subtracted for elements inside it).
+ * unit) to world space. `scrollY` = how far the screen's page is scrolled (subtracted for elements inside it), or a
+ * Shift for screens whose page and overlays pan in two directions (portrait browser card).
  */
 export function screenPointToWorld(
   el: HTMLElement,
@@ -47,11 +51,12 @@ export function screenPointToWorld(
   size: { w: number; h: number },
   pxPerUnit: number,
   out: THREE.Vector3,
-  scrollY = 0,
+  scrollY: number | Shift = 0,
 ) {
   const { x, y } = offsetIn(el, root);
-  const cx = x + el.offsetWidth / 2;
-  const cy = y + el.offsetHeight / 2 - (el.closest('[data-page]') ? scrollY : 0);
+  const s = typeof scrollY === 'function' ? scrollY(el) : { x: 0, y: el.closest('[data-page]') ? scrollY : 0 };
+  const cx = x + el.offsetWidth / 2 - s.x;
+  const cy = y + el.offsetHeight / 2 - s.y;
   out.set((cx - size.w / 2) / pxPerUnit, -(cy - size.h / 2) / pxPerUnit, 0);
   anchor.localToWorld(out);
   return out;

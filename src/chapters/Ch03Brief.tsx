@@ -6,6 +6,8 @@ import { copy } from '@/content/copy';
 import { chapterById } from '@/content/chapters';
 import { scrollVh } from '@/motion/scroll';
 import { useHydrated } from '@/motion/flags';
+import { useIsMobile } from '@/motion/reveal';
+import { stageZone } from '@/scene/zone';
 import { StaticPhones } from '@/components/StaticPhones';
 import { ChapterCopy } from '@/components/text/ChapterCopy';
 import { RevealBlock } from '@/components/text/RevealBlock';
@@ -20,13 +22,20 @@ const CAPTION: [number, number, number, number] = [832, 840, 848, 856];
 /** "Prefer the phone? Same three steps." under the fan (landing layer), opacity scrubbed by scroll. */
 function FanCaption() {
   const hydrated = useHydrated();
-  const opacity = useTransform(scrollVh, CAPTION, [0, 1, 1, 0]);
+  const mobile = useIsMobile();
+  // Portrait: inside the caption row's window (scene/zone.ts), around the carousel.
+  const opacity = useTransform(scrollVh, mobile ? [832, 838, 854, 860] : CAPTION, [0, 1, 1, 0]);
   const visibility = useTransform(opacity, (o) => (o < 0.01 ? 'hidden' : 'visible'));
+  // Portrait: its own row in the stage zone, under the invite chip's row and above the carousel (scene/zone.ts).
+  const top = useTransform(scrollVh, (vh) => {
+    const z = stageZone(vh);
+    return z.rows.top + z.rows.chip;
+  });
   if (!hydrated) return null;
   return (
     <motion.p
       data-fan-caption=""
-      style={{ opacity, visibility }}
+      style={mobile ? { opacity, visibility, top, bottom: 'auto', left: '50%' } : { opacity, visibility }}
       className="pointer-events-none fixed bottom-[2svh] left-1/2 z-10 -translate-x-1/2 text-center font-display text-[18px] font-bold text-ink md:bottom-[2.5svh] md:left-[65vw] md:text-[22px] portrait:max-lg:bottom-auto portrait:max-lg:left-1/2 portrait:max-lg:top-[40svh] portrait:max-lg:text-[16px] whitespace-nowrap"
     >
       {copy.brief.fanCaption}

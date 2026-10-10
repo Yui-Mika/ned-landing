@@ -28,6 +28,20 @@ const boxOf = (el: Element): Box => {
   const r = el.getBoundingClientRect();
   return { l: r1(r.left), t: r1(r.top), r: r1(r.right), b: r1(r.bottom) };
 };
+/** The part of `el` that can show: its box cut by every ancestor that clips (overflow other than visible). */
+function visibleBox(el: Element): Box {
+  const b = boxOf(el);
+  for (let e = el.parentElement; e && e !== document.body; e = e.parentElement) {
+    const cs = getComputedStyle(e);
+    if (cs.overflow === 'visible' && cs.overflowX === 'visible' && cs.overflowY === 'visible') continue;
+    const c = boxOf(e);
+    b.l = Math.max(b.l, c.l);
+    b.t = Math.max(b.t, c.t);
+    b.r = Math.min(b.r, c.r);
+    b.b = Math.min(b.b, c.b);
+  }
+  return b;
+}
 const hit = (a: Box, b: Box) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
 const onScreen = (b: Box) => b.r > 0 && b.l < innerWidth && b.b > 0 && b.t < innerHeight;
 
@@ -100,6 +114,9 @@ function devices(withExtras: boolean): DevRec[] {
   if (withExtras) {
     document.querySelectorAll('[data-device-tag]').forEach((el, i) => out.push({ id: `tag:${el.getAttribute('data-device-tag') || i}`, box: boxOf(el), op: paintedOpacity(el) }));
     document.querySelectorAll('[data-phone-hint]').forEach((el) => out.push({ id: 'hint', box: boxOf(el), op: paintedOpacity(el) }));
+    // Landing-layer items that travel with the devices.
+    for (const [sel, id] of [['[data-invite-chip]', 'invite chip'], ['[data-fan-caption]', 'fan caption'], ['[data-lock-stamp]', 'lock stamp'], ['[data-amount-chip]', 'amount chip']])
+      document.querySelectorAll(sel).forEach((el) => out.push({ id, box: boxOf(el), op: paintedOpacity(el) }));
   }
   return out.map((d) => ({ ...d, op: d.box.r - d.box.l < 1 ? 0 : d.op }));
 }
@@ -178,7 +195,13 @@ function check(s: Step, bts: Beat[]): Row[] {
     if (s.vh < b.win[0] || s.vh > b.win[1]) continue;
     const el = b.find();
     if (!el) continue;
-    const x = boxOf(el);
+    // What shows of it (clipped by its screen); a tap target or a slider must show whole.
+    const full = boxOf(el);
+    const x = visibleBox(el);
+    if (!b.name.startsWith('zoom') && (Math.abs(x.t - full.t) > 1 || Math.abs(x.b - full.b) > 1 || Math.abs(x.l - full.l) > 1 || Math.abs(x.r - full.r) > 1))
+      add('R4', `${b.name} clipped [${full.l},${full.t},${full.r},${full.b}] shows [${x.l},${x.t},${x.r},${x.b}]`);
+    // A zoom focus larger than the stage zone cannot fit; its slider / tap beats carry R4 instead.
+    if (b.name.startsWith('zoom') && (x.b - x.t > innerHeight - 16 - (zoneTop + 16) || x.r - x.l > innerWidth - 32)) continue;
     if (x.t < zoneTop + 16 || x.b > innerHeight - 16 || x.l < 16 || x.r > innerWidth - 16) add('R4', `${b.name} [${x.l},${x.t},${x.r},${x.b}] zone top ${Math.round(zoneTop)}`);
   }
   // R5: type sizes and tap targets in the copy.
@@ -264,6 +287,12 @@ async function run(o: Opts) {
   status.counts = undefined;
   // The hero intro must have finished (the phone is hidden until then).
   for (let i = 0; i < 100 && !document.documentElement.classList.contains('intro-done'); i++) await wait(100);
+  // No device screens means the stage never rendered (a hidden pane without ?__raf): refuse to report "clean".
+  if (!document.querySelector('[data-phone-front]')) {
+    status.result = 'no device screens on the page: load it with ?__raf if the pane is hidden';
+    status.running = false;
+    return status.result;
+  }
   const end = chapters[chapters.length - 1].end;
   const from = o.from ?? 0;
   const to = Math.min(o.to ?? end, end);

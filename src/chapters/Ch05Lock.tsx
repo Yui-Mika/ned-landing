@@ -19,7 +19,7 @@ const ch = chapterById('05');
 
 /**
  * While the camera pushes onto the wallet panel (T5 Zoom, CH05.zoom) the rest of the laptop screen spreads under the
- * copy column. A soft page-colour scrim (landing layer) keeps the copy readable: left on desktop, top on portrait.
+ * copy column. A soft page-colour scrim (landing layer) keeps the copy readable on desktop. Portrait has no zoom (mobile layout pass), so no scrim.
  */
 function ZoomScrim() {
   const hydrated = useHydrated();
@@ -32,11 +32,6 @@ function ZoomScrim() {
         aria-hidden="true"
         style={{ opacity, visibility, background: 'linear-gradient(90deg, #06060E 0%, #06060E 78%, rgb(6 6 14 / 0) 100%)' }}
         className="pointer-events-none fixed inset-y-0 left-0 w-[40vw] max-md:hidden portrait:max-lg:hidden"
-      />
-      <motion.div
-        aria-hidden="true"
-        style={{ opacity, visibility, background: 'linear-gradient(180deg, #06060E 0%, #06060E 78%, rgb(6 6 14 / 0) 100%)' }}
-        className="pointer-events-none fixed inset-x-0 top-0 hidden h-[50svh] max-md:block portrait:max-lg:block"
       />
     </>
   );

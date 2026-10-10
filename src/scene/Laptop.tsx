@@ -17,8 +17,9 @@ import { WebRecordsScreen } from '@/screens/web/WebRecordsScreen';
 import { ContractLockScreen } from '@/screens/phone/ContractLockScreen';
 import { ContractLockedScreen } from '@/screens/phone/ContractLockedScreen';
 import { HomeVNScreen } from '@/screens/phone/HomeScreen';
-import { ch03BriefAt, ch05PanelAt, ch06ScanAt, ch06SubmitAt, laptopTracks, sampleLaptop, type BriefState, type LaptopScreen, type SubmitState, type Owner, type PageScroll } from './poses';
-import { registerFocusResolver, screenPointToWorld, offsetIn } from './focus';
+import { CH05, TAPS, cameraTrack, ch03BriefAt, ch05PanelAt, ch06ScanAt, ch06SubmitAt, laptopTracks, sampleLaptop, type BriefState, type LaptopScreen, type SubmitState, type Owner, type PageScroll } from './poses';
+import { registerFocusResolver, screenPointToWorld, offsetIn, type Shift } from './focus';
+import { stageZone } from './zone';
 import { TAP_PX, drawTap } from './tap';
 import { SceneHtml } from './htmlLayer';
 import { stageViewport } from './viewport';
@@ -92,7 +93,7 @@ function SubmitScreen({ size, children }: { size: { w: number; h: number }; chil
  * (ch06ScanAt); the row's fingerprint shows once it has passed. Pure function of scroll. Reduced motion: no line
  * (it would slide); the fingerprints still appear.
  */
-function drawScan(line: HTMLDivElement, root: HTMLElement, vh: number, scrollY: number, reduced: boolean) {
+function drawScan(line: HTMLDivElement, root: HTMLElement, vh: number, scrollY: number, reduced: boolean, scrollX = 0) {
   const scan = reduced ? null : ch06ScanAt(vh);
   const row = scan ? root.querySelector<HTMLElement>(`[data-file-row="${scan.row}"]`) : null;
   if (!scan || !row) {
@@ -102,7 +103,7 @@ function drawScan(line: HTMLDivElement, root: HTMLElement, vh: number, scrollY: 
   const { x, y } = offsetIn(row, root);
   line.style.opacity = '1';
   line.style.width = `${row.offsetWidth}px`;
-  line.style.transform = `translate(${x}px, ${(y + row.offsetHeight * scan.p - scrollY - 1).toFixed(1)}px)`;
+  line.style.transform = `translate(${(x - scrollX).toFixed(1)}px, ${(y + row.offsetHeight * scan.p - scrollY - 1).toFixed(1)}px)`;
 }
 
 /** Chapter 05 wallet panel screen from scroll; React state changes only when it opens, switches or closes. */
@@ -140,20 +141,19 @@ function WorkspaceScreen({ size, panelRef, children }: { size: { w: number; h: n
 
 function ScreenContent({
   screen,
-  portrait,
+  size,
   rootRef,
   tapRef,
   panelRef,
   scanRef,
 }: {
   screen: LaptopScreen;
-  portrait: boolean;
+  size: { w: number; h: number };
   rootRef: React.RefObject<HTMLDivElement | null>;
   tapRef: React.RefObject<HTMLDivElement | null>;
   panelRef: React.RefObject<HTMLDivElement | null>;
   scanRef: React.RefObject<HTMLDivElement | null>;
 }) {
-  const size = portrait ? portraitPage(screen) : PAGE.desktop;
   /* Tap mark (landing layer, not part of the board): TAPS in poses.ts. */
   const tap = (
     <div
@@ -234,23 +234,39 @@ export function Laptop({ reduced, portrait }: Props) {
   const [owner, setOwner] = useState<Owner>('client');
   const fadeEls = useRef<(HTMLDivElement | null)[]>([]);
   const scrollY = useRef(0);
+  // Portrait: the page and overlays (the signing wallet panel) pan both ways inside the browser card.
+  const scrollX = useRef(0);
+  const pans = useRef(new Map<Element, { x: number; y: number }>());
+  // Portrait: the card's page height follows the stage zone (CSS px of the 480 px wide page).
+  const [cardPageH, setCardPageH] = useState(0);
   const mats = useRef<THREE.Material[] | null>(null);
   const facing = useMemo(() => ({ q: new THREE.Quaternion(), n: new THREE.Vector3(), p: new THREE.Vector3() }), []);
   // Un-zoomed, un-panned reference camera: the safe-area fit is done for the resting frame; the T5 Zoom works on top.
   const fit = useMemo(() => ({ cam: new THREE.PerspectiveCamera(), v: new THREE.Vector3(), c: [0, 1, 2, 3].map(() => new THREE.Vector3()) }), []);
 
-  const view = portrait ? portraitPage(screen) : PAGE.desktop;
+  const view = useMemo(
+    () => (portrait ? { w: PAGE.portrait.w, h: cardPageH || portraitPage(screen).h } : PAGE.desktop),
+    [portrait, cardPageH, screen],
+  );
   const pxPerUnit = portrait ? CARD_PX_PER_UNIT : PX_PER_UNIT;
+  /** Portrait: how far the container holding `el` (the page or an overlay) is panned. */
+  const shift: Shift = (el) => {
+    const root = rootEl.current?.firstElementChild;
+    let c: Element | null = el;
+    while (c && c.parentElement !== root) c = c.parentElement;
+    return (c && pans.current.get(c)) || { x: 0, y: 0 };
+  };
 
   useEffect(
     () =>
       registerFocusResolver((el, out) => {
         const root = rootEl.current?.firstElementChild as HTMLElement | null;
         if (!root || !anchor.current || !outer.current?.visible || !root.contains(el)) return false;
-        screenPointToWorld(el, root, anchor.current, view, pxPerUnit, out, scrollY.current);
+        screenPointToWorld(el, root, anchor.current, view, pxPerUnit, out, portrait ? shift : scrollY.current);
         return true;
       }),
-    [view, pxPerUnit],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [view, pxPerUnit, portrait],
   );
 
   useFrame((state) => {
@@ -274,12 +290,32 @@ export function Laptop({ reduced, portrait }: Props) {
     for (const el of fadeEls.current) if (el) el.style.opacity = String(opacity);
     if (!outer.current.visible) return;
 
-    const scale = portrait ? (pose.size * vp.width) / CARD.worldW : (pose.size * vp.width) / LAPTOP.base.w;
-    outer.current.position.set((pose.position[0] * vp.width) / 2, (pose.position[1] * vp.height) / 2, pose.position[2]);
-    outer.current.scale.setScalar(scale);
-    body.current.rotation.set(pose.rotation[0] * DEG, pose.rotation[1] * DEG, pose.rotation[2] * DEG);
-    if (lidPivot.current) lidPivot.current.rotation.x = (90 - pose.lid) * DEG;
-    fitToSafeArea(state.camera as THREE.PerspectiveCamera, state.size, `ch${chapterAt(vh).id}-title`);
+    if (portrait) {
+      // Mobile layout pass: the browser card is the stage zone's width (viewport minus 24 px), centred, never
+      // cropped; its page fills the zone's height (whole steps of 8 px), so tall panels fit where the zone allows.
+      const z = stageZone(vh);
+      const k = state.size.height / vp.height;
+      const cardW = z.r - z.l;
+      const pxPerCardPx = cardW / CARD_PX_W;
+      const fits = Math.floor(((z.b - z.t) / pxPerCardPx - CARD.bar - CARD.pad) / 8) * 8;
+      const pageH = Math.max(240, fits);
+      if (pageH !== view.h) setCardPageH(pageH);
+      const cx = (z.l + z.r) / 2;
+      const cy = (z.t + z.b) / 2;
+      outer.current.position.set((cx - state.size.width / 2) / k, -(cy - state.size.height / 2) / k, pose.position[2]);
+      // Turning (T9 Owner turn), the near edge comes closer and projects wider: give it 8% of room.
+      const turn = Math.abs(Math.sin(pose.rotation[1] * DEG));
+      outer.current.scale.setScalar((cardW / (CARD.worldW * k)) * (1 - 0.08 * turn));
+      laptopLive.scale = outer.current.scale.x;
+      body.current.rotation.set(pose.rotation[0] * DEG, pose.rotation[1] * DEG, pose.rotation[2] * DEG);
+    } else {
+      const scale = (pose.size * vp.width) / LAPTOP.base.w;
+      outer.current.position.set((pose.position[0] * vp.width) / 2, (pose.position[1] * vp.height) / 2, pose.position[2]);
+      outer.current.scale.setScalar(scale);
+      body.current.rotation.set(pose.rotation[0] * DEG, pose.rotation[1] * DEG, pose.rotation[2] * DEG);
+      if (lidPivot.current) lidPivot.current.rotation.x = (90 - pose.lid) * DEG;
+      fitToSafeArea(state.camera as THREE.PerspectiveCamera, state.size, `ch${chapterAt(vh).id}-title`);
+    }
 
     // The HTML screen is visible from behind too: hide it while it faces away (lid closing / closed).
     if (anchor.current && fadeEls.current[0]) {
@@ -310,7 +346,11 @@ export function Laptop({ reduced, portrait }: Props) {
     // Page scroll inside the screen (pure function of scroll; layout-based so it follows the typed list).
     const root = rootEl.current?.firstElementChild as HTMLElement | null;
     const pageEl = root?.querySelector<HTMLElement>('[data-page]');
-    if (root && pageEl) {
+    if (root && pageEl && portrait) {
+      panPortrait(root, pageEl, vh, pose.pageFrom, pose.pageTo, pose.pageMix);
+      if (tapEl.current) drawTap(tapEl.current, root, 'laptop', vh, reduced, shift);
+      if (scanEl.current) drawScan(scanEl.current, root, vh, scrollY.current, reduced, scrollX.current);
+    } else if (root && pageEl) {
       const a = scrollFor(pose.pageFrom, root, pageEl, view.h);
       const b = scrollFor(pose.pageTo, root, pageEl, view.h);
       const y = a + (b - a) * pose.pageMix;
@@ -322,6 +362,79 @@ export function Laptop({ reduced, portrait }: Props) {
       if (scanEl.current) drawScan(scanEl.current, root, vh, scrollY.current, reduced);
     }
   });
+
+  /**
+   * Portrait (mobile layout pass): zoom beats pan the content inside the card instead of moving the card. The page
+   * pans to the pose's focus (centred), then toward the camera's zoom focus, the lock slider while it moves and a
+   * tap target (TAPS; slider and tap eased in over 6 vh before and out over 6 vh after), whether the element sits in
+   * the page or in an overlay (the signing wallet panel). Horizontally just enough to show it whole. Pure function
+   * of scroll.
+   */
+  function panPortrait(root: HTMLElement, pageEl: HTMLElement, vh: number, from: PageScroll, to: PageScroll, mix: number) {
+    const M = 12;
+    const fitX = (left: number, w: number) => (w > view.w - 2 * M ? left + w / 2 - view.w / 2 : left < M ? left - M : left + w > view.w - M ? left + w - (view.w - M) : 0);
+    const fitY = (top: number, h: number) => (h > view.h - 2 * M ? top + h / 2 - view.h / 2 : top < M ? top - M : top + h > view.h - M ? top + h - (view.h - M) : 0);
+    const maxY = Math.max(0, pageEl.scrollHeight - view.h);
+    // The pose's focus, centred vertically in the card (the desktop `at` fractions assume a taller screen).
+    const base = (p: PageScroll) => {
+      const el = p && root.querySelector<HTMLElement>(`[data-focus="${p.focus}"]`);
+      if (!el) return { x: 0, y: 0 };
+      const o = offsetIn(el, root);
+      return { x: fitX(o.x, el.offsetWidth), y: Math.min(maxY, Math.max(0, o.y + el.offsetHeight / 2 - view.h / 2)) };
+    };
+    const a = base(from);
+    const b = base(to);
+    let x = a.x + (b.x - a.x) * mix;
+    let y = a.y + (b.y - a.y) * mix;
+    let overlay: Element | null = null;
+    let ox = 0;
+    let oy = 0;
+    // Pull the content toward what the beat acts on, by weight w (0 … 1), in this order (later wins): the camera's
+    // zoom focus (desktop zooms, portrait pans), the slider while its thumb moves, the tap target.
+    // `centre`: the zoom focus is centred; sliders and taps move the content only as far as needed to show them.
+    const pull = (el: HTMLElement | null, w: number, centre = false) => {
+      if (!el || w <= 0 || !root.contains(el) || el === root) return;
+      const o = offsetIn(el, root);
+      const tx = fitX(o.x, el.offsetWidth);
+      if (pageEl.contains(el)) {
+        const want = centre ? o.y + el.offsetHeight / 2 - view.h / 2 : y + fitY(o.y - y, el.offsetHeight);
+        const ty = Math.min(maxY, Math.max(0, want));
+        x += (tx - x) * w;
+        y += (ty - y) * w;
+      } else {
+        overlay = el;
+        while (overlay && overlay.parentElement !== root) overlay = overlay.parentElement;
+        ox = tx * w;
+        oy = fitY(o.y, el.offsetHeight) * w;
+      }
+    };
+    const byFocus = (f?: string) => (f ? root.querySelector<HTMLElement>(`[data-focus="${f}"]`) : null);
+    for (let i = 0; i + 1 < cameraTrack.length; i++) {
+      const ka = cameraTrack[i];
+      const kb = cameraTrack[i + 1];
+      if (vh < ka.vh || vh > kb.vh || (!ka.focus && !kb.focus)) continue;
+      const f = (vh - ka.vh) / Math.max(1e-6, kb.vh - ka.vh);
+      if (ka.focus && ka.focus === kb.focus) pull(byFocus(ka.focus), 1, true);
+      else if (kb.focus) pull(byFocus(kb.focus), f, true);
+      else pull(byFocus(ka.focus), 1 - f, true);
+    }
+    const ramp = (a: number, b: number) => Math.max(0, Math.min(1, (vh - (a - 8)) / 6, (b + 6 - vh) / 6));
+    pull(byFocus('lock-slider'), ramp(CH05.slide[0], CH05.slide[1]));
+    const tap = TAPS.find((t) => t.track === 'laptop' && vh > t.start - 8 && vh < t.end + 6);
+    if (tap) pull(root.querySelector<HTMLElement>(`[data-tap-target="${tap.target}"]`), ramp(tap.start, tap.end));
+    scrollX.current = x;
+    scrollY.current = y;
+    pageEl.style.transform = `translate(${(-x).toFixed(1)}px, ${(-y).toFixed(1)}px)`;
+    pans.current.set(pageEl, { x, y });
+    for (const c of Array.from(root.children)) {
+      if (c === pageEl) continue;
+      const on = c === overlay;
+      if (!on && !pans.current.has(c)) continue;
+      if (on) pans.current.set(c, { x: ox, y: oy });
+      else pans.current.delete(c);
+      (c as HTMLElement).style.transform = on ? `translate(${(-ox).toFixed(1)}px, ${(-oy).toFixed(1)}px)` : '';
+    }
+  }
 
   /**
    * Safe-area rule: shrink (never grow) and shift the laptop so its screen's projected box stays inside the safe
@@ -374,7 +487,7 @@ export function Laptop({ reduced, portrait }: Props) {
     laptopLive.scale = outer.current.scale.x;
   }
 
-  const screenHtml = <ScreenContent screen={screen} portrait={portrait} rootRef={rootEl} tapRef={tapEl} panelRef={panelEl} scanRef={scanEl} />;
+  const screenHtml = <ScreenContent screen={screen} size={view} rootRef={rootEl} tapRef={tapEl} panelRef={panelEl} scanRef={scanEl} />;
 
   if (portrait) {
     // Cropped browser card (SPEC §8): a generic browser frame, no laptop body.
@@ -388,6 +501,7 @@ export function Laptop({ reduced, portrait }: Props) {
               ref={(el) => {
                 fadeEls.current[0] = el;
               }}
+              data-laptop-card=""
               style={{ opacity: 0, width: CARD_PX_W, height: cardH, borderRadius: 22, background: '#1A1A22', padding: `0 ${CARD.pad}px ${CARD.pad}px`, boxSizing: 'border-box' }}
             >
               <div aria-hidden="true" style={{ height: CARD.bar, display: 'flex', alignItems: 'center', gap: 6, paddingLeft: 6 }}>
@@ -406,6 +520,7 @@ export function Laptop({ reduced, portrait }: Props) {
             ref={(el) => {
               fadeEls.current[1] = el;
             }}
+            data-device-tag="laptop"
             style={{ opacity: 0 }}
           >
             <DeviceTag owner={owner} device="computer" size="md" />

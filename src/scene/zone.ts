@@ -87,10 +87,21 @@ export function copyPresence(c: Chapter, vh: number): number {
   return Math.min(enter, exit);
 }
 
-export type Zone = { l: number; t: number; r: number; b: number };
+export type Zone = { l: number; t: number; r: number; b: number; rows: { top: number; chip: number; caption: number } };
+
+/** Rows at the top of the stage zone, for landing-layer items that must not sit on a device (CSS px). */
+export const CHIP_ROW = 48;
+export const CAPTION_ROW = 32;
+/** Chapter 03 on portrait: the invite chip (after its lift-off) and the carousel caption. Eased 6 vh in and out. */
+const CHIP_WINDOW: [number, number, number, number] = [806, 814, 888, 896];
+const CAPTION_WINDOW: [number, number, number, number] = [826, 832, 860, 866];
+const ramp = (vh: number, [a, b, c, d]: [number, number, number, number]) =>
+  Math.max(0, Math.min(1, (vh - a) / (b - a), (d - vh) / (d - c)));
 
 /** The stage zone at `vh`, in CSS px from the viewport's top-left. */
 export function stageZone(vh: number): Zone {
+  // Server render (a motion value's first computation): no layout yet.
+  if (typeof document === 'undefined') return { l: 0, t: 0, r: 0, b: 0, rows: { top: 0, chip: 0, caption: 0 } };
   if (!measured || !units) measure();
   const u = units!;
   const floor = u.bar + ZONE_GAP;
@@ -101,7 +112,15 @@ export function stageZone(vh: number): Zone {
     if (p <= 0 || bottom === undefined) continue;
     top = Math.max(top, floor + (bottom + ZONE_GAP - floor) * Math.min(1, p / PRESENT));
   }
-  return { l: u.left + ZONE_MARGIN, r: u.vw - u.right - ZONE_MARGIN, t: top, b: u.svh - u.bottom - ZONE_MARGIN };
+  const chip = CHIP_ROW * ramp(vh, CHIP_WINDOW);
+  const caption = CAPTION_ROW * ramp(vh, CAPTION_WINDOW);
+  return {
+    l: u.left + ZONE_MARGIN,
+    r: u.vw - u.right - ZONE_MARGIN,
+    t: top + chip + caption,
+    b: u.svh - u.bottom - ZONE_MARGIN,
+    rows: { top, chip, caption },
+  };
 }
 
 /** Smallest viewport height (100svh) in CSS px: the stage zone's reference height. */

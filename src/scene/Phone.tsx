@@ -11,7 +11,7 @@ import { copy } from '@/content/copy';
 import { DeviceTag, OWNER_COLOR } from '@/components/DeviceTag';
 import { PHONE_SCREEN_PX } from '@/screens/phone/size';
 import { PhoneScreenView } from '@/screens/phone/PhoneScreenView';
-import { samplePose, tracks, type Owner, type PhoneScreen, type TagPlace, type TrackName } from './poses';
+import { PORTRAIT_CAROUSELS, samplePose, tracks, type Owner, type PhoneScreen, type TagPlace, type TrackName } from './poses';
 import { TAP_PX, drawTap } from './tap';
 import { registerFocusResolver, screenPointToWorld } from './focus';
 import { stageViewport } from './viewport';
@@ -39,7 +39,7 @@ const HINT_ROW_PX = 24;
  * lie inside the stage zone (scene/zone.ts). Never grows the pose; a pure function of scroll. Positions in world
  * units at z = 0, `k` = CSS px per world unit, `w` × `h` = the canvas in CSS px.
  */
-function fitToStage(vh: number, pos: { x: number; y: number; scale: number }, k: number, w: number, h: number, hint: boolean) {
+function fitToStage(vh: number, pos: { x: number; y: number; scale: number }, k: number, w: number, h: number, hint: boolean, tagBelow: boolean) {
   const z = stageZone(vh);
   const bodyW = BODY.w * pos.scale * k;
   const bodyH = BODY.h * pos.scale * k;
@@ -48,8 +48,9 @@ function fitToStage(vh: number, pos: { x: number; y: number; scale: number }, k:
   const cx = w / 2 + pos.x * k;
   const cy = h / 2 - pos.y * k;
   const half = (BODY.w * s * k) / 2;
-  const top = cy - (BODY.h * s * k) / 2 - (TAG_ROW * s * k + (hint ? HINT_ROW_PX : 0));
-  const bottom = cy + (BODY.h * s * k) / 2;
+  const tag = TAG_ROW * s * k;
+  const top = cy - (BODY.h * s * k) / 2 - (tagBelow ? 0 : tag) - (hint ? HINT_ROW_PX : 0);
+  const bottom = cy + (BODY.h * s * k) / 2 + (tagBelow ? tag : 0);
   const dx = cx - half < z.l ? z.l - (cx - half) : cx + half > z.r ? z.r - (cx + half) : 0;
   const dy = top < z.t ? z.t - top : bottom > z.b ? z.b - bottom : 0;
   return { x: pos.x + dx / k, y: pos.y - dy / k, scale: s };
@@ -143,6 +144,7 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
   const tagOwner: Owner = anyone ? 'anyone' : frontOwner;
   // Where your phone is (chapter 09): "Your phone · Vietnam" / "· abroad". Tags only.
   const [tagPlace, setTagPlace] = useState<TagPlace | undefined>(undefined);
+  const [tagBelow, setTagBelow] = useState(false);
 
   const screenGeo = useMemo(() => roundedRect(SCREEN.w + 0.02, SCREEN.h + 0.02, SCREEN.r + 0.01), []);
   const glowTex = useMemo(() => glowTexture(), []);
@@ -189,7 +191,10 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
     const lift = reduced ? 0 : (1 - enter) * intro.phone.rise * pxToWorld;
     const grow = reduced ? 1 : intro.phone.scaleFrom + (1 - intro.phone.scaleFrom) * enter;
     let place = { x: (pose.position[0] * vp.width) / 2, y: (pose.position[1] * vp.height) / 2, scale: portrait ? (pose.size * vp.width) / BODY.w : (pose.size * vp.height) / BODY.h };
-    if (portrait) place = fitToStage(vh, place, state.size.height / vp.height, state.size.width, state.size.height, interactive && vh < HINT_UNTIL_VH);
+    // Portrait carousels (chapters 03, 08): the owner tag sits under the active phone.
+    const below = portrait && PORTRAIT_CAROUSELS.some(([a, b]) => vh >= a && vh <= b);
+    if (below !== tagBelow) setTagBelow(below);
+    if (portrait) place = fitToStage(vh, place, state.size.height / vp.height, state.size.width, state.size.height, interactive && vh < HINT_UNTIL_VH, below);
     const scale = place.scale * grow;
     outer.current.position.set(place.x, place.y - lift, pose.position[2]);
     outer.current.scale.setScalar(scale);
@@ -343,7 +348,7 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
         <SceneHtml
           transform
           distanceFactor={1}
-          position={portrait ? [-BODY.w / 2 + 0.24, BODY.h / 2 + 0.09, BODY.d / 2] : [0, -BODY.h / 2 - 0.13, BODY.d / 2]}
+          position={portrait && !tagBelow ? [-BODY.w / 2 + 0.24, BODY.h / 2 + 0.09, BODY.d / 2] : [0, -BODY.h / 2 - 0.13, BODY.d / 2]}
         >
           <div ref={tagEl} data-device-tag={track} style={{ opacity: 0 }}>
             <DeviceTag owner={tagOwner} size="md" place={tagPlace} />
