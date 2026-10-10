@@ -76,6 +76,10 @@ function blurOf(el: Element): string {
   return '';
 }
 
+/** Properties the copy may animate (R6), and the last inline value seen per element. */
+const ANIMATABLE = ['opacity', 'transform', 'visibility', 'will-change', 'translate', 'scale', 'rotate', 'pointer-events'];
+const lastStyle = new WeakMap<Element, Map<string, string>>();
+
 /** Copy columns: the parent of each chapter's headline; one record per direct child (block). */
 function copyBlocks(): CopyRec[] {
   const out: CopyRec[] = [];
@@ -87,15 +91,20 @@ function copyBlocks(): CopyRec[] {
     Array.from(col.children).forEach((el, i) => {
       let blur = blurOf(el);
       el.querySelectorAll('*').forEach((d) => (blur ||= blurOf(d)));
-      // Inline-animated properties on the block and its descendants (R6: only opacity / transform).
+      // R6: inline properties that change from one step to the next (animate), other than opacity / transform
+      // (and their helpers); any inline blur. Static inline layout (a grid for portrait copy pages) is fine.
       const keys = new Set<string>();
       [el, ...Array.from(el.querySelectorAll<HTMLElement>('*'))].forEach((d) => {
         const st = (d as HTMLElement).style;
+        const seen = lastStyle.get(d) ?? new Map<string, string>();
         for (let k = 0; k < st.length; k++) {
           const p = st[k];
-          if (p === 'filter' && (st.filter === 'none' || st.filter === '')) continue;
-          if (!['opacity', 'transform', 'visibility', 'will-change', 'translate', 'scale', 'rotate'].includes(p)) keys.add(p);
+          const v = st.getPropertyValue(p);
+          if (p === 'filter' && /blur\((?!0)/.test(v)) keys.add('filter blur');
+          if (!ANIMATABLE.includes(p) && p !== 'filter' && seen.has(p) && seen.get(p) !== v) keys.add(p);
+          seen.set(p, v);
         }
+        lastStyle.set(d, seen);
       });
       out.push({ ch, i, text: (el.textContent ?? '').replace(/\s+/g, ' ').trim(), box: boxOf(el), op: textOpacity(el), blur, style: [...keys].join(',') });
     });

@@ -11,9 +11,12 @@ import { StaticPhones } from '@/components/StaticPhones';
 import { ChapterCopy } from '@/components/text/ChapterCopy';
 import { RevealBlock } from '@/components/text/RevealBlock';
 import { SplitText } from '@/components/text/SplitText';
+import { PortraitPages } from '@/components/text/PortraitPages';
 import { DisclosuresScreen } from '@/screens/phone/DisclosuresScreen';
 
 const ch = chapterById('13');
+/** Portrait pages (vh): NOT YET from just before its first item, NEXT from just before the timeline (CH13). */
+const PAGES = [CH13.notYet[0][0] - 6, CH13.timeline[0] - 6];
 const r = copy.real;
 
 /**
@@ -63,47 +66,54 @@ export function Ch13Real({ stills = false }: { stills?: boolean }) {
               onLines={setHeadlineLines}
               className="font-display text-[clamp(26px,3vw,44px)] leading-[1.06] font-bold tracking-[-0.02em] text-ink"
             />
-            <RevealBlock line={line.now}>
-              <p className={`mt-3 md:mt-5 ${body}`}>
-                <span className={label}>{r.now.label}</span> {r.now.before}
-                <strong className="font-semibold text-ink">{r.now.strong}</strong>
-                {r.now.after}
-                <code className="font-mono text-[0.92em] text-ink">{r.now.program}</code>
-                {r.now.end}
-              </p>
-            </RevealBlock>
-            <RevealBlock line={line.simulated}>
-              <p className={`mt-1 ${body}`}>
-                {r.simulated.before}
-                <strong className="font-semibold text-ink">{r.simulated.strong}</strong>
-                {r.simulated.after}
-              </p>
-            </RevealBlock>
-            <RevealBlock line={line.notYet}>
-              <p className={`mt-3 md:mt-4 ${label}`}>{r.notYet.label}</p>
-            </RevealBlock>
-            <ul className={`mt-1 ${body}`}>
-              {r.notYet.items.map((item, i) => (
-                <li key={item.text}>
-                  <RevealBlock line={line.item(i)}>
-                    <FadeIn window={CH13.notYet[i]}>{item.text}</FadeIn>
-                  </RevealBlock>
-                </li>
-              ))}
-            </ul>
-            <RevealBlock line={line.next}>
-              <FadeIn window={CH13.timeline}>
-                <p className={`mt-3 md:mt-4 ${label}`}>{r.next.label}</p>
-                <ol className={`mt-1 ${body}`}>
-                  {r.next.steps.map((step) => (
-                    <li key={step.k} className="flex gap-3">
-                      <span className="w-12 shrink-0 font-mono text-[12px] leading-[inherit] text-ink">{step.k}</span>
-                      <span>{step.v}</span>
+            {/* Portrait: NOW, NOT YET and NEXT take turns under the headline (the copy zone stays short). */}
+            <PortraitPages bounds={PAGES}>
+              <>
+                <RevealBlock line={line.now}>
+                  <p className={`mt-3 md:mt-5 ${body}`}>
+                    <span className={label}>{r.now.label}</span> {r.now.before}
+                    <strong className="font-semibold text-ink">{r.now.strong}</strong>
+                    {r.now.after}
+                    <code className="font-mono text-[0.92em] text-ink">{r.now.program}</code>
+                    {r.now.end}
+                  </p>
+                </RevealBlock>
+                <RevealBlock line={line.simulated}>
+                  <p className={`mt-1 ${body}`}>
+                    {r.simulated.before}
+                    <strong className="font-semibold text-ink">{r.simulated.strong}</strong>
+                    {r.simulated.after}
+                  </p>
+                </RevealBlock>
+              </>
+              <>
+                <RevealBlock line={line.notYet}>
+                  <p className={`mt-3 md:mt-4 ${label}`}>{r.notYet.label}</p>
+                </RevealBlock>
+                <ul className={`mt-1 ${body}`}>
+                  {r.notYet.items.map((item, i) => (
+                    <li key={item.text}>
+                      <RevealBlock line={line.item(i)}>
+                        <FadeIn window={CH13.notYet[i]}>{item.text}</FadeIn>
+                      </RevealBlock>
                     </li>
                   ))}
-                </ol>
-              </FadeIn>
-            </RevealBlock>
+                </ul>
+              </>
+              <RevealBlock line={line.next}>
+                <FadeIn window={CH13.timeline}>
+                  <p className={`mt-3 md:mt-4 ${label}`}>{r.next.label}</p>
+                  <ol className={`mt-1 ${body}`}>
+                    {r.next.steps.map((step) => (
+                      <li key={step.k} className="flex gap-3">
+                        <span className="w-12 shrink-0 font-mono text-[12px] leading-[inherit] text-ink">{step.k}</span>
+                        <span>{step.v}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </FadeIn>
+              </RevealBlock>
+            </PortraitPages>
           </ChapterCopy>
           {stills && (
             <div className="flex justify-center md:ml-auto">

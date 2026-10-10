@@ -156,7 +156,7 @@ export default function Stage({ eventSource, reduced, onReady }: Props) {
           {/* The lock glyph stamp (chapter 05). */}
           <LockStamp reduced={reduced} />
           {/* The amount chip (chapter 07). */}
-          <AmountChip reduced={reduced} />
+          <AmountChip reduced={reduced} portrait={portrait} />
         </HtmlLayerContext.Provider>
         <Ready onReady={onReady} />
       </Canvas>

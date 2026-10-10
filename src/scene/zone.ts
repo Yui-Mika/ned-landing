@@ -25,7 +25,11 @@ const bottoms = new Map<string, number>();
 export function registerCopyColumn(id: string, el: HTMLElement, lines: number, stagger: boolean) {
   columns.set(id, { el, lines, stagger });
   measured = false;
+  // Re-measure when the column's height changes (fonts, wrapping, portrait copy pages).
+  const ro = new ResizeObserver(() => (measured = false));
+  ro.observe(el);
   return () => {
+    ro.disconnect();
     if (columns.get(id)?.el === el) columns.delete(id);
     measured = false;
   };

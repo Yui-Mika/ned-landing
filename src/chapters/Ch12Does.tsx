@@ -7,9 +7,12 @@ import { StaticPhones } from '@/components/StaticPhones';
 import { ChapterCopy } from '@/components/text/ChapterCopy';
 import { RevealBlock } from '@/components/text/RevealBlock';
 import { SplitText } from '@/components/text/SplitText';
+import { PortraitPages } from '@/components/text/PortraitPages';
 import { ContractLockedScreen } from '@/screens/phone/ContractLockedScreen';
 
 const ch = chapterById('12');
+/** Portrait pages (vh): about a third of the chapter each, after the copy has come in. */
+const PAGES = [ch.start + 56, ch.start + 104];
 const d = copy.does;
 
 const label = 'font-mono text-[12px] tracking-wider text-accent uppercase';
@@ -42,36 +45,39 @@ export function Ch12Does({ stills = false }: { stills?: boolean }) {
               onLines={setHeadlineLines}
               className="font-display text-[clamp(24px,3vw,44px)] leading-[1.06] font-bold tracking-[-0.02em] text-ink"
             />
-            <RevealBlock line={line.does}>
-              <p className={`mt-3 md:mt-6 ${label}`}>{d.does.label}</p>
-              <ul className={`mt-1 list-disc space-y-0.5 pl-5 md:space-y-1 ${item}`}>
-                {d.does.items.map((t) => (
-                  <li key={t}>{t}</li>
-                ))}
-              </ul>
-            </RevealBlock>
-            <RevealBlock line={line.doesnt}>
-              <p className={`mt-3 md:mt-4 ${label}`}>{d.doesnt.label}</p>
-              <ul className={`mt-1 list-disc space-y-0.5 pl-5 md:space-y-1 ${item}`}>
-                {d.doesnt.items.map((t) => (
-                  <li key={t}>{t}</li>
-                ))}
-              </ul>
-            </RevealBlock>
-            <RevealBlock line={line.proof}>
-              <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-0.5 border-t border-white/10 pt-3 text-[13px] md:mt-5 md:pt-4 leading-relaxed text-ink md:text-[14px]">
-                {d.proof.map((t, i) => (
-                  <li key={t}>
-                    {i > 0 && (
-                      <span aria-hidden="true" className="mr-3 text-muted">
-                        ·
-                      </span>
-                    )}
-                    {t}
-                  </li>
-                ))}
-              </ul>
-            </RevealBlock>
+            {/* Portrait: does, doesn't and the proof row take turns under the headline (the copy zone stays short). */}
+            <PortraitPages bounds={PAGES}>
+              <RevealBlock line={line.does}>
+                <p className={`mt-3 md:mt-6 ${label}`}>{d.does.label}</p>
+                <ul className={`mt-1 list-disc space-y-0.5 pl-5 md:space-y-1 ${item}`}>
+                  {d.does.items.map((t) => (
+                    <li key={t}>{t}</li>
+                  ))}
+                </ul>
+              </RevealBlock>
+              <RevealBlock line={line.doesnt}>
+                <p className={`mt-3 md:mt-4 ${label}`}>{d.doesnt.label}</p>
+                <ul className={`mt-1 list-disc space-y-0.5 pl-5 md:space-y-1 ${item}`}>
+                  {d.doesnt.items.map((t) => (
+                    <li key={t}>{t}</li>
+                  ))}
+                </ul>
+              </RevealBlock>
+              <RevealBlock line={line.proof}>
+                <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-0.5 border-t border-white/10 pt-3 text-[13px] md:mt-5 md:pt-4 leading-relaxed text-ink md:text-[14px]">
+                  {d.proof.map((t, i) => (
+                    <li key={t}>
+                      {i > 0 && (
+                        <span aria-hidden="true" className="mr-3 text-muted">
+                          ·
+                        </span>
+                      )}
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+              </RevealBlock>
+            </PortraitPages>
           </ChapterCopy>
           {stills && (
             <div className="flex justify-center md:ml-auto">

@@ -344,11 +344,11 @@ export function Phone({ reduced, portrait, track = 'phone', interactive = true }
           </div>
         </SceneHtml>
 
-        {/* Owner tag under (desktop) or above (portrait) the phone */}
+        {/* Owner tag under (desktop) or above (portrait, centred; under it in a portrait carousel) the phone */}
         <SceneHtml
           transform
           distanceFactor={1}
-          position={portrait && !tagBelow ? [-BODY.w / 2 + 0.24, BODY.h / 2 + 0.09, BODY.d / 2] : [0, -BODY.h / 2 - 0.13, BODY.d / 2]}
+          position={portrait && !tagBelow ? [0, BODY.h / 2 + 0.09, BODY.d / 2] : [0, -BODY.h / 2 - 0.13, BODY.d / 2]}
         >
           <div ref={tagEl} data-device-tag={track} style={{ opacity: 0 }}>
             <DeviceTag owner={tagOwner} size="md" place={tagPlace} />

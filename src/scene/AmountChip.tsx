@@ -31,11 +31,11 @@ function chipText(morph: number) {
  * on your receipt amount, while "$ 250 USDC" becomes "≈ 6,500,000 VND". A soft purple glow sits behind it. Everything
  * is a pure function of scroll (ch07ChipAt); no particles. Reduced motion: cuts, no travel.
  */
-export function AmountChip({ reduced }: { reduced: boolean }) {
+export function AmountChip({ reduced, portrait = false }: { reduced: boolean; portrait?: boolean }) {
   const group = useRef<THREE.Group>(null);
   const el = useRef<HTMLDivElement>(null);
   const text = useRef<HTMLSpanElement>(null);
-  const tmp = useMemo(() => ({ a: new THREE.Vector3(), b: new THREE.Vector3() }), []);
+  const tmp = useMemo(() => ({ a: new THREE.Vector3(), b: new THREE.Vector3(), p: new THREE.Vector3() }), []);
 
   useFrame((state) => {
     if (!group.current || !el.current || !text.current) return;
@@ -55,6 +55,16 @@ export function AmountChip({ reduced }: { reduced: boolean }) {
     group.current.position.y += arc * vp.height * 0.12;
     group.current.position.z += arc * 0.5 + 0.05;
 
+    if (portrait) {
+      // Mobile layout pass: never past 12 px from the side edges (14 px: room for the projection; the right phone sits near the edge).
+      const w = state.size.width;
+      const half = (el.current.offsetWidth * chip.scale) / 2;
+      tmp.p.copy(group.current.position).project(state.camera);
+      const px = ((tmp.p.x + 1) / 2) * w;
+      const want = Math.min(w - 14 - half, Math.max(14 + half, px));
+      const atZ = state.viewport.getCurrentViewport(state.camera, [state.camera.position.x, state.camera.position.y, group.current.position.z]);
+      group.current.position.x += ((want - px) * atZ.width) / w;
+    }
     el.current.style.opacity = chip.opacity.toFixed(3);
     el.current.style.transform = `scale(${chip.scale.toFixed(3)})`;
     const t = chipText(chip.morph);

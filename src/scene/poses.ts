@@ -196,7 +196,10 @@ export const CAROUSEL3 = {
   out: 866,
 };
 /** Portrait windows in which the phone is a carousel (owner tag under it). */
-export const PORTRAIT_CAROUSELS: [number, number][] = [[CAROUSEL3.in[0], 874]];
+export const PORTRAIT_CAROUSELS: [number, number][] = [
+  [CAROUSEL3.in[0], 874],
+  [1910, 2208],
+];
 
 /** T6 Fan end poses (chapter 03): the client's phone in the middle, steps 1 and 3 fanned out on either side. */
 const FAN: Record<'desktop' | 'portrait', { centre: Place; left: Place; right: Place }> = {
@@ -498,6 +501,42 @@ const FAN8: Record<'desktop' | 'portrait', { left: Place; centre: Place; right: 
     right: { device: 'phone', position: [0.62, -0.62, 0], rotation: [4, 716, -2], size: 0.28 },
   },
 };
+
+/**
+ * Portrait chapter 08 (mobile layout pass): a carousel instead of the T6 Fan. Phone A ("Approved") moves to the
+ * middle of the stage zone; then B and C take its place in turn. Each hand-off: the outgoing phone fades to 0 over
+ * 3 vh, then the next fades in over 3 vh (one device at a time). C hands back to A before chapter 09.
+ */
+export const CAROUSEL8 = {
+  aToB: [1926, 1929, 1932] as [number, number, number],
+  bToC: [2030, 2033, 2036] as [number, number, number],
+  cToA: [2176, 2179, 2182] as [number, number, number],
+};
+const C8: Place = { device: 'phone', position: [0, -0.9, 0], rotation: [4, 720, 0], size: 0.92 };
+function ch08CarouselA(from: Place): Pose[] {
+  const a = (vh: number, extra: Partial<Pose> = {}): Pose => ({ vh, ...C8, screen: 'releasedClient', owner: 'client', ...extra });
+  return [
+    { vh: CH08.fan[0], ...from, screen: 'releasedClient', owner: 'client' },
+    a(CH08.fan[1], { ease: 'easeOut' }),
+    a(CAROUSEL8.aToB[0]),
+    a(CAROUSEL8.aToB[1], { opacity: 0, ease: 'linear' }),
+    a(CAROUSEL8.cToA[1], { opacity: 0 }),
+    a(CAROUSEL8.cToA[2], { ease: 'linear' }),
+    a(2200),
+  ];
+}
+function ch08CarouselSide(win: { in: [number, number, number]; out: [number, number, number] }, stops: { vh: number; screen: PhoneScreen }[]): Pose[] {
+  const s = (vh: number, screen: PhoneScreen, extra: Partial<Pose> = {}): Pose => ({ vh, ...C8, screen, owner: 'anyone', ...extra });
+  const first = stops[0].screen;
+  const last = stops[stops.length - 1].screen;
+  return [
+    s(win.in[1], first, { opacity: 0, screenSwitch: 'cut' }),
+    s(win.in[2], first, { ease: 'linear' }),
+    ...stops.map(({ vh, screen }) => s(vh, screen)),
+    s(win.out[0], last),
+    s(win.out[1], last, { opacity: 0, ease: 'linear' }),
+  ];
+}
 
 /** Chapter 08, phone A (the client's phone from chapter 07): waits for your phone to leave, then leads the fan. */
 function ch08PhoneA(o: { from: Place; left: Place }): Pose[] {
@@ -876,8 +915,8 @@ const phonePortrait: Pose[] = [
   ...ch05Phone({ at: [0, -0.88, 0], rotation: [4, 0, 0], size: 0.86 }),
   ...ch06Phone({ at: [0, -0.88, 0], rotation: [4, 360, 0], size: 0.86 }),
   ...ch07Phone({ at: [0, -0.88, 0], rotation: [4, 360, 0], size: 0.86, left: SPLIT7.portrait.left }),
-  ...ch08PhoneA({ from: SPLIT7.portrait.left, left: FAN8.portrait.left }),
-  ...ch09Phone({ from: FAN8.portrait.left, centre: SPLIT9.portrait.centre, left: SPLIT9.portrait.left }),
+  ...ch08CarouselA(SPLIT7.portrait.left),
+  ...ch09Phone({ from: C8, centre: SPLIT9.portrait.centre, left: SPLIT9.portrait.left }),
   ...ch10Phone({ from: SPLIT9.portrait.left, at: P10.portrait }),
   ...ch11Phone({ from: P10.portrait.rest, to: P11.portrait }),
   ...ch12Phone({ from: P11.portrait, to: P12.portrait }),
@@ -917,13 +956,21 @@ const phoneBPortrait: Pose[] = [
   { vh: CH07.split[1], ...SPLIT7.portrait.right, screen: 'releasedVN', owner: 'you', ease: 'easeOut', transform: 'T3 Split' },
   { vh: 1898, ...SPLIT7.portrait.right, screen: 'releasedVN', owner: 'you' },
   { vh: CH08.youOut[1], ...SPLIT7.portrait.right, size: SPLIT7.portrait.right.size * FADE_SCALE.phone, opacity: 0, screen: 'releasedVN', owner: 'you', ease: 'linear' },
-  ...ch08B(phonePortrait, FAN8.portrait.centre),
+  ...ch08CarouselSide({ in: CAROUSEL8.aToB, out: CAROUSEL8.bToC }, [
+    { vh: CH08.toSheetB[0], screen: 'logoSubmitted' },
+    { vh: CH08.toSheetB[1], screen: 'anyoneRelease' },
+    { vh: CH08.releasedB[0], screen: 'anyoneRelease' },
+    { vh: CH08.releasedB[1], screen: 'releasedB' },
+  ]),
   ...ch09B(phonePortrait, SPLIT9.portrait.right),
 ];
 
 /** Third phone: only for the T6 Fan (chapter 03). */
 const phoneCDesktop: Pose[] = [...t6Fan(phoneDesktop, FAN.desktop.right, 'cn3'), ...ch08C(phoneDesktop, FAN8.desktop.right)];
-const phoneCPortrait: Pose[] = [...ch08C(phonePortrait, FAN8.portrait.right)];
+const phoneCPortrait: Pose[] = ch08CarouselSide({ in: CAROUSEL8.bToC, out: CAROUSEL8.cToA }, [
+  { vh: CH08.refunded[0], screen: 'anyoneRefund' },
+  { vh: CH08.refunded[1], screen: 'refunded' },
+]);
 
 export const tracks = {
   phone: { desktop: phoneDesktop, portrait: phonePortrait },
